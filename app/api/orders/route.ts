@@ -1,121 +1,66 @@
+import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
-type OrderItemInput = {
-  product?: { id?: unknown };
-  weight?: unknown;
-  grind?: unknown;
-  quantity?: unknown;
-};
-
+type OrderItemInput = { product?: { id?: unknown }; weight?: unknown; grind?: unknown; quantity?: unknown };
 type OrderInput = {
-  customerName?: unknown;
-  email?: unknown;
-  phone?: unknown;
-  fulfillmentType?: unknown;
-  postalCode?: unknown;
-  address?: unknown;
-  addressDetail?: unknown;
-  deliveryMessage?: unknown;
-  items?: unknown;
+  customerName?: unknown; email?: unknown; phone?: unknown; fulfillmentType?: unknown;
+  postalCode?: unknown; address?: unknown; addressDetail?: unknown; deliveryMessage?: unknown;
+  items?: unknown; idempotencyKey?: unknown; accessToken?: unknown;
 };
 
 const validWeights = new Set(["150g", "300g"]);
 const validGrinds = new Set(["Whole Bean", "Filter", "Espresso"]);
 const text = (value: unknown) => typeof value === "string" ? value.trim() : "";
+const tokenHash = (token: string) => createHash("sha256").update(token).digest("hex");
 
 export async function POST(request: Request) {
   let body: OrderInput;
-  try {
-    body = await request.json() as OrderInput;
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
+  try { body = await request.json() as OrderInput; }
+  catch { return NextResponse.json({ error: "요청 형식이 올바르지 않습니다." }, { status: 400 }); }
 
   const items = Array.isArray(body.items) ? body.items as OrderItemInput[] : [];
   const fulfillmentType = text(body.fulfillmentType);
   const email = text(body.email);
-  const invalidItem = items.some((item) =>
-    !text(item.product?.id) ||
-    !validWeights.has(text(item.weight)) ||
-    !validGrinds.has(text(item.grind)) ||
-    !Number.isInteger(item.quantity) ||
-    Number(item.quantity) < 1 ||
-    Number(item.quantity) > 20
-  );
+  const idempotencyKey = text(body.idempotencyKey);
+  const accessToken = text(body.accessToken);
+  const invalidItem = items.some((item) => !text(item.product?.id) || !validWeights.has(text(item.weight)) ||
+    !validGrinds.has(text(item.grind)) || !Number.isInteger(item.quantity) || Number(item.quantity) < 1 || Number(item.quantity) > 20);
 
   if (!text(body.customerName) || !email.includes("@") || !text(body.phone) ||
-      !["delivery", "pickup"].includes(fulfillmentType) || !items.length || invalidItem) {
-    return NextResponse.json({ error: "Invalid order details" }, { status: 400 });
+      !["delivery", "pickup"].includes(fulfillmentType) || !items.length || invalidItem ||
+      !/^[0-9a-f-]{36}$/i.test(idempotencyKey) || accessToken.length < 32) {
+    return NextResponse.json({ error: "주문 정보를 다시 확인해 주세요." }, { status: 400 });
   }
   if (fulfillmentType === "delivery" && (!text(body.postalCode) || !text(body.address))) {
-    return NextResponse.json({ error: "A delivery address is required" }, { status: 400 });
+    return NextResponse.json({ error: "배송 주소를 입력해 주세요." }, { status: 400 });
   }
-
-  if (!hasSupabaseEnv) return NextResponse.json({ orderNumber: "PREVIEW-001" });
+  if (!hasSupabaseEnv || !process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY) {
+    return NextResponse.json({ error: "결제 환경이 아직 설정되지 않았습니다." }, { status: 503 });
+  }
 
   const supabase = await createClient();
-  const productIds = [...new Set(items.map((item) => text(item.product?.id)))];
-  const { data: products, error: productError } = await supabase
-    .from("products")
-    .select("id,name,price_150g,price_300g,stock_quantity,active")
-    .in("id", productIds)
-    .eq("active", true);
-
-  if (productError || !products || products.length !== productIds.length) {
-    return NextResponse.json({ error: "One or more products are unavailable" }, { status: 400 });
-  }
-
-  const productById = new Map(products.map((product) => [product.id, product]));
-  const orderItems = items.map((item) => {
-    const product = productById.get(text(item.product?.id))!;
-    const quantity = Number(item.quantity);
-    const weight = text(item.weight);
-    const unitPrice = weight === "150g" ? product.price_150g : product.price_300g;
-    return {
-      product_id: product.id,
-      product_name: product.name,
-      weight,
-      grind: text(item.grind),
-      quantity,
-      unit_price: unitPrice,
-      subtotal: unitPrice * quantity,
-    };
+  const { data, error } = await supabase.rpc("create_pending_order", {
+    p_client_reference: idempotencyKey,
+    p_guest_token_hash: tokenHash(accessToken),
+    p_customer_name: text(body.customerName), p_email: email, p_phone: text(body.phone),
+    p_fulfillment_type: fulfillmentType, p_postal_code: text(body.postalCode) || null,
+    p_address: text(body.address) || null, p_address_detail: text(body.addressDetail) || null,
+    p_delivery_message: text(body.deliveryMessage) || null,
+    p_items: items.map((item) => ({ product_id: text(item.product?.id), weight: text(item.weight), grind: text(item.grind), quantity: Number(item.quantity) })),
   });
 
-  const requestedByProduct = new Map<string, number>();
-  orderItems.forEach((item) => requestedByProduct.set(item.product_id, (requestedByProduct.get(item.product_id) ?? 0) + item.quantity));
-  if (products.some((product) => (requestedByProduct.get(product.id) ?? 0) > product.stock_quantity)) {
-    return NextResponse.json({ error: "The requested quantity is no longer available" }, { status: 409 });
+  if (error || !data?.[0]) {
+    const unavailable = error?.message.includes("unavailable") || error?.message.includes("stock");
+    return NextResponse.json({ error: unavailable ? "품절되었거나 구매할 수 없는 상품이 있습니다." : "주문을 만들지 못했습니다. 잠시 후 다시 시도해 주세요." }, { status: unavailable ? 409 : 400 });
   }
+  const order = data[0];
+  // An idempotent replay needs the original token. A different token cannot read the order.
+  if (order.token_matches === false) return NextResponse.json({ error: "이미 처리된 주문 요청입니다. 결제 화면을 새로 열어 주세요." }, { status: 409 });
 
-  const subtotal = orderItems.reduce((sum, item) => sum + item.subtotal, 0);
-  const { data: { user } } = await supabase.auth.getUser();
-  const orderNumber = `CDS-${Date.now().toString(36).toUpperCase()}`;
-  const { data: order, error } = await supabase.from("orders").insert({
-    order_number: orderNumber,
-    user_id: user?.id ?? null,
-    customer_name: text(body.customerName),
-    email,
-    phone: text(body.phone),
-    fulfillment_type: fulfillmentType,
-    postal_code: text(body.postalCode) || null,
-    address: text(body.address) || null,
-    address_detail: text(body.addressDetail) || null,
-    delivery_message: text(body.deliveryMessage) || null,
-    subtotal,
-    total: subtotal,
-    payment_status: "pending",
-    order_status: "new",
-  }).select().single();
-
-  if (error || !order) return NextResponse.json({ error: error?.message ?? "Could not create order" }, { status: 400 });
-
-  const { error: itemError } = await supabase.from("order_items").insert(orderItems.map((item) => ({ ...item, order_id: order.id })));
-  if (itemError) {
-    return NextResponse.json({ error: "Could not save order items" }, { status: 400 });
-  }
-
-  return NextResponse.json({ orderNumber });
+  return NextResponse.json({
+    orderId: order.order_id, orderNumber: order.order_number, amount: order.total,
+    orderName: order.order_name, accessToken, clientKey: process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY,
+  });
 }

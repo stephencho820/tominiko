@@ -45,9 +45,35 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_TOSS_CLIENT_KEY=test_ck_...
+TOSS_SECRET_KEY=test_sk_...
 ```
 
-The service role key is server-only and must never be prefixed with `NEXT_PUBLIC_` or exposed to the browser.
+The service role and Toss secret keys are server-only and must never be prefixed with `NEXT_PUBLIC_` or exposed to the browser. The Toss client key is intentionally public.
+
+## Toss Payments setup
+
+This project uses the current Toss Payments v2 Standard SDK payment window and the server-side payment confirmation API. The browser only opens the payment window. The server independently loads the order total, sends the approval request with the secret key, verifies `paymentKey`, `orderId`, `amount`, and `status`, and only then marks the order paid.
+
+Before deploying:
+
+1. In the Supabase SQL Editor, run [`supabase/migrations/202609170001_payments.sql`](supabase/migrations/202609170001_payments.sql). It adds payment metadata plus atomic order creation and stock-deduction RPCs.
+2. Get a **test client key** and **test secret key** from Toss Payments Developer Center. Set `NEXT_PUBLIC_TOSS_CLIENT_KEY` and the server-only `TOSS_SECRET_KEY`. Switch both to the matching live-key pair only after test verification and Toss onboarding.
+3. In Toss Payments Developer Center, register `https://YOUR_DOMAIN/api/payments/webhook` as the payment-status webhook URL. Webhook payloads are not accepted as proof by themselves; the handler retrieves the payment from Toss with the secret key before applying an idempotent state transition.
+4. Set `SUPABASE_SERVICE_ROLE_KEY` and `TOSS_SECRET_KEY` as encrypted Cloudflare Worker secrets. Set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL`, and `NEXT_PUBLIC_TOSS_CLIENT_KEY` as deployment variables. Never expose the service-role or Toss secret key as `NEXT_PUBLIC_*` values.
+5. Ensure the production domain is allowed in the Toss configuration and that `NEXT_PUBLIC_SITE_URL` uses HTTPS.
+
+The server calculates every line price from `products`; browser `unitPrice`, subtotal, and total values are ignored. Payment finalization locks the relevant product rows, checks aggregate quantities, decrements stock, and changes `payment_status` to `paid` in one PostgreSQL transaction. Concurrent buyers therefore cannot oversell the last unit. If Toss approval succeeds after stock has disappeared, the server immediately compensates by cancelling that payment rather than creating a paid order without inventory.
+
+### Payment checks before going live
+
+- Complete a test-card payment as a guest and confirm the completion page, Admin payment status, order status, and stock decrement.
+- Double-click the payment CTA, refresh the success URL, and retry after a simulated network interruption; one checkout reference must map to one order and inventory must decrement once.
+- Cancel in the payment window and retry from Checkout; the cart must remain and no stock should move.
+- Try two simultaneous payments for the final unit; only one order may become paid and the other payment must be cancelled.
+- Send the same webhook more than once and verify the order and stock do not change twice.
+- Alter `amount` in the success URL/request and verify confirmation is rejected.
+- Verify test and live keys are never mixed, then perform Toss's required live approval test before accepting real orders.
 
 ## OAuth
 
@@ -76,6 +102,4 @@ Use the Cloudflare Worker URL as `NEXT_PUBLIC_SITE_URL`, and add its `/auth/call
 
 ## Current scope and next steps
 
-Product browsing, product detail, localStorage cart, guest checkout/order creation, Google/Kakao sign-in buttons, account order views, admin product/order screens, image upload wiring, RLS, and a payment service boundary are included. Toss Payments approval is intentionally not implemented yet. Connect it in `services/payment.ts` and the checkout order action after credentials and webhook handling are ready.
-
-For production, add email verification policy, rate limiting, transactional stock decrementing, shipping fee rules, Toss webhook signature verification, backups, and an admin audit log.
+Product browsing, guest and member checkout, Toss Payments approval and reconciliation, transactional inventory, account order views, admin product/order screens, image upload wiring, and RLS are included. Before higher traffic, add edge rate limiting, an automated abandoned-pending-order cleanup policy, backups, and an admin audit log.
