@@ -20,7 +20,13 @@ export default function PaymentSuccess() {
     if (!paymentKey || !orderId || !Number.isInteger(amount) || !accessToken) { setError("결제 확인 정보가 없습니다."); return; }
     fetch("/api/payments/confirm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ paymentKey, orderId, amount, accessToken }) })
       .then(async (response) => { const data = await response.json(); if (!response.ok) throw new Error(data.error); return data; })
-      .then((data) => { setOrder(data.order); clear(); sessionStorage.removeItem("tominiko-checkout-reference"); sessionStorage.removeItem("tominiko-payment-order-id"); })
+      .then((data) => {
+        setOrder(data.order);
+        clear();
+        sessionStorage.removeItem("tominiko-checkout-reference");
+        sessionStorage.removeItem("tominiko-checkout-cart");
+        sessionStorage.removeItem("tominiko-payment-order-id");
+      })
       .catch((caught) => setError(caught instanceof Error ? caught.message : "결제를 확인하지 못했습니다."));
   }, [params, clear]);
 

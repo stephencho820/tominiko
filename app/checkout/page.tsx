@@ -15,10 +15,17 @@ declare global {
 const loadToss = () => new Promise<void>((resolve, reject) => {
   if (window.TossPayments) return resolve();
   const existing = document.querySelector<HTMLScriptElement>('script[src="https://js.tosspayments.com/v2/standard"]');
-  if (existing) { existing.addEventListener("load", () => resolve(), { once: true }); return; }
+  if (existing) {
+    // A script left behind by a previous render may already have completed. Avoid
+    // waiting forever for a load event that will never fire again.
+    if (existing.dataset.loaded === "true") return resolve();
+    existing.addEventListener("load", () => resolve(), { once: true });
+    existing.addEventListener("error", () => reject(new Error("결제 모듈을 불러오지 못했습니다.")), { once: true });
+    return;
+  }
   const script = document.createElement("script");
   script.src = "https://js.tosspayments.com/v2/standard";
-  script.onload = () => resolve();
+  script.onload = () => { script.dataset.loaded = "true"; resolve(); };
   script.onerror = () => reject(new Error("결제 모듈을 불러오지 못했습니다."));
   document.head.appendChild(script);
 });
@@ -39,12 +46,20 @@ export default function Checkout() {
     if (submitting) return;
     setSubmitting(true); setError("");
     try {
+      const cartFingerprint = JSON.stringify(items.map((item) => ({
+        productId: item.product.id,
+        weight: item.weight,
+        grind: item.grind,
+        quantity: item.quantity,
+      })));
       let idempotencyKey = sessionStorage.getItem("tominiko-checkout-reference");
       let accessToken = sessionStorage.getItem("tominiko-order-access-token");
-      if (!idempotencyKey || !accessToken) {
+      const previousFingerprint = sessionStorage.getItem("tominiko-checkout-cart");
+      if (!idempotencyKey || !accessToken || previousFingerprint !== cartFingerprint) {
         idempotencyKey = crypto.randomUUID(); accessToken = newAccessToken();
         sessionStorage.setItem("tominiko-checkout-reference", idempotencyKey);
         sessionStorage.setItem("tominiko-order-access-token", accessToken);
+        sessionStorage.setItem("tominiko-checkout-cart", cartFingerprint);
       }
       const response = await fetch("/api/orders", {
         method: "POST", headers: { "Content-Type": "application/json" },
