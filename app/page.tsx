@@ -1,140 +1,23 @@
 import { getProducts } from "@/services/products";
-import { HomeStory } from "@/components/HomeStory";
+import Link from "next/link";
+import { CoffeeDiscovery } from "@/components/CoffeeDiscovery";
 
 export default async function Home() {
-  const roast = await getProducts({ activeOnly: true, todaysRoast: true });
-  const featured = roast.length ? roast : await getProducts({ activeOnly: true });
+  const products = await getProducts({ activeOnly: true });
 
-  return <HomeStory product={featured[0] ?? null} />;
-  /* return (
-    <main>
-      <section className="hero-panel relative isolate overflow-hidden px-6 py-10 md:px-12 md:py-14">
-        <div className="absolute inset-0 -z-10 bg-[rgba(64,46,36,0.18)]" />
-
-        <div className="relative z-10 flex min-h-[calc(100vh-76px)] flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <div className="eyebrow text-[var(--paper)]/80">
-              <span className="lang-ko">수원 · 커피 로스터리 &amp; 테이스팅 룸</span>
-              <span className="lang-en">Coffee roastery &amp; tasting room · Suwon</span>
-            </div>
-            <span className="hidden sans text-xs text-[var(--paper)]/75 md:block" />
-          </div>
-
-          <div className="relative max-w-5xl pb-8">
-            <p className="section-label mb-6 text-[var(--paper)]/85">Casa di Stefano</p>
-            <h1 className="max-w-3xl text-4xl leading-[.95] tracking-[-.05em] text-[var(--paper)] md:text-7xl">
-              <span className="lang-ko">
-                매일의 커피에<br />
-                <i>조금 더 좋은 순간을.</i>
-              </span>
-              <span className="lang-en">
-                Good beans.<br />
-                <i>Thoughtfully roasted.</i>
-              </span>
-            </h1>
-
-            <div className="mt-10 flex flex-wrap items-center gap-5">
-              <Link href="/shop" className="button-primary sans px-6 py-4 text-xs font-bold tracking-[.15em]">
-                <span className="lang-ko">커피 둘러보기</span>
-                <span className="lang-en">SHOP THE ROASTS</span> <span className="ml-4">↗</span>
-              </Link>
-              <span className="sans text-xs text-[var(--paper)]/75">
-                <span className="lang-ko">매주 수원에서 로스팅</span>
-                <span className="lang-en">Roasted weekly in Suwon</span>
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-end justify-between border-t border-[rgba(255,255,255,0.25)] pt-4">
-            <span className="section-label text-[var(--paper)]/80">01 / 03</span>
-            <span className="sans text-xs text-[var(--paper)]/75">
-              <span className="lang-ko">스크롤하여 둘러보기</span>
-              <span className="lang-en">Scroll to discover</span>
-            </span>
-          </div>
-        </div>
-      </section>
-
-      <section className="px-6 py-20 md:px-12 md:py-28">
-        <div className="mb-10 flex items-end justify-between">
-          <div>
-            <p className="section-label mb-3">
-              <span className="lang-ko">로스터리에서</span>
-              <span className="lang-en">From the roastery</span>
-            </p>
-            <p className="eyebrow mb-3 text-[var(--brown)]">TOMINIKO BEANS &amp; COFFEE</p>
-            <h2 className="text-4xl md:text-5xl">
-              <span className="lang-ko">오늘의 로스터리</span>
-              <span className="lang-en">Freshly roasted</span>
-            </h2>
-          </div>
-          <Link href="/shop" className="eyebrow border-b border-[var(--ink)] pb-1 transition-colors hover:text-[var(--accent)]">
-            <span className="lang-ko">전체 보기</span>
-            <span className="lang-en">View all</span> ↗
-          </Link>
-        </div>
-
-        {featured.length ? (
-          <div className="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-            {featured.slice(0, 3).map((product) => (
-              <ProductCard product={product} key={product.id} />
-            ))}
-          </div>
-        ) : (
-          <p className="border-y border-[var(--line)] py-12 text-xl text-[var(--brown)]">
-            <span className="lang-ko">다음 배치를 준비하고 있습니다. 곧 새로운 커피를 소개할게요.</span>
-            <span className="lang-en">Our next batch is resting. New releases will appear here soon.</span>
-          </p>
-        )}
-      </section>
-
-      <section id="about" className="grid border-t border-[var(--line)] md:grid-cols-2">
-        <div className="bg-[var(--brown)] px-6 py-20 text-[var(--ivory)] md:px-12 md:py-28">
-          <p className="eyebrow mb-10 text-[#dcc6af]">Zero Degrees Coffee Roasters</p>
-          <h2 className="max-w-lg text-5xl leading-tight md:text-6xl">
-            <span className="lang-ko">더 나은 커피를 위한<br />조용한 태도.</span>
-            <span className="lang-en">A quieter approach to better coffee.</span>
-          </h2>
-        </div>
-
-        <div className="px-6 py-20 md:px-12 md:py-28">
-          <div className="grid gap-8 sm:grid-cols-3">
-            <div>
-              <p className="section-label">01</p>
-              <h3 className="mt-4 text-xl">
-                <span className="lang-ko">ZERO ADDITIVES</span>
-                <span className="lang-en">ZERO ADDITIVES</span>
-              </h3>
-              <p className="mt-3 text-[var(--muted)]">
-                <span className="lang-ko">필요 없는 건 넣지 않습니다.</span>
-                <span className="lang-en">Nothing unnecessary added.</span>
-              </p>
-            </div>
-            <div>
-              <p className="section-label">02</p>
-              <h3 className="mt-4 text-xl">
-                <span className="lang-ko">ZERO MASKING</span>
-                <span className="lang-en">ZERO MASKING</span>
-              </h3>
-              <p className="mt-3 text-[var(--muted)]">
-                <span className="lang-ko">콩의 본질을 가리지 않습니다.</span>
-                <span className="lang-en">Never hide the character of the bean.</span>
-              </p>
-            </div>
-            <div>
-              <p className="section-label">03</p>
-              <h3 className="mt-4 text-xl">
-                <span className="lang-ko">ZERO GUESSWORK</span>
-                <span className="lang-en">ZERO GUESSWORK</span>
-              </h3>
-              <p className="mt-3 text-[var(--muted)]">
-                <span className="lang-ko">데이터와 경험으로 로스팅합니다.</span>
-                <span className="lang-en">Roasting guided by data and experience.</span>
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-  ); */
+  return <main className="home-page">
+    <section className="new-home-hero">
+      <div className="new-home-hero-grain" />
+      <div className="new-home-hero-copy">
+        <p className="eyebrow">Casa di Stefano · Suwon</p>
+        <h1><span className="lang-ko">오늘의 기분에 맞는<br /><i>좋은 커피 한 잔.</i></span><span className="lang-en">Good coffee,<br /><i>for today.</i></span></h1>
+        <p><span className="lang-ko">수원에서 작은 배치로 로스팅하는<br />Tominiko Beans &amp; Coffee.</span><span className="lang-en">Tominiko Beans &amp; Coffee,<br />roasted in small batches in Suwon.</span></p>
+        <a href="#discover" className="hero-discover-link"><span className="lang-ko">내 커피 찾기</span><span className="lang-en">Find my coffee</span><span>↓</span></a>
+      </div>
+      <div className="new-home-hero-aside"><span>Roasted by</span><strong>ZERO<br />DEGREES</strong><small>Thoughtfully measured.<br />Never overworked.</small></div>
+    </section>
+    <CoffeeDiscovery products={products} />
+    <section className="home-brand-teaser"><div><p className="section-label">The roastery</p><h2><span className="lang-ko">더하지 않고,<br />가리지 않는 로스팅.</span><span className="lang-en">Nothing added.<br />Nothing hidden.</span></h2></div><div><p><span className="lang-ko">데이터로 이해하고 경험으로 결정합니다. 커피가 가진 고유한 인상을 조용히 선명하게 만드는 것이 Zero Degrees의 방식입니다.</span><span className="lang-en">We understand with data and decide with experience—making each coffee's character quietly clear.</span></p><Link href="/zero-degrees"><span className="lang-ko">로스팅 철학 보기</span><span className="lang-en">Our roasting philosophy</span> →</Link></div></section>
+    <section className="home-closing"><p className="eyebrow">Tominiko Beans &amp; Coffee</p><h2><span className="lang-ko">천천히 만들고,<br /><i>쉽게 고르는 커피.</i></span><span className="lang-en">Made slowly.<br /><i>Chosen easily.</i></span></h2><div><Link href="/shop" className="button-primary home-shop-link"><span className="lang-ko">모든 커피 보기</span><span className="lang-en">Browse all coffee</span> ↗</Link><Link href="/tasting-room" className="home-text-link"><span className="lang-ko">테이스팅 룸 방문</span><span className="lang-en">Visit the tasting room</span> →</Link></div></section>
+  </main>;
 }

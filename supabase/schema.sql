@@ -19,10 +19,11 @@ create table public.products (
   price_150g_original integer,
   price_300g integer not null default 0, stock_quantity integer not null default 0,
   active boolean not null default true, featured boolean not null default false,
-  todays_roast boolean not null default false, display_order integer not null default 0,
+  todays_roast boolean not null default false, discovery_tags text[] not null default '{}', display_order integer not null default 0,
   image_url text, created_at timestamptz not null default now(), updated_at timestamptz not null default now()
 );
 alter table public.products add column if not exists price_150g_original integer;
+alter table public.products add column if not exists discovery_tags text[] not null default '{}';
 create unique index if not exists products_one_todays_roast on public.products (todays_roast) where todays_roast = true;
 create table public.orders (
   id uuid primary key default gen_random_uuid(), order_number text unique not null,
