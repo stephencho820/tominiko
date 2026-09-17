@@ -1,0 +1,2 @@
+import { AdminProductForm } from "@/components/AdminProductForm";
+export default function NewProduct() { return <main className="px-6 py-12 md:px-12"><p className="eyebrow">Catalog</p><h1 className="mt-3 text-5xl">New product</h1><AdminProductForm /></main>; }

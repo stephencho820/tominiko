@@ -1,0 +1,7 @@
+name = "casa-di-stefano"
+compatibility_date = "2026-09-14"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"

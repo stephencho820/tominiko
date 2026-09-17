@@ -1,0 +1,3 @@
+"use client";
+import { useRouter } from "next/navigation";
+export function ProductDeleteButton({ id }: { id: string }) { const router = useRouter(); return <button className="eyebrow underline" onClick={async () => { if (!window.confirm("Delete this product?")) return; await fetch("/api/admin/products", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); router.refresh(); }}>Delete</button>; }
