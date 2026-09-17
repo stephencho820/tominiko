@@ -10,6 +10,7 @@ type CartContext = {
   add: (item: CartItem) => void;
   remove: (index: number) => void;
   update: (index: number, quantity: number) => void;
+  updateOptions: (index: number, options: Partial<Pick<CartItem, "weight" | "grind">>) => void;
   clear: () => void;
   total: number;
 };
@@ -43,7 +44,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return current.map((currentItem, index) => index === existing ? { ...currentItem, quantity: currentItem.quantity + item.quantity } : currentItem);
     }),
     remove: (index) => setItems((current) => current.filter((_, itemIndex) => itemIndex !== index)),
-    update: (index, quantity) => setItems((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, quantity } : item)),
+    update: (index, quantity) => setItems((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, quantity: Math.min(20, Math.max(1, quantity)) } : item)),
+    updateOptions: (index, options) => setItems((current) => current.map((item, itemIndex) => {
+      if (itemIndex !== index) return item;
+      const weight = options.weight ?? item.weight;
+      return {
+        ...item,
+        ...options,
+        unitPrice: weight === "150g" ? item.product.price_150g : item.product.price_300g,
+      };
+    })),
     clear: () => setItems([]),
     total: items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0),
   };
