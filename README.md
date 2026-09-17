@@ -10,7 +10,18 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open the forwarded port shown by Codespaces (usually `3000`). The production check is:
+The development server listens on all container interfaces at port `3000`. In a
+remote workspace, open the workspace's **Ports** panel, forward port `3000`, and
+use the generated HTTPS URL. Opening `http://localhost:3000` on your own computer
+only works when the repository is running on that same computer.
+
+To verify the server from inside the workspace, run:
+
+```bash
+curl --fail http://127.0.0.1:3000
+```
+
+The production check is:
 
 ```bash
 npm run build
