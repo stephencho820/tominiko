@@ -39,6 +39,9 @@ create table public.order_items (
   unit_price integer not null, subtotal integer not null
 );
 
+-- Payment lifecycle columns and atomic functions are maintained in the migration.
+-- Run supabase/migrations/202609170001_payments.sql after this base schema.
+
 create or replace function public.handle_new_user() returns trigger language plpgsql security definer set search_path = public as $$
 begin insert into public.profiles (id, email, name) values (new.id, new.email, coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name')); return new; end; $$;
 create trigger on_auth_user_created after insert on auth.users for each row execute procedure public.handle_new_user();
