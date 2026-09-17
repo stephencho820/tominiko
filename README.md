@@ -38,6 +38,13 @@ The app uses Next.js App Router, TypeScript, Tailwind CSS, Supabase, and is stru
 5. Create the `product-images` bucket as public, then apply the storage policies in the same SQL file.
 6. Configure Auth > URL Configuration with the local and production callback URLs listed in `.env.example`.
 
+For an existing project created before coffee discovery was added, run
+[`supabase/migrations/202609170002_product_discovery_tags.sql`](supabase/migrations/202609170002_product_discovery_tags.sql).
+This adds the indexed `discovery_tags` array used by the home recommendations.
+Afterward, open each product in Admin and select every relevant discovery tag;
+untagged products remain available in Shop but only appear as a recommendation
+fallback when marked **Today's roast** or **Featured**.
+
 Required `.env.local` values:
 
 ```env

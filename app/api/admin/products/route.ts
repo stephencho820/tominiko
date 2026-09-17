@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 
-const allowed = new Set(["name", "slug", "origin", "region", "producer", "variety", "process", "roast_level", "tasting_notes", "description", "roasted_date", "price_150g", "price_150g_original", "price_300g", "stock_quantity", "active", "featured", "todays_roast", "display_order", "image_url"]);
+const allowed = new Set(["name", "slug", "origin", "region", "producer", "variety", "process", "roast_level", "tasting_notes", "description", "roasted_date", "price_150g", "price_150g_original", "price_300g", "stock_quantity", "active", "featured", "todays_roast", "discovery_tags", "display_order", "image_url"]);
 
 async function payloadFrom(request: Request) {
   const raw = await request.json() as Record<string, unknown>;
@@ -12,6 +12,7 @@ function validate(payload: Record<string, unknown>) {
   for (const key of ["price_150g", "price_300g", "stock_quantity", "display_order"]) {
     if (key in payload && (!Number.isInteger(payload[key]) || Number(payload[key]) < 0)) return `${key} must be a positive whole number`;
   }
+  if ("discovery_tags" in payload && (!Array.isArray(payload.discovery_tags) || payload.discovery_tags.some((tag) => typeof tag !== "string"))) return "discovery_tags must be a list of tags";
   return null;
 }
 

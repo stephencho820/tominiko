@@ -9,7 +9,7 @@ import { useCart } from "./CartProvider";
 const weights = ["150g", "300g"] as const;
 const grinds = ["Whole Bean", "Filter", "Espresso"] as const;
 
-export function ProductPurchase({ product }: { product: Product }) {
+export function ProductPurchase({ product, compact = false }: { product: Product; compact?: boolean }) {
   const [weight, setWeight] = useState<(typeof weights)[number]>("150g");
   const [grind, setGrind] = useState<(typeof grinds)[number]>("Whole Bean");
   const [quantity, setQuantity] = useState(1);
@@ -33,7 +33,7 @@ export function ProductPurchase({ product }: { product: Product }) {
   }
 
   return (
-    <div className="purchase-panel">
+    <div className={`purchase-panel ${compact ? "purchase-panel-compact" : ""}`}>
       <div className="purchase-price" aria-live="polite">
         <span>₩{unitPrice.toLocaleString()}</span>
         {originalPrice && <del>₩{originalPrice.toLocaleString()}</del>}
