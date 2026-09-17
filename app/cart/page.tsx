@@ -1,4 +1,69 @@
 "use client";
+
 import Link from "next/link";
+import { Minus, Plus, X } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
-export default function CartPage() { const { items, total, remove, update } = useCart(); return <main className="mx-auto max-w-5xl px-6 py-14 md:px-12 md:py-20"><p className="section-label"><span className="lang-ko">선택한 커피</span><span className="lang-en">Your selection</span></p><div className="mt-4 flex items-end justify-between border-b border-[var(--line)] pb-8"><h1 className="text-6xl leading-none md:text-8xl"><span className="lang-ko">장바구니</span><span className="lang-en">Your bag</span></h1><span className="sans text-xs text-[var(--muted)]">{items.reduce((sum, item) => sum + item.quantity, 0)} <span className="lang-ko">개</span><span className="lang-en">items</span></span></div>{!items.length ? <div className="border-b border-[var(--line)] py-16"><p className="text-2xl"><span className="lang-ko">좋은 커피를 담을 공간이 비어 있습니다.</span><span className="lang-en">Your bag is waiting for something good.</span></p><Link href="/shop" className="button-secondary eyebrow mt-8 inline-block px-5 py-3"><span className="lang-ko">커피 둘러보기 ↗</span><span className="lang-en">Browse coffee ↗</span></Link></div> : <div className="mt-10"><div className="border-y border-[var(--line)]">{items.map((item, index) => <div className="grid gap-5 border-b border-[var(--line)] py-6 last:border-b-0 sm:grid-cols-[112px_1fr_auto]" key={`${item.product.id}-${index}`}><div className="grain aspect-square overflow-hidden">{item.product.image_url && <img src={item.product.image_url} alt="" className="h-full w-full object-cover" />}</div><div><h2 className="text-2xl">{item.product.name}</h2><p className="sans mt-2 text-xs uppercase tracking-[.1em] text-[var(--muted)]">{item.weight} · {item.grind}</p><button className="eyebrow mt-6 text-[var(--brown)] underline underline-offset-4" onClick={() => remove(index)}><span className="lang-ko">삭제</span><span className="lang-en">Remove</span></button></div><div className="flex items-start justify-between gap-6 text-right sm:block"><p className="sans font-semibold">₩{(item.unitPrice * item.quantity).toLocaleString()}</p><input aria-label="Quantity" type="number" min="1" value={item.quantity} onChange={(e) => update(index, Math.max(1, Number(e.target.value)))} className="mt-0 w-14 border border-[var(--line)] bg-[var(--paper)] p-2 text-center sm:mt-4" /></div></div>)}</div><div className="ml-auto mt-8 max-w-sm"><div className="flex justify-between text-2xl"><span className="lang-ko">합계</span><span className="lang-en">Total</span><span>₩{total.toLocaleString()}</span></div><p className="sans mt-2 text-xs text-[var(--muted)]"><span className="lang-ko">배송비는 결제 단계에서 계산됩니다.</span><span className="lang-en">Shipping calculated at checkout.</span></p><Link href="/checkout" className="button-primary sans mt-6 block p-4 text-center text-xs font-bold tracking-[.16em]"><span className="lang-ko">결제하기</span><span className="lang-en">CHECKOUT</span> <span className="ml-3">↗</span></Link></div></div>}</main>; }
+
+const money = (value: number) => `₩${value.toLocaleString("ko-KR")}`;
+
+export default function CartPage() {
+  const { items, total, remove, update, updateOptions } = useCart();
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+
+  return (
+    <main className="purchase-page cart-page">
+      <header className="purchase-heading">
+        <div>
+          <p className="section-label"><span className="lang-ko">선택한 커피</span><span className="lang-en">Your selection</span></p>
+          <h1><span className="lang-ko">장바구니</span><span className="lang-en">Your bag</span></h1>
+        </div>
+        <p className="purchase-count">{itemCount} <span className="lang-ko">개</span><span className="lang-en">items</span></p>
+      </header>
+
+      {!items.length ? (
+        <section className="empty-bag" aria-live="polite">
+          <p><span className="lang-ko">아직 담긴 커피가 없습니다.</span><span className="lang-en">Your bag is ready for something good.</span></p>
+          <Link href="/shop" className="button-primary purchase-button"><span className="lang-ko">커피 둘러보기</span><span className="lang-en">Browse coffee</span><span>→</span></Link>
+        </section>
+      ) : (
+        <div className="cart-layout">
+          <section className="cart-list" aria-label="Cart items">
+            {items.map((item, index) => (
+              <article className="cart-item" key={`${item.product.id}-${item.weight}-${item.grind}-${index}`}>
+                <div className="cart-image grain">
+                  {item.product.image_url ? <img src={item.product.image_url} alt={item.product.name} /> : <span>{item.product.origin}</span>}
+                </div>
+                <div className="cart-item-main">
+                  <div className="cart-item-title">
+                    <div><p className="section-label">Tominiko Coffee</p><h2>{item.product.name}</h2></div>
+                    <button type="button" className="cart-remove" onClick={() => remove(index)} aria-label={`${item.product.name} remove`}><X size={16} /><span><span className="lang-ko">삭제</span><span className="lang-en">Remove</span></span></button>
+                  </div>
+                  <div className="cart-options">
+                    <label><span><span className="lang-ko">중량</span><span className="lang-en">Weight</span></span><select value={item.weight} onChange={(event) => updateOptions(index, { weight: event.target.value as "150g" | "300g" })}><option value="150g">150g</option><option value="300g">300g</option></select></label>
+                    <label><span><span className="lang-ko">분쇄</span><span className="lang-en">Grind</span></span><select value={item.grind} onChange={(event) => updateOptions(index, { grind: event.target.value as typeof item.grind })}><option value="Whole Bean">Whole Bean</option><option value="Filter">Filter</option><option value="Espresso">Espresso</option></select></label>
+                  </div>
+                  <div className="cart-item-footer">
+                    <div className="quantity-control" aria-label="Quantity selector">
+                      <button type="button" onClick={() => update(index, item.quantity - 1)} disabled={item.quantity <= 1} aria-label="Decrease quantity"><Minus size={15} /></button>
+                      <span aria-live="polite">{item.quantity}</span>
+                      <button type="button" onClick={() => update(index, item.quantity + 1)} disabled={item.quantity >= 20 || item.quantity >= item.product.stock_quantity} aria-label="Increase quantity"><Plus size={15} /></button>
+                    </div>
+                    <strong>{money(item.unitPrice * item.quantity)}</strong>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </section>
+          <aside className="cart-totals">
+            <p className="section-label"><span className="lang-ko">주문 금액</span><span className="lang-en">Order total</span></p>
+            <div className="total-line"><span><span className="lang-ko">상품 금액</span><span className="lang-en">Subtotal</span></span><span>{money(total)}</span></div>
+            <p className="shipping-note"><span className="lang-ko">수령 방법은 다음 단계에서 선택합니다.</span><span className="lang-en">Choose delivery or pickup in the next step.</span></p>
+            <div className="total-line total-emphasis"><span>Total</span><strong>{money(total)}</strong></div>
+            <Link href="/checkout" className="button-primary purchase-button"><span className="lang-ko">주문 정보 입력</span><span className="lang-en">Continue to checkout</span><span>→</span></Link>
+            <Link href="/shop" className="continue-link"><span className="lang-ko">쇼핑 계속하기</span><span className="lang-en">Continue shopping</span></Link>
+          </aside>
+        </div>
+      )}
+    </main>
+  );
+}
