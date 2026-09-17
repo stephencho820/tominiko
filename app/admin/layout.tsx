@@ -4,18 +4,5 @@ import { getAdminClient } from "@/lib/supabase/admin";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   if (!(await getAdminClient())) redirect("/login");
-
-  return (
-    <div className="min-h-screen bg-[#e8e1d7]">
-      <div className="flex flex-wrap items-center gap-6 border-b border-[#c8bfb2] px-6 py-5 md:px-12">
-        <Link href="/admin" className="eyebrow">Casa / Admin</Link>
-        <nav className="ml-auto flex flex-wrap gap-5" aria-label="Admin navigation">
-          <Link href="/admin/products" className="eyebrow">Products</Link>
-          <Link href="/admin/orders" className="eyebrow">Orders</Link>
-          <Link href="/" className="eyebrow">Store ↗</Link>
-        </nav>
-      </div>
-      {children}
-    </div>
-  );
+  return <div className="admin-shell"><header className="admin-header"><Link href="/admin" className="admin-brand"><span>Casa di Stefano</span><small>Roastery operations</small></Link><nav aria-label="Admin navigation"><Link href="/admin">Today</Link><Link href="/admin/orders">Orders</Link><Link href="/admin/products">Products</Link><Link href="/">Store ↗</Link></nav></header>{children}</div>;
 }
