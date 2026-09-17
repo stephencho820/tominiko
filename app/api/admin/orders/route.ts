@@ -12,6 +12,11 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Invalid order update" }, { status: 400 });
   }
 
+  const { data: order } = await supabase.from("orders").select("payment_status").eq("id", id).single();
+  if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
+  if (order.payment_status !== "paid" && !["new", "confirmed", "cancelled"].includes(orderStatus)) {
+    return NextResponse.json({ error: "Payment must be completed before fulfillment" }, { status: 409 });
+  }
   const { error } = await supabase.from("orders").update({ order_status: orderStatus }).eq("id", id);
   return error ? NextResponse.json({ error: error.message }, { status: 400 }) : NextResponse.json({ ok: true });
 }

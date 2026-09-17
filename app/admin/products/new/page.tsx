@@ -1,2 +1,2 @@
 import { AdminProductForm } from "@/components/AdminProductForm";
-export default function NewProduct() { return <main className="px-6 py-12 md:px-12"><p className="eyebrow">Catalog</p><h1 className="mt-3 text-5xl">New product</h1><AdminProductForm /></main>; }
+export default function NewProduct() { return <main className="admin-main"><div className="admin-page-heading"><div><p className="eyebrow">Products</p><h1>New product</h1><p>Add a coffee to the current small-batch catalog.</p></div></div><AdminProductForm /></main>; }

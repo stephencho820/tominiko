@@ -23,6 +23,7 @@ create table public.products (
   image_url text, created_at timestamptz not null default now(), updated_at timestamptz not null default now()
 );
 alter table public.products add column if not exists price_150g_original integer;
+create unique index if not exists products_one_todays_roast on public.products (todays_roast) where todays_roast = true;
 create table public.orders (
   id uuid primary key default gen_random_uuid(), order_number text unique not null,
   user_id uuid references auth.users(id) on delete set null, customer_name text not null,
