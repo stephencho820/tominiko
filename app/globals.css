@@ -698,6 +698,133 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 @keyframes page-enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 ::selection { background: var(--accent); color: var(--paper); }
 
+/* Shop — a quiet, product-first coffee catalogue */
+.shop-page {
+  width: min(1280px, 100%);
+  margin: 0 auto;
+  padding: clamp(48px, 7vw, 96px) clamp(20px, 5vw, 72px) clamp(80px, 10vw, 140px);
+}
+
+.shop-intro {
+  max-width: 760px;
+  padding-bottom: clamp(42px, 6vw, 76px);
+}
+
+.shop-intro h1 {
+  margin-top: 14px;
+  font-size: clamp(42px, 6vw, 78px);
+  font-weight: 400;
+  letter-spacing: -.055em;
+  line-height: .98;
+}
+
+.shop-intro-subtitle {
+  margin-top: 18px;
+  color: var(--muted);
+  font: 400 clamp(12px, 1.2vw, 14px)/1.7 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: .035em;
+}
+
+.todays-roast { border-top: 1px solid var(--line); }
+.todays-roast-link {
+  display: grid;
+  grid-template-columns: minmax(0, 1.28fr) minmax(280px, .72fr);
+  min-height: clamp(520px, 57vw, 680px);
+}
+
+.todays-roast-image,
+.product-card-image {
+  position: relative;
+  overflow: hidden;
+}
+
+.todays-roast-image img,
+.product-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .9s cubic-bezier(.22,1,.36,1);
+}
+
+.todays-roast-link:hover .todays-roast-image img { transform: scale(1.018); }
+.todays-roast-placeholder,
+.product-card-placeholder {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: var(--brown);
+}
+.todays-roast-placeholder span { font-size: clamp(44px, 7vw, 90px); font-style: italic; letter-spacing: -.06em; }
+.todays-roast-placeholder small,
+.product-card-placeholder small { font: 700 9px/1.4 "Avenir Next", "Helvetica Neue", Arial, sans-serif; letter-spacing: .16em; text-transform: uppercase; }
+
+.todays-roast-copy {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+  padding: clamp(42px, 6vw, 84px);
+  background: #f1ebe2;
+}
+.todays-roast-copy h2 {
+  margin-top: 25px;
+  font-size: clamp(36px, 4.5vw, 64px);
+  font-weight: 400;
+  letter-spacing: -.05em;
+  line-height: .98;
+}
+.todays-roast-notes { margin-top: 28px; color: var(--brown-dark); font-size: clamp(17px, 1.7vw, 22px); line-height: 1.45; }
+.todays-roast-origin { margin-top: 13px; color: var(--muted); font: 400 11px/1.7 "Avenir Next", "Helvetica Neue", Arial, sans-serif; letter-spacing: .07em; text-transform: uppercase; }
+.todays-roast-price { margin-top: 38px; font: 600 17px/1.4 "Avenir Next", "Helvetica Neue", Arial, sans-serif; }
+.todays-roast-price span { color: var(--muted); font-size: 11px; font-weight: 400; letter-spacing: .08em; }
+.todays-roast-cta { display: inline-flex; align-items: center; gap: 12px; margin-top: 40px; padding-bottom: 7px; border-bottom: 1px solid var(--ink); font: 700 10px/1.4 "Avenir Next", "Helvetica Neue", Arial, sans-serif; letter-spacing: .14em; text-transform: uppercase; }
+.todays-roast-cta i { font-size: 15px; font-style: normal; transition: transform .35s cubic-bezier(.22,1,.36,1); }
+.todays-roast-link:hover .todays-roast-cta i { transform: translateX(5px); }
+
+.coffee-collection { padding-top: clamp(76px, 9vw, 124px); }
+.coffee-collection-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+.coffee-collection-heading h2 { font-size: clamp(28px, 3vw, 42px); font-weight: 400; letter-spacing: -.035em; }
+.coffee-collection-heading p { color: var(--muted); font: 400 10px/1.5 "Avenir Next", "Helvetica Neue", Arial, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+.coffee-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(42px, 5vw, 72px) clamp(20px, 3vw, 38px); padding-top: 34px; }
+
+.product-card-link { display: block; }
+.product-card-image { aspect-ratio: 4 / 5; }
+.product-card-link:hover .product-card-image img { transform: scale(1.025); }
+.product-card-placeholder span { font-size: clamp(28px, 4vw, 48px); font-style: italic; letter-spacing: -.05em; }
+.product-card-copy { display: flex; justify-content: space-between; gap: 18px; padding: 18px 0 20px; border-bottom: 1px solid var(--line); transition: border-color .3s ease; }
+.product-card-link:hover .product-card-copy { border-color: var(--brown); }
+.product-card-copy h3 { font-size: clamp(19px, 1.7vw, 24px); font-weight: 400; letter-spacing: -.025em; line-height: 1.15; }
+.product-card-notes { margin-top: 9px; color: var(--brown); font-size: 14px; line-height: 1.45; }
+.product-card-origin { margin-top: 8px; color: var(--muted); font: 400 9px/1.55 "Avenir Next", "Helvetica Neue", Arial, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+.product-card-price { flex: none; padding-top: 2px; text-align: right; font: 600 13px/1.35 "Avenir Next", "Helvetica Neue", Arial, sans-serif; }
+.product-card-price small { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; font-weight: 400; letter-spacing: .08em; }
+.shop-empty { padding: 72px 0; border-top: 1px solid var(--line); color: var(--brown); font-size: clamp(22px, 3vw, 34px); }
+
+@media (max-width: 840px) {
+  .todays-roast-link { grid-template-columns: 1fr; min-height: 0; }
+  .todays-roast-image { aspect-ratio: 4 / 3; }
+  .todays-roast-copy { min-height: 390px; padding: 42px 28px 48px; }
+  .coffee-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .shop-page { padding-right: 16px; padding-left: 16px; }
+  .shop-intro { padding-right: 8px; }
+  .todays-roast-image { aspect-ratio: 1 / 1; }
+  .todays-roast-copy { min-height: 350px; padding: 34px 24px 40px; }
+  .todays-roast-copy h2 { margin-top: 18px; }
+  .todays-roast-notes { margin-top: 22px; }
+  .todays-roast-price { margin-top: 28px; }
+  .todays-roast-cta { min-height: 44px; margin-top: 24px; }
+  .coffee-collection-heading { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .coffee-grid { grid-template-columns: 1fr; gap: 48px; padding-top: 24px; }
+  .product-card-image { aspect-ratio: 5 / 6; }
+  .product-card-copy { padding-top: 16px; }
+  .product-card-copy h3 { font-size: 22px; }
+}
+
 /* Editorial brand pages */
 .editorial-hero,
 .story-opening,
