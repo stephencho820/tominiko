@@ -51,7 +51,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return {
         ...item,
         ...options,
-        unitPrice: weight === "150g" ? item.product.price_150g : item.product.price_300g,
+        unitPrice: weight === "150g" ? item.product.price_150g : item.product.price_400g,
       };
     })),
     clear: () => setItems([]),

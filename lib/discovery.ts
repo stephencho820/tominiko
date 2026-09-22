@@ -10,3 +10,8 @@ export const DISCOVERY_TAGS = [
 ] as const;
 
 export type DiscoveryTag = (typeof DISCOVERY_TAGS)[number]["value"];
+
+/** Product matching is intentionally metadata-driven: origin is display data, never a rule. */
+export function hasDiscoveryTag(productTags: readonly string[] | null | undefined, tag: DiscoveryTag) {
+  return productTags?.includes(tag) ?? false;
+}

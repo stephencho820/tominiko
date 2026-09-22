@@ -10,7 +10,7 @@ type OrderInput = {
   items?: unknown; idempotencyKey?: unknown; accessToken?: unknown;
 };
 
-const validWeights = new Set(["150g", "300g"]);
+const validWeights = new Set(["150g", "400g"]);
 const validGrinds = new Set(["Whole Bean", "Filter", "Espresso"]);
 const text = (value: unknown) => typeof value === "string" ? value.trim() : "";
 const tokenHash = (token: string) => createHash("sha256").update(token).digest("hex");

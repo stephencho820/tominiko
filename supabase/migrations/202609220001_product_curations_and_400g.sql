@@ -1,17 +1,27 @@
--- Atomic, idempotent order/payment lifecycle for Toss Payments.
-alter table public.orders
-  add column if not exists client_reference uuid,
-  add column if not exists guest_access_token_hash text,
-  add column if not exists payment_key text,
-  add column if not exists payment_method text,
-  add column if not exists payment_approved_at timestamptz,
-  add column if not exists payment_failure_code text,
-  add column if not exists payment_failure_message text,
-  add column if not exists inventory_deducted_at timestamptz,
-  add column if not exists updated_at timestamptz not null default now();
+-- Separate catalogue type from curation metadata and introduce the 400g pricing tier.
+do $$
+begin
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'products' and column_name = 'price_300g')
+     and not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'products' and column_name = 'price_400g') then
+    alter table public.products rename column price_300g to price_400g;
+  end if;
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'products' and column_name = 'price_150g_original')
+     and not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'products' and column_name = 'price_400g_original') then
+    alter table public.products rename column price_150g_original to price_400g_original;
+  end if;
+end $$;
 
-create unique index if not exists orders_client_reference_key on public.orders(client_reference);
-create unique index if not exists orders_payment_key_key on public.orders(payment_key) where payment_key is not null;
+alter table public.products
+  add column if not exists product_type text not null default 'single-origin',
+  add column if not exists price_400g integer not null default 29000,
+  add column if not exists price_400g_original integer;
+
+alter table public.products drop constraint if exists products_product_type_check;
+alter table public.products add constraint products_product_type_check check (product_type in ('single-origin', 'blend', 'decaf'));
+drop index if exists public.products_one_todays_roast;
+
+-- Current catalogue pricing; future products can set these values independently in admin.
+update public.products set price_150g = 13000, price_400g = 29000, price_400g_original = 35000;
 
 create or replace function public.create_pending_order(
   p_client_reference uuid, p_guest_token_hash text, p_customer_name text, p_email text, p_phone text,
