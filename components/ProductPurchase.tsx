@@ -6,19 +6,23 @@ import { useEffect, useRef, useState } from "react";
 import type { Product } from "@/types";
 import { useCart } from "./CartProvider";
 
-const weights = ["150g", "300g"] as const;
-const grinds = ["Whole Bean", "Filter", "Espresso"] as const;
+const weights = ["150g", "400g"] as const;
+const grinds = [
+  { value: "Whole Bean", ko: "홀빈" },
+  { value: "Filter", ko: "필터용" },
+  { value: "Espresso", ko: "에스프레소용" },
+] as const;
 
 export function ProductPurchase({ product, compact = false }: { product: Product; compact?: boolean }) {
   const [weight, setWeight] = useState<(typeof weights)[number]>("150g");
-  const [grind, setGrind] = useState<(typeof grinds)[number]>("Whole Bean");
+  const [grind, setGrind] = useState<(typeof grinds)[number]["value"]>("Whole Bean");
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { add } = useCart();
   const soldOut = product.stock_quantity < 1;
-  const unitPrice = weight === "150g" ? product.price_150g : product.price_300g;
-  const originalPrice = weight === "150g" ? product.price_150g_original : null;
+  const unitPrice = weight === "150g" ? product.price_150g : product.price_400g;
+  const originalPrice = weight === "400g" ? product.price_400g_original : null;
   const totalPrice = unitPrice * quantity;
 
   useEffect(() => () => {
@@ -46,7 +50,7 @@ export function ProductPurchase({ product, compact = false }: { product: Product
           {weights.map((option) => (
             <button key={option} type="button" aria-pressed={weight === option} onClick={() => setWeight(option)}>
               <span>{option}</span>
-              <span>₩{(option === "150g" ? product.price_150g : product.price_300g).toLocaleString()}</span>
+              <span className="weight-option-price">{option === "400g" && product.price_400g_original && <del>₩{product.price_400g_original.toLocaleString()}</del>}<span>₩{(option === "150g" ? product.price_150g : product.price_400g).toLocaleString()}</span></span>
             </button>
           ))}
         </div>
@@ -56,7 +60,7 @@ export function ProductPurchase({ product, compact = false }: { product: Product
         <legend><span className="lang-ko">분쇄도</span><span className="lang-en">Grind</span></legend>
         <div className="option-grid option-grid-grind">
           {grinds.map((option) => (
-            <button key={option} type="button" aria-pressed={grind === option} onClick={() => setGrind(option)}>{option}</button>
+            <button key={option.value} type="button" aria-pressed={grind === option.value} onClick={() => setGrind(option.value)}><span className="lang-ko">{option.ko}</span><span className="lang-en">{option.value}</span></button>
           ))}
         </div>
       </fieldset>

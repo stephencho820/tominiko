@@ -39,7 +39,7 @@ export default function CartPage() {
                     <button type="button" className="cart-remove" onClick={() => remove(index)} aria-label={`${item.product.name} remove`}><X size={16} /><span><span className="lang-ko">삭제</span><span className="lang-en">Remove</span></span></button>
                   </div>
                   <div className="cart-options">
-                    <label><span><span className="lang-ko">중량</span><span className="lang-en">Weight</span></span><select value={item.weight} onChange={(event) => updateOptions(index, { weight: event.target.value as "150g" | "300g" })}><option value="150g">150g</option><option value="300g">300g</option></select></label>
+                    <label><span><span className="lang-ko">중량</span><span className="lang-en">Weight</span></span><select value={item.weight} onChange={(event) => updateOptions(index, { weight: event.target.value as "150g" | "400g" })}><option value="150g">150g</option><option value="400g">400g</option></select></label>
                     <label><span><span className="lang-ko">분쇄</span><span className="lang-en">Grind</span></span><select value={item.grind} onChange={(event) => updateOptions(index, { grind: event.target.value as typeof item.grind })}><option value="Whole Bean">Whole Bean</option><option value="Filter">Filter</option><option value="Espresso">Espresso</option></select></label>
                   </div>
                   <div className="cart-item-footer">
