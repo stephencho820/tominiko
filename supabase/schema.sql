@@ -40,6 +40,10 @@ create table public.order_items (
   weight text not null, grind text not null, quantity integer not null check (quantity > 0),
   unit_price integer not null, subtotal integer not null
 );
+create table public.page_settings (
+  slug text primary key, texts jsonb not null default '{}'::jsonb,
+  images jsonb not null default '{}'::jsonb, updated_at timestamptz not null default now()
+);
 
 -- Payment lifecycle columns and atomic functions are maintained in the migration.
 -- Run supabase/migrations/202609170001_payments.sql after this base schema.
@@ -48,7 +52,7 @@ create or replace function public.handle_new_user() returns trigger language plp
 begin insert into public.profiles (id, email, name) values (new.id, new.email, coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name')); return new; end; $$;
 create trigger on_auth_user_created after insert on auth.users for each row execute procedure public.handle_new_user();
 
-alter table public.profiles enable row level security; alter table public.products enable row level security; alter table public.orders enable row level security; alter table public.order_items enable row level security;
+alter table public.profiles enable row level security; alter table public.products enable row level security; alter table public.orders enable row level security; alter table public.order_items enable row level security; alter table public.page_settings enable row level security;
 create or replace function public.is_admin() returns boolean language sql stable security definer set search_path = public as $$ select exists (select 1 from public.profiles where id = auth.uid() and role = 'admin'); $$;
 create policy "active products are public" on public.products for select using (active = true or public.is_admin());
 create policy "admins manage products" on public.products for all using (public.is_admin()) with check (public.is_admin());
@@ -59,8 +63,15 @@ create policy "users see own items" on public.order_items for select using (exis
 create policy "order creators add items" on public.order_items for insert with check (exists (select 1 from public.orders where orders.id = order_id and (orders.user_id = auth.uid() or orders.user_id is null)));
 create policy "own profile" on public.profiles for select using (id = auth.uid() or public.is_admin());
 create policy "admins manage profiles" on public.profiles for all using (public.is_admin()) with check (public.is_admin());
+create policy "page settings are public" on public.page_settings for select using (true);
+create policy "admins manage page settings" on public.page_settings for all using (public.is_admin()) with check (public.is_admin());
 
 insert into storage.buckets (id, name, public) values ('product-images', 'product-images', true) on conflict (id) do nothing;
+insert into storage.buckets (id, name, public) values ('page-images', 'page-images', true) on conflict (id) do nothing;
 create policy "public product images" on storage.objects for select using (bucket_id = 'product-images');
 create policy "admins upload product images" on storage.objects for insert with check (bucket_id = 'product-images' and public.is_admin());
 create policy "admins delete product images" on storage.objects for delete using (bucket_id = 'product-images' and public.is_admin());
+create policy "public page images" on storage.objects for select using (bucket_id = 'page-images');
+create policy "admins upload page images" on storage.objects for insert with check (bucket_id = 'page-images' and public.is_admin());
+create policy "admins update page images" on storage.objects for update using (bucket_id = 'page-images' and public.is_admin());
+create policy "admins delete page images" on storage.objects for delete using (bucket_id = 'page-images' and public.is_admin());
