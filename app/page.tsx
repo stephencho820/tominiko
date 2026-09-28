@@ -5,8 +5,10 @@ import { PageText } from "@/components/PageText";
 import { getPageSettings } from "@/lib/page-content";
 
 export default async function Home() {
-  const products = await getProducts({ activeOnly: true });
-  const content = await getPageSettings("home");
+  const [products, content] = await Promise.all([
+    getProducts({ activeOnly: true }),
+    getPageSettings("home"),
+  ]);
 
   return <main className="home-page">
     <section className="new-home-hero" style={content.images.hero ? { backgroundImage: `linear-gradient(rgba(20,16,12,.18),rgba(20,16,12,.18)),url(${content.images.hero})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}>
