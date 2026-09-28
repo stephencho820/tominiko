@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 700" role="img" aria-label="Casa di Stefano Tasting Room">
+  <defs><linearGradient id="bg" x2="1"><stop stop-color="#33271f"/><stop offset=".58" stop-color="#725541"/><stop offset="1" stop-color="#b18d6d"/></linearGradient><radialGradient id="glow" cx="82%" cy="22%" r="62%"><stop stop-color="#f3d4a3" stop-opacity=".66"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
+  <rect width="1800" height="700" fill="url(#bg)"/><rect width="1800" height="700" fill="url(#glow)"/>
+  <ellipse cx="1420" cy="610" rx="430" ry="74" fill="#2b211b" opacity=".45"/><path d="M1260 320h305l-35 255h-235z" fill="#eee3d2" opacity=".9"/><path d="M1560 365q150 10 82 135q-26 48-100 30" fill="none" stroke="#eee3d2" stroke-width="25"/>
+  <g fill="#fff" font-family="Georgia,serif"><text x="125" y="190" font-size="26" letter-spacing="8">CASA DI STEFANO</text><text x="120" y="380" font-size="112" letter-spacing="-3">TASTING ROOM</text><text x="128" y="456" font-size="30" opacity=".76">Coffee, conversation, and a seat at our table.</text><text x="128" y="570" font-family="Arial,sans-serif" font-size="20" letter-spacing="5">DISCOVER THE ROOM  →</text></g>
+</svg>

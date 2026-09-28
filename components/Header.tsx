@@ -8,9 +8,8 @@ import { LanguageSwitcher } from "./LanguageSwitcher";
 
 const primaryLinks = [
   ["SHOP", "/shop"],
-  ["ZERO DEGREES", "/zero-degrees"],
-  ["TASTING ROOM", "/tasting-room"],
   ["OUR STORY", "/our-story"],
+  ["TASTING ROOM", "/tasting-room"],
 ];
 
 export function Header() {
