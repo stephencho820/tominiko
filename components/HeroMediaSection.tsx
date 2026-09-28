@@ -1,11 +1,13 @@
 import type { HeroMedia } from "@/lib/page-content-config";
 
 export function HeroMediaSection({ media }: { media: HeroMedia }) {
+  const showMedia = media.active && media.url.trim().length > 0;
+
   return (
     <section className="home-visual-hero" aria-label="Casa di Stefano">
-      {media.active && media.type === "video" ? (
+      {showMedia && media.type === "video" ? (
         <video className="home-hero-media" src={media.url} autoPlay muted loop playsInline preload="metadata" />
-      ) : media.active ? (
+      ) : showMedia ? (
         <img className="home-hero-media" src={media.url} alt="Coffee at Casa di Stefano" />
       ) : <div className="home-hero-fallback" />}
       {media.overlay && <div className="home-hero-shade" />}
