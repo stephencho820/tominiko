@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" role="img" aria-label="Coffee cherries in gentle morning light">
+  <defs><linearGradient id="b" x2="1" y2="1"><stop stop-color="#1d241c"/><stop offset=".52" stop-color="#53604b"/><stop offset="1" stop-color="#a27b55"/></linearGradient><radialGradient id="l" cx="78%" cy="13%" r="70%"><stop stop-color="#f8dfb0" stop-opacity=".7"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient><filter id="blur"><feGaussianBlur stdDeviation="22"/></filter></defs>
+  <rect width="1920" height="1080" fill="url(#b)"/><rect width="1920" height="1080" fill="url(#l)"/>
+  <g opacity=".76" filter="url(#blur)" fill="#182016"><ellipse cx="260" cy="780" rx="430" ry="95" transform="rotate(-31 260 780)"/><ellipse cx="980" cy="600" rx="560" ry="105" transform="rotate(16 980 600)"/></g>
+  <g fill="#682f27"><circle cx="760" cy="610" r="92"/><circle cx="915" cy="690" r="78"/><circle cx="1100" cy="560" r="105"/><circle cx="1260" cy="680" r="82"/></g>
+  <g fill="#a24c36" opacity=".9"><circle cx="800" cy="580" r="28"/><circle cx="1135" cy="520" r="34"/></g>
+  <path d="M620 760Q1000 410 1470 330" fill="none" stroke="#333c2c" stroke-width="32" stroke-linecap="round"/>
+  <rect width="1920" height="1080" fill="#20160f" opacity=".12"/>
+</svg>

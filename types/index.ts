@@ -22,6 +22,9 @@ export type Product = {
   discovery_tags: string[];
   display_order: number;
   image_url: string | null;
+  primary_image_url?: string | null;
+  thumbnail_url?: string | null;
+  created_at?: string;
 };
 
 export type Weight = "150g" | "400g";
