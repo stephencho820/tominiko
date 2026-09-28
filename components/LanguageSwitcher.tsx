@@ -7,7 +7,12 @@ export function LanguageSwitcher() {
   const [language, setLanguage] = useState<Language>("ko");
 
   useEffect(() => {
-    const stored = localStorage.getItem("casa-language");
+    let stored: string | null = null;
+    try {
+      stored = window.localStorage.getItem("casa-language");
+    } catch {
+      // Keep Korean as the default when storage is blocked or unavailable.
+    }
     const nextLanguage: Language = stored === "en" ? "en" : "ko";
     setLanguage(nextLanguage);
     document.documentElement.lang = nextLanguage;
@@ -17,7 +22,11 @@ export function LanguageSwitcher() {
   const toggleLanguage = () => {
     const nextLanguage: Language = language === "ko" ? "en" : "ko";
     setLanguage(nextLanguage);
-    localStorage.setItem("casa-language", nextLanguage);
+    try {
+      window.localStorage.setItem("casa-language", nextLanguage);
+    } catch {
+      // The switch still works for the current page without persistence.
+    }
     document.documentElement.lang = nextLanguage;
     document.documentElement.dataset.lang = nextLanguage;
   };
