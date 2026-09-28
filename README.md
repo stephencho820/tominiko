@@ -96,6 +96,8 @@ update public.profiles set role = 'admin' where email = 'your@email.com';
 
 Admin URL: `/admin`. Authorization is checked on the server and again by RLS policies; hiding links in the UI is not the security boundary.
 
+The **Pages** area at `/admin/pages` lets administrators edit the main public pages' copy, font family, text size, and page photography. For an existing Supabase project, run [`supabase/migrations/202609220002_page_settings.sql`](supabase/migrations/202609220002_page_settings.sql) before using it; this creates the content table, public image bucket, and admin-only write policies.
+
 ## Cloudflare deployment
 
 The repository includes OpenNext configuration for Cloudflare. Connect the GitHub repository in Cloudflare Workers & Pages, use the `npm run build:cloudflare` build command, and set the same environment variables as encrypted Worker variables. For a manual deploy:
