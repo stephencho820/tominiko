@@ -8,6 +8,7 @@ function isPromotionBanner(item: unknown): item is PromotionBanner {
   if (!item || typeof item !== "object") return false;
   const banner = item as Record<string, unknown>;
   return typeof banner.id === "string" && typeof banner.image === "string" && typeof banner.hyperlink === "string"
+    && (banner.placement === "tasting-room" || banner.placement === "our-story")
     && typeof banner.active === "boolean" && typeof banner.sortOrder === "number" && typeof banner.alt === "string";
 }
 
@@ -33,10 +34,11 @@ function mergePageSettings(fallback: PageSettings, data: { texts: unknown; image
 
   const rawHero = data.hero_media && typeof data.hero_media === "object" ? data.hero_media as Record<string, unknown> : null;
   const heroMedia = rawHero && typeof rawHero.url === "string" && (rawHero.type === "image" || rawHero.type === "video")
-    ? { url: rawHero.url, type: rawHero.type as "image" | "video" } : fallback.heroMedia;
-  const promotions = Array.isArray(data.promotions)
-    ? data.promotions.filter(isPromotionBanner)
-    : fallback.promotions;
+    ? { url: rawHero.url, type: rawHero.type as "image" | "video", active: rawHero.active !== false, overlay: rawHero.overlay !== false } : fallback.heroMedia;
+  const storedPromotions = Array.isArray(data.promotions) ? data.promotions.filter(isPromotionBanner) : [];
+  const promotions = fallback.promotions?.map((defaultBanner) =>
+    storedPromotions.find((banner) => banner.placement === defaultBanner.placement) ?? defaultBanner
+  );
   return { texts, images, heroMedia, promotions };
 }
 

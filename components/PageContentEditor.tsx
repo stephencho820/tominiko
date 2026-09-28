@@ -32,7 +32,6 @@ export function PageContentEditor({ slug, initial }: { slug: PageSlug; initial: 
     }
   };
   const updatePromotion = (id: string, patch: Partial<PromotionBanner>) => setSettings((current) => ({ ...current, promotions: (current.promotions ?? []).map((banner) => banner.id === id ? { ...banner, ...patch } : banner) }));
-  const addPromotion = () => setSettings((current) => ({ ...current, promotions: [...(current.promotions ?? []), { id: crypto.randomUUID(), image: "", hyperlink: "/", active: true, sortOrder: (current.promotions?.length ?? 0), alt: "" }] }));
   const save = async () => {
     if (busy) return;
     setBusy(true);
@@ -48,26 +47,25 @@ export function PageContentEditor({ slug, initial }: { slug: PageSlug; initial: 
     }
   };
   return <div className="admin-page-editor">
-    <section className="admin-panel"><div className="admin-section-heading"><div><p className="eyebrow">Text &amp; typography</p><h2>Page copy</h2></div></div><p className="admin-muted">Line breaks are preserved. Leave text size empty to use the page&apos;s responsive default.</p>
+    {Object.keys(definition.texts).length > 0 && <section className="admin-panel"><div className="admin-section-heading"><div><p className="eyebrow">Text &amp; typography</p><h2>Page copy</h2></div></div><p className="admin-muted">Line breaks are preserved. Leave text size empty to use the page&apos;s responsive default.</p>
       <div className="admin-content-fields">{Object.entries(definition.texts).map(([key, entry]) => <div className="admin-content-field" key={key}><label>{entry[0]}<textarea value={settings.texts[key]?.value ?? ""} onChange={(event) => updateText(key, { value: event.target.value })} /></label><div><label>Font<select value={settings.texts[key]?.font ?? "serif"} onChange={(event) => updateText(key, { font: event.target.value as "serif" | "sans" | "display" })}><option value="serif">Serif</option><option value="sans">Sans serif</option><option value="display">Display</option></select></label><label>Text size<input value={settings.texts[key]?.size ?? ""} placeholder="e.g. 48px, 5vw" onChange={(event) => updateText(key, { size: event.target.value })} /></label></div></div>)}</div>
-    </section>
+    </section>}
     {slug === "home" && <>
       <section className="admin-panel"><div className="admin-section-heading"><div><p className="eyebrow">Hero media</p><h2>Opening visual</h2></div></div><p className="admin-muted">Upload a wide image or an MP4/WebM video. Videos play muted, inline, and on a loop.</p>
         <div className="admin-hero-media-editor"><div className="admin-image-preview">{settings.heroMedia?.type === "video" ? <video src={settings.heroMedia.url} muted controls /> : <img src={settings.heroMedia?.url} alt="" />}</div><div>
-          <label className="admin-field">Media type<select value={settings.heroMedia?.type ?? "image"} onChange={(event) => setSettings((current) => ({ ...current, heroMedia: { url: current.heroMedia?.url ?? "", type: event.target.value as "image" | "video" } }))}><option value="image">Image</option><option value="video">Video</option></select></label>
-          <label className="admin-field">Upload hero media<input type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" onChange={(event) => { const file = event.target.files?.[0]; if (file) void upload("hero", file, (url) => setSettings((current) => ({ ...current, heroMedia: { url, type: file.type.startsWith("video/") ? "video" : "image" } }))); }} /></label>
-          <label className="admin-field">Or paste a media URL<input value={settings.heroMedia?.url ?? ""} onChange={(event) => setSettings((current) => ({ ...current, heroMedia: { url: event.target.value, type: current.heroMedia?.type ?? "image" } }))} /></label>
+          <label className="admin-field">Media type<select value={settings.heroMedia?.type ?? "image"} onChange={(event) => setSettings((current) => ({ ...current, heroMedia: { url: current.heroMedia?.url ?? "", type: event.target.value as "image" | "video", active: current.heroMedia?.active ?? true, overlay: current.heroMedia?.overlay ?? true } }))}><option value="image">Image</option><option value="video">Video</option></select></label>
+          <label className="admin-field">Upload hero media<input type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" onChange={(event) => { const file = event.target.files?.[0]; if (file) void upload("hero", file, (url) => setSettings((current) => ({ ...current, heroMedia: { url, type: file.type.startsWith("video/") ? "video" : "image", active: current.heroMedia?.active ?? true, overlay: current.heroMedia?.overlay ?? true } }))); }} /></label>
+          <label className="admin-field">Or paste a media URL<input value={settings.heroMedia?.url ?? ""} onChange={(event) => setSettings((current) => ({ ...current, heroMedia: { url: event.target.value, type: current.heroMedia?.type ?? "image", active: current.heroMedia?.active ?? true, overlay: current.heroMedia?.overlay ?? true } }))} /></label>
+          <div className="admin-toggle-row"><label><input type="checkbox" checked={settings.heroMedia?.active ?? true} onChange={(event) => setSettings((current) => ({ ...current, heroMedia: { ...(current.heroMedia ?? { url: "/images/home-hero.svg", type: "image", overlay: true }), active: event.target.checked } }))} /><span>Active<small>Show the uploaded media</small></span></label><label><input type="checkbox" checked={settings.heroMedia?.overlay ?? true} onChange={(event) => setSettings((current) => ({ ...current, heroMedia: { ...(current.heroMedia ?? { url: "/images/home-hero.svg", type: "image", active: true }), overlay: event.target.checked } }))} /><span>Overlay<small>Subtle dark CTA contrast</small></span></label></div>
         </div></div>
       </section>
-      <section className="admin-panel"><div className="admin-section-heading"><div><p className="eyebrow">Promotion banner</p><h2>Homepage promotions</h2></div><button type="button" className="admin-primary-button" onClick={addPromotion}>Add banner</button></div>
+      <section className="admin-panel"><div className="admin-section-heading"><div><p className="eyebrow">Editorial banners</p><h2>Tasting Room &amp; Our Story</h2></div></div><p className="admin-muted">Upload finished artwork including all titles, descriptions, and CTA text. The storefront adds no text over these images.</p>
         <div className="admin-promotion-list">{(settings.promotions ?? []).map((banner) => <article key={banner.id} className="admin-promotion-item"><div className="admin-image-preview">{banner.image ? <img src={banner.image} alt="" /> : <span>No image</span>}</div><div className="admin-promotion-fields">
+          <h3>{banner.placement === "tasting-room" ? "Tasting Room Banner" : "Our Story Banner"}</h3>
           <label className="admin-field">Image URL<input value={banner.image} onChange={(event) => updatePromotion(banner.id, { image: event.target.value })} /></label>
           <label className="admin-field">Upload image<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={(event) => { const file = event.target.files?.[0]; if (file) void upload(`promotion-${banner.id}`, file, (url) => updatePromotion(banner.id, { image: url })); }} /></label>
           <label className="admin-field">Hyperlink<input value={banner.hyperlink} onChange={(event) => updatePromotion(banner.id, { hyperlink: event.target.value })} /></label>
-          <label className="admin-field">Accessible label<input value={banner.alt} onChange={(event) => updatePromotion(banner.id, { alt: event.target.value })} /></label>
-          <label className="admin-field">Sort order<input type="number" value={banner.sortOrder} onChange={(event) => updatePromotion(banner.id, { sortOrder: Number(event.target.value) })} /></label>
           <label className="admin-checkbox"><input type="checkbox" checked={banner.active} onChange={(event) => updatePromotion(banner.id, { active: event.target.checked })} /> Active</label>
-          <button type="button" className="admin-text-link" onClick={() => setSettings((current) => ({ ...current, promotions: (current.promotions ?? []).filter((item) => item.id !== banner.id) }))}>Remove</button>
         </div></article>)}</div>
       </section>
     </>}

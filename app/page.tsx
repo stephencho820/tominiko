@@ -2,8 +2,7 @@ import { getProducts } from "@/services/products";
 import { getPageSettings } from "@/lib/page-content";
 import { HeroMediaSection } from "@/components/HeroMediaSection";
 import { CoffeeMarquee } from "@/components/CoffeeMarquee";
-import { PromotionSlider } from "@/components/PromotionSlider";
-import { PhilosophySection } from "@/components/PhilosophySection";
+import { EditorialBanner } from "@/components/EditorialBanner";
 
 export default async function Home() {
   const [products, content] = await Promise.all([
@@ -14,7 +13,7 @@ export default async function Home() {
   return <main className="home-page home-page-reimagined">
     <HeroMediaSection media={content.heroMedia!} />
     <CoffeeMarquee products={products} />
-    <PromotionSlider banners={content.promotions ?? []} />
-    <PhilosophySection content={content} />
+    <EditorialBanner banners={content.promotions ?? []} placement="tasting-room" />
+    <EditorialBanner banners={content.promotions ?? []} placement="our-story" />
   </main>;
 }
