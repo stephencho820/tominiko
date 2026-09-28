@@ -1,49 +1,9 @@
 import Link from "next/link";
-import { ProductCard, formatCoffeeText } from "@/components/ProductCard";
-import { Reveal } from "@/components/Reveal";
+import { ProductCard } from "@/components/ProductCard";
 import { getProducts } from "@/services/products";
-import type { Product } from "@/types";
 import { PageText } from "@/components/PageText";
+import { TodaysRoast } from "@/components/TodaysRoast";
 import { getPageSettings } from "@/lib/page-content";
-
-function TodaysRoast({ product }: { product: Product }) {
-  const tastingNotes = formatCoffeeText(product.tasting_notes);
-  const origins = formatCoffeeText(product.origin);
-
-  return (
-    <Reveal className="todays-roast" variant="fade">
-      <Link href={`/shop/${product.slug}`} className="todays-roast-link group">
-        <div className="todays-roast-image grain">
-          {product.image_url ? (
-            <img src={product.image_url} alt="" />
-          ) : (
-            <div className="todays-roast-placeholder" aria-hidden="true">
-              <span>Tominiko</span>
-              <small>Beans &amp; Coffee</small>
-            </div>
-          )}
-        </div>
-
-        <div className="todays-roast-copy">
-          <p className="section-label">Today&apos;s roast</p>
-          <h2>{product.name}</h2>
-          {tastingNotes && <p className="todays-roast-notes">{tastingNotes}</p>}
-          <p className="todays-roast-origin">
-            {origins}{product.process ? ` · ${product.process}` : ""}
-          </p>
-          <p className="todays-roast-price">
-            ₩{product.price_150g.toLocaleString()} <span>/ 150g</span>
-          </p>
-          <span className="todays-roast-cta">
-            <span className="lang-ko">커피 보기</span>
-            <span className="lang-en">View coffee</span>
-            <i aria-hidden="true">→</i>
-          </span>
-        </div>
-      </Link>
-    </Reveal>
-  );
-}
 
 export default async function Shop() {
   const products = await getProducts({ activeOnly: true });
