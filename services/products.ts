@@ -3,11 +3,12 @@ import { createClient } from "@/lib/supabase/server";
 import { runSupabaseQuery } from "@/lib/supabase/query";
 import type { Product } from "@/types";
 
-export async function getProducts(options?: { activeOnly?: boolean; todaysRoast?: boolean }) {
+export async function getProducts(options?: { activeOnly?: boolean; todaysRoast?: boolean; latestFirst?: boolean }) {
   if (!hasSupabaseEnv) return [] as Product[];
   try {
     const supabase = await createClient();
-    let query = supabase.from("products").select("*").order("display_order").order("created_at", { ascending: false });
+    let query = supabase.from("products").select("*");
+    query = options?.latestFirst ? query.order("created_at", { ascending: false }) : query.order("display_order").order("created_at", { ascending: false });
     if (options?.activeOnly) query = query.eq("active", true).gt("stock_quantity", 0);
     if (options?.todaysRoast) query = query.eq("todays_roast", true);
     const { data, error } = await runSupabaseQuery(async (signal) => await query.abortSignal(signal));
