@@ -27,6 +27,18 @@ The production check is:
 npm run build
 ```
 
+## Opening a Vercel deployment
+
+`https://vercel.com/<team>/<project>` is the private Vercel dashboard, not the
+deployed website. It requires a Vercel session with access to that team, and a
+dashboard error at that address is not an error rendered by this application.
+
+To open the website, use the **Visit** button on the project's latest successful
+Production deployment, or copy an address from **Project Settings → Domains**.
+The public address will normally look like `https://<project>.vercel.app/` (or
+the custom domain attached to the project). Share that public deployment URL,
+not the `vercel.com/<team>/<project>` dashboard URL.
+
 The app uses Next.js App Router, TypeScript, Tailwind CSS, Supabase, and is structured for Cloudflare Workers through OpenNext. It does not use Vercel-only APIs.
 
 ## Supabase setup

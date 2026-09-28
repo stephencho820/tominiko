@@ -11,7 +11,13 @@ export const DISCOVERY_TAGS = [
 
 export type DiscoveryTag = (typeof DISCOVERY_TAGS)[number]["value"];
 
-/** Product matching is intentionally metadata-driven: origin is display data, never a rule. */
-export function hasDiscoveryTag(productTags: readonly string[] | null | undefined, tag: DiscoveryTag) {
-  return productTags?.includes(tag) ?? false;
+/**
+ * Product matching is intentionally metadata-driven: origin is display data,
+ * never a rule. Treat the database value as untrusted at runtime because older
+ * rows may predate the text-array migration or contain JSON-shaped metadata.
+ */
+export function hasDiscoveryTag(productTags: unknown, tag: DiscoveryTag) {
+  return Array.isArray(productTags)
+    && productTags.every((value): value is string => typeof value === "string")
+    && productTags.includes(tag);
 }
