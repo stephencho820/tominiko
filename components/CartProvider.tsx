@@ -24,10 +24,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(CART_STORAGE_KEY);
+      const stored = window.localStorage.getItem(CART_STORAGE_KEY);
       if (stored) setItems(sanitizeCart(JSON.parse(stored)));
     } catch {
-      localStorage.removeItem(CART_STORAGE_KEY);
+      // Storage can be unavailable in private browsing, embedded previews, or
+      // when the browser blocks site data. Do not touch it again in the error
+      // path: even reading `window.localStorage` can itself throw.
     } finally {
       setHasHydrated(true);
     }
@@ -36,7 +38,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!hasHydrated) return;
     try {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+      window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
     } catch {
       // Checkout remains usable when storage is unavailable or full.
     }
