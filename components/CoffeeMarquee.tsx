@@ -20,6 +20,7 @@ function CoffeeCard({ product, duplicate = false }: { product: Product; duplicat
 
 export function CoffeeMarquee({ products }: { products: Product[] }) {
   const rail = useRef<HTMLDivElement>(null);
+  const firstGroup = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
   const lastX = useRef(0);
   const draggedDistance = useRef(0);
@@ -27,24 +28,53 @@ export function CoffeeMarquee({ products }: { products: Product[] }) {
 
   useEffect(() => {
     const element = rail.current;
-    if (!element || products.length === 0) return;
+    const group = firstGroup.current;
+    if (!element || !group || products.length === 0) return;
+
     let frame = 0;
-    let previous = performance.now();
-    let positioned = false;
+    let startTimer = 0;
+    let groupWidth = group.getBoundingClientRect().width;
+    let previousTime = 0;
+    let running = false;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    const measure = () => { groupWidth = group.getBoundingClientRect().width; };
+    const resizeObserver = new ResizeObserver(measure);
+    resizeObserver.observe(group);
+
     const move = (time: number) => {
-      const segment = element.scrollWidth / 3;
-      if (!positioned && segment) { element.scrollLeft = segment; positioned = true; }
+      if (!previousTime) previousTime = time;
+      const elapsed = Math.min(time - previousTime, 32);
+
       if (!reducedMotion.matches && !dragging.current && time >= pauseUntil.current) {
-        element.scrollLeft += Math.min(time - previous, 32) * 0.035;
+        element.scrollLeft += elapsed * 0.04;
       }
-      if (segment && element.scrollLeft >= segment * 2) element.scrollLeft -= segment;
-      if (segment && element.scrollLeft < segment * .25) element.scrollLeft += segment;
-      previous = time;
+
+      if (groupWidth > 0) {
+        while (element.scrollLeft >= groupWidth) element.scrollLeft -= groupWidth;
+        while (element.scrollLeft < 0) element.scrollLeft += groupWidth;
+      }
+
+      previousTime = time;
       frame = requestAnimationFrame(move);
     };
-    frame = requestAnimationFrame(move);
-    return () => cancelAnimationFrame(frame);
+
+    // Give product imagery one paint to settle before measuring and starting.
+    // The guard makes this safe when React Strict Mode mounts the effect twice.
+    startTimer = window.setTimeout(() => {
+      measure();
+      if (!running) {
+        running = true;
+        frame = requestAnimationFrame(move);
+      }
+    }, 500);
+
+    return () => {
+      running = false;
+      window.clearTimeout(startTimer);
+      cancelAnimationFrame(frame);
+      resizeObserver.disconnect();
+    };
   }, [products.length]);
 
   if (!products.length) return <section id="coffee-marquee" className="coffee-marquee coffee-marquee-empty"><p className="section-label">TODAY&apos;S COFFEE</p><h2>오늘 준비된 커피</h2><Link href="/shop">SHOP 보기 →</Link></section>;
@@ -58,7 +88,7 @@ export function CoffeeMarquee({ products }: { products: Product[] }) {
       onPointerUp={() => { dragging.current = false; pauseUntil.current = performance.now() + 1500; }}
       onPointerCancel={() => { dragging.current = false; pauseUntil.current = performance.now() + 1500; }}
       onClickCapture={(event) => { if (draggedDistance.current > 8) { event.preventDefault(); event.stopPropagation(); } }}>
-      <div className="coffee-marquee-track">{[0, 1, 2].map((group) => <div className="coffee-marquee-group" aria-hidden={group !== 1} key={group}>{segmentProducts.map((product, index) => <CoffeeCard key={`${product.id}-${group}-${index}`} product={product} duplicate={group !== 1} />)}</div>)}</div>
+      <div className="coffee-marquee-track">{[0, 1].map((groupIndex) => <div className="coffee-marquee-group" ref={groupIndex === 0 ? firstGroup : undefined} aria-hidden={groupIndex !== 0} key={groupIndex}>{segmentProducts.map((product, index) => <CoffeeCard key={`${product.id}-${groupIndex}-${index}`} product={product} duplicate={groupIndex !== 0} />)}</div>)}</div>
     </div>
   </section>;
 }
