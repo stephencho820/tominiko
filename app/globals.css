@@ -320,7 +320,7 @@ button { cursor: pointer; }
   .product-visual:hover .product-image { transform: none; }
 }
 
-header {
+.site-header {
   position: sticky;
   top: 0;
   z-index: 50;
@@ -331,7 +331,7 @@ header {
   transition: background-color .45s ease, box-shadow .45s ease, border-color .45s ease;
 }
 
-header.is-scrolled {
+.site-header.is-scrolled {
   border-color: rgba(216,208,195,.45);
   background: rgba(244,240,232,.5) !important;
   box-shadow: 0 10px 28px rgba(33,29,24,.08);
@@ -971,37 +971,48 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 
 /* Shop — a quiet, product-first coffee catalogue */
 .shop-page {
-  width: min(1280px, 100%);
+  width: 100%;
+  max-width: 1320px;
   margin: 0 auto;
-  padding: clamp(48px, 7vw, 96px) clamp(20px, 5vw, 72px) clamp(80px, 10vw, 140px);
+  padding: clamp(32px, 4vw, 54px) clamp(24px, 4vw, 52px) clamp(80px, 9vw, 128px);
 }
 
 .shop-intro {
-  max-width: 760px;
-  padding-bottom: clamp(42px, 6vw, 76px);
+  max-width: 920px;
+  padding-bottom: clamp(34px, 4vw, 52px);
 }
 
 .shop-intro h1 {
-  margin-top: 14px;
-  font-size: clamp(42px, 6vw, 78px);
+  margin-top: 12px;
+  font-size: clamp(44px, 5.4vw, 76px);
   font-weight: 400;
   letter-spacing: -.055em;
   line-height: .98;
 }
 
 .shop-intro-subtitle {
-  margin-top: 18px;
+  margin-top: 16px;
   color: var(--muted);
   font: 400 clamp(12px, 1.2vw, 14px)/1.7 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
   letter-spacing: .035em;
 }
 
+.shop-intro h1,
+.shop-intro-subtitle,
+.todays-roast-copy h2,
+.todays-roast-notes { word-break: keep-all; overflow-wrap: normal; }
 .todays-roast { border-top: 1px solid var(--line); }
 .todays-roast-link {
   display: grid;
-  grid-template-columns: minmax(0, 1.28fr) minmax(280px, .72fr);
-  min-height: clamp(520px, 57vw, 680px);
+  grid-template-columns: minmax(0, 1.15fr) minmax(390px, .85fr);
+  min-height: clamp(500px, 43vw, 610px);
+  background: #f1ebe2;
 }
+.todays-roast-link--no-image { display: block; min-height: 0; }
+.todays-roast-link--no-image .todays-roast-copy { min-height: clamp(390px, 38vw, 500px); padding-right: max(42px, 32%); }
+.todays-roast-link:has(.todays-roast-image--failed) { display: block; min-height: 0; }
+.todays-roast-link:has(.todays-roast-image--failed) .todays-roast-copy { min-height: clamp(390px, 38vw, 500px); padding-right: max(42px, 32%); }
+.todays-roast-image--failed { display: none; }
 
 .todays-roast-image,
 .product-card-image {
@@ -1014,11 +1025,11 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
   transition: transform .9s cubic-bezier(.22,1,.36,1);
 }
 
 .todays-roast-link:hover .todays-roast-image img { transform: scale(1.018); }
-.todays-roast-placeholder,
 .product-card-placeholder {
   display: flex;
   height: 100%;
@@ -1027,8 +1038,6 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
   flex-direction: column;
   color: var(--brown);
 }
-.todays-roast-placeholder span { font-size: clamp(44px, 7vw, 90px); font-style: italic; letter-spacing: -.06em; }
-.todays-roast-placeholder small,
 .product-card-placeholder small { font: 700 9px/1.4 "Avenir Next", "Helvetica Neue", Arial, sans-serif; letter-spacing: .16em; text-transform: uppercase; }
 
 .todays-roast-copy {
@@ -1036,12 +1045,12 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
   align-items: flex-start;
   justify-content: center;
   flex-direction: column;
-  padding: clamp(42px, 6vw, 84px);
+  padding: clamp(42px, 5vw, 70px);
   background: #f1ebe2;
 }
 .todays-roast-copy h2 {
   margin-top: 25px;
-  font-size: clamp(36px, 4.5vw, 64px);
+  font-size: clamp(38px, 4vw, 58px);
   font-weight: 400;
   letter-spacing: -.05em;
   line-height: .98;
@@ -1077,11 +1086,13 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
   .todays-roast-link { grid-template-columns: 1fr; min-height: 0; }
   .todays-roast-image { aspect-ratio: 4 / 3; }
   .todays-roast-copy { min-height: 390px; padding: 42px 28px 48px; }
+  .todays-roast-link--no-image .todays-roast-copy { min-height: 360px; padding-right: 28px; }
+  .todays-roast-link:has(.todays-roast-image--failed) .todays-roast-copy { min-height: 360px; padding-right: 28px; }
   .coffee-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 560px) {
-  .shop-page { padding-right: 16px; padding-left: 16px; }
+  .shop-page { padding-top: 28px; padding-right: 16px; padding-left: 16px; }
   .shop-intro { padding-right: 8px; }
   .todays-roast-image { aspect-ratio: 1 / 1; }
   .todays-roast-copy { min-height: 350px; padding: 34px 24px 40px; }

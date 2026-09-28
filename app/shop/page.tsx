@@ -4,6 +4,7 @@ import { Reveal } from "@/components/Reveal";
 import { getProducts } from "@/services/products";
 import type { Product } from "@/types";
 import { PageText } from "@/components/PageText";
+import { RoastImage } from "@/components/RoastImage";
 import { getPageSettings } from "@/lib/page-content";
 
 function TodaysRoast({ product }: { product: Product }) {
@@ -12,17 +13,13 @@ function TodaysRoast({ product }: { product: Product }) {
 
   return (
     <Reveal className="todays-roast" variant="fade">
-      <Link href={`/shop/${product.slug}`} className="todays-roast-link group">
-        <div className="todays-roast-image grain">
-          {product.image_url ? (
-            <img src={product.image_url} alt="" />
-          ) : (
-            <div className="todays-roast-placeholder" aria-hidden="true">
-              <span>Tominiko</span>
-              <small>Beans &amp; Coffee</small>
-            </div>
-          )}
-        </div>
+      <Link
+        href={`/shop/${product.slug}`}
+        className={`todays-roast-link group${product.image_url ? "" : " todays-roast-link--no-image"}`}
+      >
+        {product.image_url && (
+          <RoastImage src={product.image_url} alt={product.name} />
+        )}
 
         <div className="todays-roast-copy">
           <p className="section-label">Today&apos;s roast</p>
