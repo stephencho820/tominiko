@@ -1,5 +1,5 @@
-import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
+import { hashAccessToken } from "@/lib/order-access";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
@@ -12,8 +12,9 @@ type OrderInput = {
 
 const validWeights = new Set(["150g", "400g"]);
 const validGrinds = new Set(["Whole Bean", "Filter", "Espresso"]);
-const text = (value: unknown) => typeof value === "string" ? value.trim() : "";
-const tokenHash = (token: string) => createHash("sha256").update(token).digest("hex");
+const text = (value: unknown, maxLength = 500) => typeof value === "string" ? value.trim().slice(0, maxLength) : "";
+const within = (value: unknown, maxLength: number) => typeof value !== "string" || value.trim().length <= maxLength;
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export async function POST(request: Request) {
   let body: OrderInput;
@@ -22,15 +23,23 @@ export async function POST(request: Request) {
 
   const items = Array.isArray(body.items) ? body.items as OrderItemInput[] : [];
   const fulfillmentType = text(body.fulfillmentType);
-  const email = text(body.email);
+  const email = text(body.email, 254).toLowerCase();
   const idempotencyKey = text(body.idempotencyKey);
   const accessToken = text(body.accessToken);
-  const invalidItem = items.some((item) => !text(item.product?.id) || !validWeights.has(text(item.weight)) ||
+  const invalidItem = items.some((item) => !uuidPattern.test(text(item.product?.id)) || !validWeights.has(text(item.weight)) ||
     !validGrinds.has(text(item.grind)) || !Number.isInteger(item.quantity) || Number(item.quantity) < 1 || Number(item.quantity) > 20);
+  const quantities = new Map<string, number>();
+  for (const item of items) {
+    const productId = text(item.product?.id);
+    quantities.set(productId, (quantities.get(productId) ?? 0) + Number(item.quantity));
+  }
 
-  if (!text(body.customerName) || !email.includes("@") || !text(body.phone) ||
-      !["delivery", "pickup"].includes(fulfillmentType) || !items.length || invalidItem ||
-      !/^[0-9a-f-]{36}$/i.test(idempotencyKey) || accessToken.length < 32) {
+  if (!text(body.customerName, 100) || !/^\S+@\S+\.\S+$/.test(email) || !text(body.phone, 30) ||
+      !["delivery", "pickup"].includes(fulfillmentType) || !items.length || items.length > 20 || invalidItem ||
+      [...quantities.values()].some((quantity) => quantity > 20) || !uuidPattern.test(idempotencyKey) ||
+      accessToken.length < 32 || accessToken.length > 256 || !within(body.customerName, 100) || !within(body.email, 254) ||
+      !within(body.phone, 30) || !within(body.postalCode, 20) || !within(body.address, 300) ||
+      !within(body.addressDetail, 300) || !within(body.deliveryMessage, 500)) {
     return NextResponse.json({ error: "주문 정보를 다시 확인해 주세요." }, { status: 400 });
   }
   if (fulfillmentType === "delivery" && (!text(body.postalCode) || !text(body.address))) {
@@ -43,11 +52,11 @@ export async function POST(request: Request) {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("create_pending_order", {
     p_client_reference: idempotencyKey,
-    p_guest_token_hash: tokenHash(accessToken),
-    p_customer_name: text(body.customerName), p_email: email, p_phone: text(body.phone),
-    p_fulfillment_type: fulfillmentType, p_postal_code: text(body.postalCode) || null,
-    p_address: text(body.address) || null, p_address_detail: text(body.addressDetail) || null,
-    p_delivery_message: text(body.deliveryMessage) || null,
+    p_guest_token_hash: hashAccessToken(accessToken),
+    p_customer_name: text(body.customerName, 100), p_email: email, p_phone: text(body.phone, 30),
+    p_fulfillment_type: fulfillmentType, p_postal_code: text(body.postalCode, 20) || null,
+    p_address: text(body.address, 300) || null, p_address_detail: text(body.addressDetail, 300) || null,
+    p_delivery_message: text(body.deliveryMessage, 500) || null,
     p_items: items.map((item) => ({ product_id: text(item.product?.id), weight: text(item.weight), grind: text(item.grind), quantity: Number(item.quantity) })),
   });
 
