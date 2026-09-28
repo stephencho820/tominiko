@@ -12,7 +12,7 @@ export default async function Home() {
 
   return <main className="home-page home-page-reimagined">
     <HeroMediaSection media={content.heroMedia!} />
-    <CoffeeMarquee products={products} />
+    <CoffeeMarquee products={products.filter((product) => product.featured || product.todays_roast)} />
     <EditorialBanner banners={content.promotions ?? []} placement="tasting-room" />
     <EditorialBanner banners={content.promotions ?? []} placement="our-story" />
   </main>;

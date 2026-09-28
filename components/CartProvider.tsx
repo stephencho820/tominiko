@@ -47,7 +47,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const add = useCallback((item: CartItem) => setItems((current) => {
     const safeItem = sanitizeCart([item])[0];
     if (!safeItem) return current;
-    const existing = current.findIndex((currentItem) => currentItem.product.id === safeItem.product.id && currentItem.weight === safeItem.weight && currentItem.grind === safeItem.grind);
+    const existing = current.findIndex((currentItem) => currentItem.product.id === safeItem.product.id && currentItem.variantId === safeItem.variantId);
     if (existing === -1) return [...current, safeItem];
     return current.map((currentItem, index) => index === existing
       ? { ...currentItem, quantity: Math.min(maxCartQuantity(currentItem), currentItem.quantity + safeItem.quantity) }

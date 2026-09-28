@@ -1,105 +1,33 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { ProductPurchase } from "@/components/ProductPurchase";
-import { getProduct } from "@/services/products";
+import { ProductCard } from "@/components/ProductCard";
+import { productImage, tastingNotes } from "@/lib/products";
+import { getProduct, getProducts } from "@/services/products";
 
-function ProductFact({ label, value }: { label: string; value: string | null }) {
-  if (!value) return null;
-
-  return (
-    <div className="product-fact">
-      <dt>{label}</dt>
-      <dd>{value}</dd>
-    </div>
-  );
+function Facts({ rows }: { rows: [string, string | null | undefined][] }) {
+  const visible = rows.filter((row): row is [string, string] => Boolean(row[1]));
+  if (!visible.length) return null;
+  return <dl className="product-facts-list">{visible.map(([label, value]) => <div className="product-fact" key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>;
 }
-
-export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
-  const product = await getProduct((await params).slug);
+function Profile({ label, value }: { label: string; value?: number | null }) { if (!value) return null; return <div className="taste-meter"><span>{label}</span><span aria-label={`${value} out of 5`}>{"●".repeat(value)}<i>{"●".repeat(5-value)}</i></span></div>; }
+export default async function ProductPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ preview?: string }> }) {
+  const slug = (await params).slug; const preview = (await searchParams).preview === "1";
+  const [product, all] = await Promise.all([getProduct(slug, { includeInactive: preview }), getProducts({ activeOnly: true })]);
   if (!product) notFound();
-
-  const coffeeFacts = [product.origin, product.region, product.producer, product.variety, product.process].filter(Boolean);
-  const roastFacts = [product.roast_level, product.roasted_date].filter(Boolean);
-
-  return (
-    <main className="product-detail">
-      <section className="product-hero" aria-labelledby="product-title">
-        <div className="product-visual grain">
-          {product.image_url ? (
-            <img src={product.image_url} alt={product.name} className="product-image" />
-          ) : (
-            <div className="product-image-fallback">
-              <span className="section-label">Coffee / {product.origin}</span>
-              <span>Casa</span>
-            </div>
-          )}
-          <span className="product-availability">
-            {product.stock_quantity > 0 ? (
-              <><span className="lang-ko">스몰 배치 · 판매 중</span><span className="lang-en">Small batch · Available</span></>
-            ) : (
-              <><span className="lang-ko">품절</span><span className="lang-en">Sold out</span></>
-            )}
-          </span>
-        </div>
-
-        <div className="product-intro">
-          <p className="section-label">Tominiko Beans &amp; Coffee</p>
-          <h1 id="product-title">{product.name}</h1>
-          {product.tasting_notes && <p className="product-notes">{product.tasting_notes}</p>}
-          {product.description && <p className="product-lede">{product.description}</p>}
-          <ProductPurchase product={product} />
-        </div>
-      </section>
-
-      {(product.description || product.tasting_notes || coffeeFacts.length > 0 || roastFacts.length > 0) && (
-        <div className="product-story">
-          {(product.description || product.tasting_notes) && (
-            <section className="story-cup" aria-labelledby="the-cup">
-              <p className="section-label">01 / The cup</p>
-              <h2 id="the-cup">
-                <span className="lang-ko">잔 안에서 만나는 맛</span>
-                <span className="lang-en">In the cup</span>
-              </h2>
-              {product.tasting_notes && <p className="story-notes">{product.tasting_notes}</p>}
-              {product.description && <p className="story-copy">{product.description}</p>}
-            </section>
-          )}
-
-          {coffeeFacts.length > 0 && (
-            <section className="story-facts" aria-labelledby="the-coffee">
-              <div className="story-heading">
-                <p className="section-label">02 / The coffee</p>
-                <h2 id="the-coffee">
-                  <span className="lang-ko">커피가 온 곳</span>
-                  <span className="lang-en">Where it begins</span>
-                </h2>
-              </div>
-              <dl className="product-facts-list">
-                <ProductFact label="Origin" value={product.origin} />
-                <ProductFact label="Region" value={product.region} />
-                <ProductFact label="Producer" value={product.producer} />
-                <ProductFact label="Variety" value={product.variety} />
-                <ProductFact label="Process" value={product.process} />
-              </dl>
-            </section>
-          )}
-
-          {roastFacts.length > 0 && (
-            <section className="story-facts story-roast" aria-labelledby="the-roast">
-              <div className="story-heading">
-                <p className="section-label">03 / The roast</p>
-                <h2 id="the-roast">
-                  <span className="lang-ko">작은 배치로 로스팅</span>
-                  <span className="lang-en">Roasted in small batches</span>
-                </h2>
-              </div>
-              <dl className="product-facts-list">
-                <ProductFact label="Roast level" value={product.roast_level} />
-                <ProductFact label="Roasted" value={product.roasted_date} />
-              </dl>
-            </section>
-          )}
-        </div>
-      )}
-    </main>
-  );
+  const notes = tastingNotes(product); const images = [productImage(product), ...(product.gallery_images ?? [])].filter((value, index, list) => list.indexOf(value) === index);
+  const related = all.filter((item) => item.id !== product.id).sort((a,b) => Number(b.category === product.category)-Number(a.category === product.category)).slice(0,3);
+  const brew = product.use_default_recipe ? { brewing_dose:"20g", brewing_water:"300g", brewing_temperature:"92°C", brewing_grind:"Medium", brewing_time:"2:30–3:00" } : product;
+  return <main className="product-detail product-detail-new">
+    {preview && <div className="preview-banner">ADMIN PREVIEW · <Link href={`/admin/products/${product.id}`}>Back to editor</Link></div>}
+    <section className="product-hero"><div className="product-gallery">{images.map((image, index) => <img src={image} alt={`${product.name}${index ? ` ${index+1}`:""}`} key={image} />)}</div><div className="product-intro"><p className="section-label">{product.origin}{product.region ? ` · ${product.region}`:""}</p><h1>{product.korean_name || product.name}</h1>{product.korean_name && <p className="product-english-name">{product.name}</p>}{product.subtitle && <p className="product-subtitle">{product.subtitle}</p>}<ProductPurchase product={product}/></div></section>
+    <div className="pdp-sections">
+      {(notes.length > 0 || product.acidity || product.sweetness || product.body) && <section><p className="section-label">TASTES LIKE</p>{notes.length > 0 && <h2>{notes.join(" · ")}</h2>}<div className="taste-profile"><Profile label="ACIDITY" value={product.acidity}/><Profile label="SWEETNESS" value={product.sweetness}/><Profile label="BODY" value={product.body}/></div></section>}
+      <section><p className="section-label">THE COFFEE</p><Facts rows={[["Country",product.origin],["Region",product.region],["Farm / Producer",product.producer],["Washing station",product.washing_station],["Variety",product.variety],["Process",product.process],["Altitude",product.altitude],["Harvest",product.harvest],["Grade",product.grade]]}/></section>
+      {(product.about || product.why_we_chose_it || product.description) && <section><p className="section-label">OUR NOTE</p><h2>About this coffee</h2><p>{product.about || product.description}</p>{product.why_we_chose_it && <><h3>Why we chose it</h3><p>{product.why_we_chose_it}</p></>}</section>}
+      {product.roaster_note && <section><p className="section-label">ROASTER&apos;S NOTE</p><p>{product.roaster_note}</p></section>}
+      {(product.use_default_recipe || product.brewing_dose || product.brewing_water || product.brewing_temperature || product.brewing_grind || product.brewing_time) && <section><p className="section-label">BREWING GUIDE</p><Facts rows={[["Coffee",brew.brewing_dose],["Water",brew.brewing_water],["Temperature",brew.brewing_temperature],["Grind",brew.brewing_grind],["Brew time",brew.brewing_time]]}/></section>}
+    </div>
+    {related.length > 0 && <section className="related-products"><p className="section-label">YOU MAY ALSO LIKE</p><div>{related.map((item) => <ProductCard product={item} key={item.id}/>)}</div></section>}
+  </main>;
 }

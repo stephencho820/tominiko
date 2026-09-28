@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { runSupabaseQuery } from "@/lib/supabase/query";
 import type { Product } from "@/types";
 
-export async function getProducts(options?: { activeOnly?: boolean; todaysRoast?: boolean; latestFirst?: boolean }) {
+export async function getProducts(options?: { activeOnly?: boolean; todaysRoast?: boolean; featured?: boolean; latestFirst?: boolean }) {
   if (!hasSupabaseEnv) return [] as Product[];
   try {
     const supabase = await createClient();
@@ -11,6 +11,7 @@ export async function getProducts(options?: { activeOnly?: boolean; todaysRoast?
     query = options?.latestFirst ? query.order("created_at", { ascending: false }) : query.order("display_order").order("created_at", { ascending: false });
     if (options?.activeOnly) query = query.eq("active", true).gt("stock_quantity", 0);
     if (options?.todaysRoast) query = query.eq("todays_roast", true);
+    if (options?.featured) query = query.eq("featured", true);
     const { data, error } = await runSupabaseQuery(async (signal) => await query.abortSignal(signal));
     if (error) return [] as Product[];
     return (data ?? []) as Product[];
@@ -18,12 +19,12 @@ export async function getProducts(options?: { activeOnly?: boolean; todaysRoast?
     return [] as Product[];
   }
 }
-export async function getProduct(slug: string) {
+export async function getProduct(slug: string, options?: { includeInactive?: boolean }) {
   if (!hasSupabaseEnv) return null;
   try {
     const supabase = await createClient();
     const { data, error } = await runSupabaseQuery(async (signal) =>
-      await supabase.from("products").select("*").eq("slug", slug).abortSignal(signal).single(),
+      await (options?.includeInactive ? supabase.from("products").select("*").eq("slug", slug) : supabase.from("products").select("*").eq("slug", slug).eq("active", true)).abortSignal(signal).single(),
     );
     return error ? null : data as Product | null;
   } catch {
