@@ -2,9 +2,17 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { runSupabaseQuery } from "@/lib/supabase/query";
-import { defaultPageSettings, type PageSettings, type PageSlug } from "@/lib/page-content-config";
+import { defaultPageSettings, type PageSettings, type PageSlug, type PromotionBanner } from "@/lib/page-content-config";
 
-function mergePageSettings(fallback: PageSettings, data: { texts: unknown; images: unknown }): PageSettings {
+function isPromotionBanner(item: unknown): item is PromotionBanner {
+  if (!item || typeof item !== "object") return false;
+  const banner = item as Record<string, unknown>;
+  return typeof banner.id === "string" && typeof banner.image === "string" && typeof banner.hyperlink === "string"
+    && (banner.placement === "tasting-room" || banner.placement === "our-story")
+    && typeof banner.active === "boolean" && typeof banner.sortOrder === "number" && typeof banner.alt === "string";
+}
+
+function mergePageSettings(fallback: PageSettings, data: { texts: unknown; images: unknown; hero_media?: unknown; promotions?: unknown }): PageSettings {
   const storedTexts = data.texts && typeof data.texts === "object" ? data.texts as Record<string, unknown> : {};
   const storedImages = data.images && typeof data.images === "object" ? data.images as Record<string, unknown> : {};
 
@@ -24,7 +32,14 @@ function mergePageSettings(fallback: PageSettings, data: { texts: unknown; image
     typeof storedImages[key] === "string" ? storedImages[key] : defaultImage,
   ]));
 
-  return { texts, images };
+  const rawHero = data.hero_media && typeof data.hero_media === "object" ? data.hero_media as Record<string, unknown> : null;
+  const heroMedia = rawHero && typeof rawHero.url === "string" && (rawHero.type === "image" || rawHero.type === "video")
+    ? { url: rawHero.url, type: rawHero.type as "image" | "video", active: rawHero.active !== false, overlay: rawHero.overlay !== false } : fallback.heroMedia;
+  const storedPromotions = Array.isArray(data.promotions) ? data.promotions.filter(isPromotionBanner) : [];
+  const promotions = fallback.promotions?.map((defaultBanner) =>
+    storedPromotions.find((banner) => banner.placement === defaultBanner.placement) ?? defaultBanner
+  );
+  return { texts, images, heroMedia, promotions };
 }
 
 export async function getPageSettings(slug: PageSlug): Promise<PageSettings> {
@@ -33,7 +48,7 @@ export async function getPageSettings(slug: PageSlug): Promise<PageSettings> {
   try {
     const supabase = await createClient();
     const { data, error } = await runSupabaseQuery(async (signal) =>
-      await supabase.from("page_settings").select("texts,images").eq("slug", slug).abortSignal(signal).maybeSingle(),
+      await supabase.from("page_settings").select("texts,images,hero_media,promotions").eq("slug", slug).abortSignal(signal).maybeSingle(),
     );
     if (error || !data) return fallback;
     return mergePageSettings(fallback, data);
