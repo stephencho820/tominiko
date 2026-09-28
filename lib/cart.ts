@@ -1,7 +1,7 @@
+import { productVariants } from "@/lib/products";
 import type { CartItem, Grind, Product, Weight } from "@/types";
 
-const weights = new Set<Weight>(["150g", "400g"]);
-const grinds = new Set<Grind>(["Whole Bean", "Filter", "Espresso"]);
+const grinds = new Set<Grind>(["Whole Bean", "Filter", "Espresso", "Moka Pot", "Pour Over", "Coffee Maker", "French Press", "Other"]);
 
 function isProduct(value: unknown): value is Product {
   if (!value || typeof value !== "object") return false;
@@ -13,7 +13,8 @@ function isProduct(value: unknown): value is Product {
 }
 
 export function itemPrice(product: Product, weight: Weight) {
-  return weight === "150g" ? product.price_150g : product.price_400g;
+  const variant = productVariants(product).find((item) => item.size === weight);
+  return variant ? variant.salePrice ?? variant.price : weight === "150g" ? product.price_150g : product.price_400g;
 }
 
 export function maxCartQuantity(item: Pick<CartItem, "product">) {
@@ -26,10 +27,12 @@ export function sanitizeCart(value: unknown): CartItem[] {
   return value.flatMap((entry): CartItem[] => {
     if (!entry || typeof entry !== "object") return [];
     const item = entry as Partial<CartItem>;
-    if (!isProduct(item.product) || !weights.has(item.weight as Weight) || !grinds.has(item.grind as Grind)) return [];
+    if (!isProduct(item.product) || typeof item.weight !== "string" || !item.weight || !grinds.has(item.grind as Grind)) return [];
     const quantity = Math.min(20, item.product.stock_quantity, Math.max(1, Number(item.quantity)));
     if (!Number.isInteger(quantity) || quantity < 1) return [];
     const weight = item.weight as Weight;
-    return [{ product: item.product, weight, grind: item.grind as Grind, quantity, unitPrice: itemPrice(item.product, weight) }];
+    const variant = productVariants(item.product).find((value) => value.id === item.variantId || (value.size === weight && value.grindType === item.grind));
+    if (!variant) return [];
+    return [{ product: item.product, variantId: variant.id, weight, grind: variant.grindType, quantity, unitPrice: variant.salePrice ?? variant.price }];
   });
 }

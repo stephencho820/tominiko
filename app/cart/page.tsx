@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Minus, Plus, X } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
+import { productImage, productVariants } from "@/lib/products";
 
 const money = (value: number) => `₩${value.toLocaleString("ko-KR")}`;
 
@@ -31,7 +32,7 @@ export default function CartPage() {
             {items.map((item, index) => (
               <article className="cart-item" key={`${item.product.id}-${item.weight}-${item.grind}-${index}`}>
                 <div className="cart-image grain">
-                  {item.product.image_url ? <img src={item.product.image_url} alt={item.product.name} /> : <span>{item.product.origin}</span>}
+                  <img src={productImage(item.product)} alt={item.product.name} />
                 </div>
                 <div className="cart-item-main">
                   <div className="cart-item-title">
@@ -39,8 +40,7 @@ export default function CartPage() {
                     <button type="button" className="cart-remove" onClick={() => remove(index)} aria-label={`${item.product.name} remove`}><X size={16} /><span><span className="lang-ko">삭제</span><span className="lang-en">Remove</span></span></button>
                   </div>
                   <div className="cart-options">
-                    <label><span><span className="lang-ko">중량</span><span className="lang-en">Weight</span></span><select value={item.weight} onChange={(event) => updateOptions(index, { weight: event.target.value as "150g" | "400g" })}><option value="150g">150g</option><option value="400g">400g</option></select></label>
-                    <label><span><span className="lang-ko">분쇄</span><span className="lang-en">Grind</span></span><select value={item.grind} onChange={(event) => updateOptions(index, { grind: event.target.value as typeof item.grind })}><option value="Whole Bean">Whole Bean</option><option value="Filter">Filter</option><option value="Espresso">Espresso</option></select></label>
+                    <label><span><span className="lang-ko">옵션</span><span className="lang-en">Variant</span></span><select value={item.variantId} onChange={(event) => { const variant = productVariants(item.product).find((value) => value.id === event.target.value); if (variant) updateOptions(index, { weight: variant.size, grind: variant.grindType }); }} disabled>{productVariants(item.product).filter((variant) => variant.id === item.variantId).map((variant) => <option key={variant.id} value={variant.id}>{variant.size} · {variant.grindType}</option>)}</select></label>
                   </div>
                   <div className="cart-item-footer">
                     <div className="quantity-control" aria-label="Quantity selector">

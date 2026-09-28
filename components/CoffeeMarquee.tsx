@@ -3,17 +3,18 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import type { Product } from "@/types";
+import { productImage } from "@/lib/products";
 
 const won = new Intl.NumberFormat("ko-KR");
 
 function CoffeeCard({ product, duplicate = false }: { product: Product; duplicate?: boolean }) {
-  const image = product.primary_image_url || product.image_url || product.thumbnail_url || "/images/coffee-card-fallback.svg";
+  const image = productImage(product);
   return <Link href={`/shop/${product.slug}`} className="marquee-coffee-card" draggable={false} tabIndex={duplicate ? -1 : undefined}>
     <div className="marquee-coffee-image">
       <img src={image} alt={product.image_url || product.primary_image_url || product.thumbnail_url ? product.name : "Casa di Stefano coffee"} draggable={false} />
     </div>
     <div className="marquee-coffee-copy">
-      <p>{product.origin}</p><h3>{product.name}</h3>
+      <p>{product.origin}</p><h3>{product.korean_name || product.name}</h3>
       <div><span>{product.tasting_notes || product.process || "Small batch roast"}</span><strong>₩{won.format(product.price_150g)}</strong></div>
     </div>
   </Link>;
