@@ -6,7 +6,7 @@ const fonts = new Set(["serif", "sans", "display"]);
 
 function parseSettings(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  const body = value as { slug?: unknown; texts?: unknown; images?: unknown };
+  const body = value as { slug?: unknown; texts?: unknown; images?: unknown; heroMedia?: unknown; promotions?: unknown };
   if (typeof body.slug !== "string" || !(body.slug in pageDefinitions) || !body.texts || typeof body.texts !== "object" || !body.images || typeof body.images !== "object") return null;
   const slug = body.slug as PageSlug;
   const definition = pageDefinitions[slug];
@@ -27,7 +27,23 @@ function parseSettings(value: unknown) {
     if (typeof image !== "string" || image.length > 2_000 || (image && !image.startsWith("/") && !/^https:\/\//i.test(image))) return null;
     images[key] = image;
   }
-  return { slug, texts, images };
+  let hero_media: PageSettings["heroMedia"];
+  let promotions: PageSettings["promotions"];
+  if (slug === "home") {
+    const hero = body.heroMedia as Record<string, unknown> | undefined;
+    if (!hero || typeof hero.url !== "string" || hero.url.length > 2_000 || (hero.type !== "image" && hero.type !== "video")) return null;
+    hero_media = { url: hero.url, type: hero.type };
+    if (!Array.isArray(body.promotions) || body.promotions.length > 20) return null;
+    promotions = [];
+    for (const raw of body.promotions) {
+      if (!raw || typeof raw !== "object") return null;
+      const banner = raw as Record<string, unknown>;
+      if (typeof banner.id !== "string" || typeof banner.image !== "string" || typeof banner.hyperlink !== "string" || typeof banner.active !== "boolean" || typeof banner.sortOrder !== "number" || typeof banner.alt !== "string") return null;
+      if (banner.image.length > 2_000 || banner.hyperlink.length > 2_000 || banner.alt.length > 200) return null;
+      promotions.push({ id: banner.id, image: banner.image, hyperlink: banner.hyperlink, active: banner.active, sortOrder: banner.sortOrder, alt: banner.alt });
+    }
+  }
+  return { slug, texts, images, hero_media, promotions };
 }
 
 export async function PUT(request: Request) {
