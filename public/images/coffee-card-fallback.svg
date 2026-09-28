@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" role="img" aria-label="Casa di Stefano coffee">
+  <defs><radialGradient id="g" cx="50%" cy="40%" r="70%"><stop stop-color="#f1e9dc"/><stop offset="1" stop-color="#d7c8b4"/></radialGradient></defs>
+  <rect width="800" height="1000" fill="url(#g)"/><ellipse cx="400" cy="495" rx="132" ry="182" fill="#72523e" transform="rotate(22 400 495)"/><path d="M348 334c78 106 81 224 25 337" fill="none" stroke="#d8c1a5" stroke-width="16" stroke-linecap="round"/>
+  <text x="400" y="845" text-anchor="middle" fill="#4a382d" font-family="Georgia,serif" font-size="30" letter-spacing="7">CASA DI STEFANO</text>
+</svg>

@@ -7,9 +7,10 @@ import type { Product } from "@/types";
 const won = new Intl.NumberFormat("ko-KR");
 
 function CoffeeCard({ product, duplicate = false }: { product: Product; duplicate?: boolean }) {
+  const image = product.primary_image_url || product.image_url || product.thumbnail_url || "/images/coffee-card-fallback.svg";
   return <Link href={`/shop/${product.slug}`} className="marquee-coffee-card" draggable={false} tabIndex={duplicate ? -1 : undefined}>
     <div className="marquee-coffee-image">
-      {product.image_url ? <img src={product.image_url} alt="" draggable={false} /> : <span>{product.origin || "Coffee"}</span>}
+      <img src={image} alt={product.image_url || product.primary_image_url || product.thumbnail_url ? product.name : "Casa di Stefano coffee"} draggable={false} />
     </div>
     <div className="marquee-coffee-copy">
       <p>{product.origin}</p><h3>{product.name}</h3>

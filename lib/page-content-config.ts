@@ -9,8 +9,8 @@ export const pageDefinitions = {
 export type PageSlug = keyof typeof pageDefinitions;
 export type TextSetting = { value: string; font: "serif" | "sans" | "display"; size: string };
 export type BannerPlacement = "tasting-room" | "our-story";
-export type PromotionBanner = { id: string; placement: BannerPlacement; image: string; hyperlink: string; active: boolean; sortOrder: number; alt: string };
-export type HeroMedia = { url: string; type: "image" | "video"; active: boolean; overlay: boolean };
+export type PromotionBanner = { id: string; placement: BannerPlacement; image: string; mobileImage: string; hyperlink: string; active: boolean; sortOrder: number; alt: string };
+export type HeroMedia = { url: string; type: "image" | "video"; mobileUrl: string; mobileType: "image" | "video"; active: boolean; overlay: boolean };
 export type PageSettings = { texts: Record<string, TextSetting>; images: Record<string, string>; heroMedia?: HeroMedia; promotions?: PromotionBanner[] };
 
 export function defaultPageSettings(slug: PageSlug): PageSettings {
@@ -19,10 +19,10 @@ export function defaultPageSettings(slug: PageSlug): PageSettings {
     texts: Object.fromEntries(Object.entries(definition.texts).map(([key, entry]) => [key, { value: entry[1], font: "serif", size: "" }])),
     images: Object.fromEntries(Object.entries(definition.images).map(([key, entry]) => [key, entry[1]])),
     ...(slug === "home" ? {
-      heroMedia: { url: "/images/home-hero.svg", type: "image" as const, active: true, overlay: true },
+      heroMedia: { url: "/images/home-hero.svg", type: "image" as const, mobileUrl: "", mobileType: "image" as const, active: true, overlay: true },
       promotions: [
-        { id: "default-tasting-room", placement: "tasting-room" as const, image: "/images/tasting-room-banner.svg", hyperlink: "/tasting-room", active: true, sortOrder: 0, alt: "Casa di Stefano Tasting Room" },
-        { id: "default-our-story", placement: "our-story" as const, image: "/images/our-story-banner.svg", hyperlink: "/our-story", active: true, sortOrder: 1, alt: "The story and philosophy of Casa di Stefano" },
+        { id: "default-tasting-room", placement: "tasting-room" as const, image: "/images/tasting-room-banner.svg", mobileImage: "/images/tasting-room-banner-mobile.svg", hyperlink: "/tasting-room", active: true, sortOrder: 0, alt: "Casa di Stefano Tasting Room" },
+        { id: "default-our-story", placement: "our-story" as const, image: "/images/our-story-banner.svg", mobileImage: "/images/our-story-banner-mobile.svg", hyperlink: "/our-story", active: true, sortOrder: 1, alt: "The story and philosophy of Casa di Stefano" },
       ],
     } : {}),
   };

@@ -9,6 +9,7 @@ function isPromotionBanner(item: unknown): item is PromotionBanner {
   const banner = item as Record<string, unknown>;
   return typeof banner.id === "string" && typeof banner.image === "string" && typeof banner.hyperlink === "string"
     && (banner.placement === "tasting-room" || banner.placement === "our-story")
+    && (typeof banner.mobileImage === "string" || typeof banner.mobileImage === "undefined")
     && typeof banner.active === "boolean" && typeof banner.sortOrder === "number" && typeof banner.alt === "string";
 }
 
@@ -34,8 +35,8 @@ function mergePageSettings(fallback: PageSettings, data: { texts: unknown; image
 
   const rawHero = data.hero_media && typeof data.hero_media === "object" ? data.hero_media as Record<string, unknown> : null;
   const heroMedia = rawHero && typeof rawHero.url === "string" && (rawHero.type === "image" || rawHero.type === "video")
-    ? { url: rawHero.url, type: rawHero.type as "image" | "video", active: rawHero.active !== false, overlay: rawHero.overlay !== false } : fallback.heroMedia;
-  const storedPromotions = Array.isArray(data.promotions) ? data.promotions.filter(isPromotionBanner) : [];
+    ? { url: rawHero.url, type: rawHero.type as "image" | "video", mobileUrl: typeof rawHero.mobileUrl === "string" ? rawHero.mobileUrl : "", mobileType: rawHero.mobileType === "video" ? "video" as const : "image" as const, active: rawHero.active !== false, overlay: rawHero.overlay !== false } : fallback.heroMedia;
+  const storedPromotions = Array.isArray(data.promotions) ? data.promotions.filter(isPromotionBanner).map((banner) => ({ ...banner, mobileImage: banner.mobileImage ?? "" })) : [];
   const promotions = fallback.promotions?.map((defaultBanner) =>
     storedPromotions.find((banner) => banner.placement === defaultBanner.placement) ?? defaultBanner
   );

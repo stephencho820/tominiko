@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" role="img" aria-label="Casa di Stefano Tasting Room">
+  <defs><linearGradient id="b" y2="1"><stop stop-color="#33271f"/><stop offset="1" stop-color="#9b795d"/></linearGradient><radialGradient id="g" cx="80%" cy="10%" r="70%"><stop stop-color="#f3d4a3" stop-opacity=".6"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><rect width="800" height="1000" fill="url(#b)"/><rect width="800" height="1000" fill="url(#g)"/>
+  <path d="M465 570h230l-28 210H495z" fill="#eee3d2" opacity=".9"/><path d="M690 610q100 10 58 108q-18 38-72 24" fill="none" stroke="#eee3d2" stroke-width="20"/>
+  <g fill="#fff" font-family="Georgia,serif"><text x="60" y="115" font-size="19" letter-spacing="6">CASA DI STEFANO</text><text x="58" y="330" font-size="78">TASTING</text><text x="58" y="415" font-size="78">ROOM</text><text x="62" y="480" font-size="24" opacity=".76">Coffee and conversation.</text><text x="62" y="885" font-family="Arial,sans-serif" font-size="16" letter-spacing="4">DISCOVER THE ROOM  →</text></g>
+</svg>

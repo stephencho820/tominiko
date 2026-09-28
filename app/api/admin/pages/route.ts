@@ -31,19 +31,19 @@ function parseSettings(value: unknown) {
   let promotions: PageSettings["promotions"];
   if (slug === "home") {
     const hero = body.heroMedia as Record<string, unknown> | undefined;
-    if (!hero || typeof hero.url !== "string" || hero.url.length > 2_000 || (hero.type !== "image" && hero.type !== "video") || typeof hero.active !== "boolean" || typeof hero.overlay !== "boolean") return null;
-    hero_media = { url: hero.url, type: hero.type, active: hero.active, overlay: hero.overlay };
+    if (!hero || typeof hero.url !== "string" || hero.url.length > 2_000 || (hero.type !== "image" && hero.type !== "video") || typeof hero.mobileUrl !== "string" || hero.mobileUrl.length > 2_000 || (hero.mobileType !== "image" && hero.mobileType !== "video") || typeof hero.active !== "boolean" || typeof hero.overlay !== "boolean") return null;
+    hero_media = { url: hero.url, type: hero.type, mobileUrl: hero.mobileUrl, mobileType: hero.mobileType, active: hero.active, overlay: hero.overlay };
     if (!Array.isArray(body.promotions) || body.promotions.length !== 2) return null;
     promotions = [];
     const placements = new Set<string>();
     for (const raw of body.promotions) {
       if (!raw || typeof raw !== "object") return null;
       const banner = raw as Record<string, unknown>;
-      if (typeof banner.id !== "string" || (banner.placement !== "tasting-room" && banner.placement !== "our-story") || typeof banner.image !== "string" || typeof banner.hyperlink !== "string" || typeof banner.active !== "boolean" || typeof banner.sortOrder !== "number" || typeof banner.alt !== "string") return null;
-      if (banner.image.length > 2_000 || banner.hyperlink.length > 2_000 || banner.alt.length > 200) return null;
+      if (typeof banner.id !== "string" || (banner.placement !== "tasting-room" && banner.placement !== "our-story") || typeof banner.image !== "string" || typeof banner.mobileImage !== "string" || typeof banner.hyperlink !== "string" || typeof banner.active !== "boolean" || typeof banner.sortOrder !== "number" || typeof banner.alt !== "string") return null;
+      if (banner.image.length > 2_000 || banner.mobileImage.length > 2_000 || banner.hyperlink.length > 2_000 || banner.alt.length > 200) return null;
       if (placements.has(banner.placement)) return null;
       placements.add(banner.placement);
-      promotions.push({ id: banner.id, placement: banner.placement, image: banner.image, hyperlink: banner.hyperlink, active: banner.active, sortOrder: banner.sortOrder, alt: banner.alt });
+      promotions.push({ id: banner.id, placement: banner.placement, image: banner.image, mobileImage: banner.mobileImage, hyperlink: banner.hyperlink, active: banner.active, sortOrder: banner.sortOrder, alt: banner.alt });
     }
   }
   return { slug, texts, images, hero_media, promotions };
