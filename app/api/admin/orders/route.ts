@@ -7,8 +7,10 @@ export async function PATCH(request: Request) {
   const supabase = await getAdminClient();
   if (!supabase) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { id, order_status: orderStatus } = await request.json();
-  if (typeof id !== "string" || !statuses.has(orderStatus)) {
+  let body: { id?: unknown; order_status?: unknown };
+  try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
+  const { id, order_status: orderStatus } = body;
+  if (typeof id !== "string" || typeof orderStatus !== "string" || !statuses.has(orderStatus)) {
     return NextResponse.json({ error: "Invalid order update" }, { status: 400 });
   }
 

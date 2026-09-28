@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { itemPrice, maxCartQuantity, sanitizeCart } from "@/lib/cart";
 import type { CartItem } from "@/types";
 
 const CART_STORAGE_KEY = "casa-cart";
@@ -24,7 +25,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const stored = localStorage.getItem(CART_STORAGE_KEY);
-      if (stored) setItems(JSON.parse(stored) as CartItem[]);
+      if (stored) setItems(sanitizeCart(JSON.parse(stored)));
     } catch {
       localStorage.removeItem(CART_STORAGE_KEY);
     } finally {
@@ -33,30 +34,39 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (hasHydrated) localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    if (!hasHydrated) return;
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    } catch {
+      // Checkout remains usable when storage is unavailable or full.
+    }
   }, [hasHydrated, items]);
 
-  const value: CartContext = {
+  const add = useCallback((item: CartItem) => setItems((current) => {
+    const safeItem = sanitizeCart([item])[0];
+    if (!safeItem) return current;
+    const existing = current.findIndex((currentItem) => currentItem.product.id === safeItem.product.id && currentItem.weight === safeItem.weight && currentItem.grind === safeItem.grind);
+    if (existing === -1) return [...current, safeItem];
+    return current.map((currentItem, index) => index === existing
+      ? { ...currentItem, quantity: Math.min(maxCartQuantity(currentItem), currentItem.quantity + safeItem.quantity) }
+      : currentItem);
+  }), []);
+  const remove = useCallback((index: number) => setItems((current) => current.filter((_, itemIndex) => itemIndex !== index)), []);
+  const update = useCallback((index: number, quantity: number) => setItems((current) => current.map((item, itemIndex) => itemIndex === index
+    ? { ...item, quantity: Math.min(maxCartQuantity(item), Math.max(1, Math.trunc(quantity))) }
+    : item)), []);
+  const updateOptions = useCallback((index: number, options: Partial<Pick<CartItem, "weight" | "grind">>) => setItems((current) => current.map((item, itemIndex) => {
+    if (itemIndex !== index) return item;
+    const weight = options.weight ?? item.weight;
+    return { ...item, ...options, unitPrice: itemPrice(item.product, weight) };
+  })), []);
+  const clear = useCallback(() => setItems([]), []);
+
+  const value = useMemo<CartContext>(() => ({
     items,
-    add: (item) => setItems((current) => {
-      const existing = current.findIndex((currentItem) => currentItem.product.id === item.product.id && currentItem.weight === item.weight && currentItem.grind === item.grind);
-      if (existing === -1) return [...current, item];
-      return current.map((currentItem, index) => index === existing ? { ...currentItem, quantity: currentItem.quantity + item.quantity } : currentItem);
-    }),
-    remove: (index) => setItems((current) => current.filter((_, itemIndex) => itemIndex !== index)),
-    update: (index, quantity) => setItems((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, quantity: Math.min(20, Math.max(1, quantity)) } : item)),
-    updateOptions: (index, options) => setItems((current) => current.map((item, itemIndex) => {
-      if (itemIndex !== index) return item;
-      const weight = options.weight ?? item.weight;
-      return {
-        ...item,
-        ...options,
-        unitPrice: weight === "150g" ? item.product.price_150g : item.product.price_400g,
-      };
-    })),
-    clear: () => setItems([]),
+    add, remove, update, updateOptions, clear,
     total: items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0),
-  };
+  }), [add, clear, items, remove, update, updateOptions]);
 
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
