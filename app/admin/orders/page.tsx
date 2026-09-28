@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireAdminClient } from "@/lib/supabase/admin";
 import { OrderStatusSelect } from "@/components/OrderStatusSelect";
 import { StatusBadge } from "@/components/AdminStatusBadge";
 import { formatOrderTime } from "@/lib/admin";
 import type { Order } from "@/types";
 
 export default async function AdminOrders() {
-  const supabase = await createClient();
+  const supabase = await requireAdminClient();
   const { data } = await supabase.from("orders").select("*,order_items(*)").order("created_at", { ascending: false });
   const orders = (data ?? []) as Order[];
   const active = orders.filter((order) => !["completed", "cancelled"].includes(order.order_status));

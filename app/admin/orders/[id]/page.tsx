@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { requireAdminClient } from "@/lib/supabase/admin";
 import { OrderStatusSelect } from "@/components/OrderStatusSelect";
 import { StatusBadge } from "@/components/AdminStatusBadge";
 import { formatOrderTime } from "@/lib/admin";
 
 export default async function AdminOrderDetail({ params }: { params: Promise<{ id: string }> }) {
-  const supabase = await createClient(); const id = (await params).id;
+  const supabase = await requireAdminClient(); const id = (await params).id;
   const [{ data: order }, { data: items }] = await Promise.all([supabase.from("orders").select("*").eq("id", id).single(), supabase.from("order_items").select("*").eq("order_id", id)]);
   if (!order) notFound();
   return <main className="admin-main admin-detail"><Link href="/admin/orders" className="admin-back">← Orders</Link><div className="admin-page-heading"><div><p className="eyebrow">Order detail</p><h1>{order.order_number}</h1><p>{formatOrderTime(order.created_at)}</p></div><div className="admin-detail-status"><StatusBadge type="payment" value={order.payment_status} /><StatusBadge type="order" value={order.order_status} /></div></div>{order.payment_status !== "paid" && <div className="admin-payment-warning"><strong>Payment not completed</strong><span>Do not roast, prepare, or dispatch this order until payment is confirmed.</span></div>}<div className="admin-detail-grid"><section className="admin-panel"><p className="eyebrow">Customer & fulfillment</p><h2>{order.customer_name}</h2><p>{order.email}<br />{order.phone}</p><hr /><p className="eyebrow">{order.fulfillment_type === "delivery" ? "Delivery" : "Pickup"}</p><p>{order.fulfillment_type === "delivery" ? `${order.postal_code} ${order.address} ${order.address_detail ?? ""}` : "Customer pickup"}</p>{order.delivery_message && <p className="admin-note">“{order.delivery_message}”</p>}</section><section className="admin-panel"><div className="admin-section-heading"><div><p className="eyebrow">Items</p><h2>Prepare order</h2></div></div><div className="admin-detail-items">{(items ?? []).map((item) => <div key={item.id}><span><strong>{item.product_name}</strong><small>{item.weight} · {item.grind} · Qty {item.quantity}</small></span><span>₩{item.subtotal.toLocaleString()}</span></div>)}</div><div className="admin-total"><span>Total</span><strong>₩{order.total.toLocaleString()}</strong></div><div className="admin-detail-actions"><OrderStatusSelect id={order.id} initial={order.order_status} fulfillmentType={order.fulfillment_type} paymentStatus={order.payment_status} /><OrderStatusSelect id={order.id} initial={order.order_status} fulfillmentType={order.fulfillment_type} paymentStatus={order.payment_status} mode="select" /></div></section></div></main>;

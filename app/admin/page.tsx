@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireAdminClient } from "@/lib/supabase/admin";
 import { LOW_STOCK_THRESHOLD, formatOrderTime, seoulTodayRange } from "@/lib/admin";
 import { StatusBadge } from "@/components/AdminStatusBadge";
 import { ProductQuickActions } from "@/components/ProductQuickActions";
@@ -7,7 +7,7 @@ import { OrderStatusSelect } from "@/components/OrderStatusSelect";
 import type { Order, Product } from "@/types";
 
 export default async function Admin() {
-  const supabase = await createClient();
+  const supabase = await requireAdminClient();
   const { start, end } = seoulTodayRange();
   const [{ data: productsData }, { data: ordersData }, { count: todayCount }] = await Promise.all([
     supabase.from("products").select("*").order("display_order"),

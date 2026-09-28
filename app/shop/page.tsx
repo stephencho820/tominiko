@@ -3,6 +3,8 @@ import { ProductCard, formatCoffeeText } from "@/components/ProductCard";
 import { Reveal } from "@/components/Reveal";
 import { getProducts } from "@/services/products";
 import type { Product } from "@/types";
+import { PageText } from "@/components/PageText";
+import { getPageSettings } from "@/lib/page-content";
 
 function TodaysRoast({ product }: { product: Product }) {
   const tastingNotes = formatCoffeeText(product.tasting_notes);
@@ -45,6 +47,7 @@ function TodaysRoast({ product }: { product: Product }) {
 
 export default async function Shop() {
   const products = await getProducts({ activeOnly: true });
+  const content = await getPageSettings("shop");
   const todaysRoast = products.find((product) => product.todays_roast);
   const otherCoffees = products.filter((product) => !product.todays_roast);
 
@@ -53,12 +56,12 @@ export default async function Shop() {
       <header className="shop-intro">
         <p className="section-label">Coffee</p>
         <h1>
-          <span className="lang-ko">오늘 준비된 커피</span>
-          <span className="lang-en">Coffee for today</span>
+          <PageText className="lang-ko" setting={content.texts.title_ko} />
+          <PageText className="lang-en" setting={content.texts.title_en} />
         </h1>
         <p className="shop-intro-subtitle">
-          <span className="lang-ko">작은 배치로 정성스럽게 로스팅한 커피.</span>
-          <span className="lang-en">Coffee, roasted in small batches.</span>
+          <PageText className="lang-ko" setting={content.texts.subtitle_ko} />
+          <PageText className="lang-en" setting={content.texts.subtitle_en} />
         </p>
       </header>
 
@@ -68,8 +71,8 @@ export default async function Shop() {
         <section className="coffee-collection" aria-labelledby="coffee-collection-title">
           <div className="coffee-collection-heading">
             <h2 id="coffee-collection-title">
-              <span className="lang-ko">다른 커피</span>
-              <span className="lang-en">Other coffees</span>
+              <PageText className="lang-ko" setting={content.texts.collection_ko} />
+              <PageText className="lang-en" setting={content.texts.collection_en} />
             </h2>
             <p>
               <span className="lang-ko">지금 만나볼 수 있는 커피</span>
