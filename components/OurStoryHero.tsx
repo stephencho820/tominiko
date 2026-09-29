@@ -4,9 +4,9 @@ import type { CSSProperties, ReactNode } from "react";
 import type { PageSettings } from "@/lib/page-content-config";
 
 const illustrations = {
-  casa: { src: "/philosophy/tasting-room.png", width: 1120, height: 1400, alt: "Hand pouring coffee into a dripper" },
-  zero: { src: "/philosophy/zero-degrees.png", width: 1280, height: 1280, alt: "Zero Degrees small batch coffee roaster" },
-  tominiko: { src: "/philosophy/tominiko.png", width: 1280, height: 1280, alt: "Tominiko coffee bag" },
+  casa: { src: "/images/philosophy/tasting-room.png", width: 1120, height: 1400, alt: "Hand pouring coffee into a dripper" },
+  zero: { src: "/images/philosophy/zero-degrees.png", width: 1280, height: 1280, alt: "Zero Degrees small batch coffee roaster" },
+  tominiko: { src: "/images/philosophy/tominiko.png", width: 1280, height: 1280, alt: "Tominiko coffee bag" },
 } as const;
 
 function BrandLogo({ src, fallback, alt, scale }: { src?: string; fallback: string; alt: string; scale: number }) {
@@ -27,7 +27,7 @@ function HeroBrandItem({ href, className, label, image, logo, fallback, alt, sca
   href: string; className: string; label: string; image: (typeof illustrations)[keyof typeof illustrations]; logo?: string;
   fallback: string; alt: string; scale: number; microcopy: string; overlay?: ReactNode;
 }) {
-  const contents = <><div className="brand-scene__art"><Image src={image.src} width={image.width} height={image.height} sizes="(max-width: 767px) 75vw, 340px" alt={image.alt} priority />{overlay}</div><div className="brand-scene__identity"><BrandLogo src={logo} fallback={fallback} alt={alt} scale={scale} /><p>{microcopy} <b aria-hidden="true">{href.startsWith("#") ? "↓" : "↗"}</b></p></div></>;
+  const contents = <article className="philosophy-card"><div className="brand-scene__art philosophy-visual"><Image src={image.src} width={image.width} height={image.height} sizes="(max-width: 768px) 75vw, 340px" alt={image.alt} priority />{overlay}</div><div className="brand-scene__identity philosophy-copy"><BrandLogo src={logo} fallback={fallback} alt={alt} scale={scale} /><p>{microcopy} <b aria-hidden="true">{href.startsWith("#") ? "↓" : "↗"}</b></p></div></article>;
   return href.startsWith("#")
     ? <a href={href} className={`brand-scene ${className}`} aria-label={label}>{contents}</a>
     : <Link href={href} className={`brand-scene ${className}`} aria-label={label}>{contents}</Link>;

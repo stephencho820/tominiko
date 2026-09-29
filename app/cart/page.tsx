@@ -46,7 +46,7 @@ export default function CartPage() {
                     <div className="quantity-control" aria-label="Quantity selector">
                       <button type="button" onClick={() => updateQuantity(cartItemKey(item), item.quantity - 1)} disabled={item.quantity <= 1} aria-label="Decrease quantity"><Minus size={15} /></button>
                       <span aria-live="polite">{item.quantity}</span>
-                      <button type="button" onClick={() => updateQuantity(cartItemKey(item), item.quantity + 1)} disabled={item.quantity >= 20 || item.quantity >= item.product.stock_quantity} aria-label="Increase quantity"><Plus size={15} /></button>
+                      <button type="button" onClick={() => updateQuantity(cartItemKey(item), item.quantity + 1)} disabled={item.quantity >= 20 || item.quantity >= (productVariants(item.product).find((variant) => variant.id === item.variantId)?.stock ?? item.product.stock_quantity)} aria-label="Increase quantity"><Plus size={15} /></button>
                     </div>
                     <strong>{money(item.unitPrice * item.quantity)}</strong>
                   </div>

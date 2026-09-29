@@ -24,7 +24,8 @@ export function ProductPurchase({ product, compact = false }: { product: Product
   function chooseSize(next: string) { setSize(next); setVariantId(variants.find((item) => item.size === next)?.id ?? ""); setQuantity(1); }
   function addToBag() {
     if (!variant) return;
-    addToCart({ product, variantId: variant.id, weight: variant.size, grind: variant.grindType, quantity, unitPrice: price });
+    const didAdd = addToCart({ product, variantId: variant.id, weight: variant.size, grind: variant.grindType, quantity, unitPrice: price });
+    if (!didAdd) return;
     setAdded(true); if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(() => setAdded(false), 2500);
   }
   return <div className={`purchase-panel ${compact ? "purchase-panel-compact" : ""}`}>
