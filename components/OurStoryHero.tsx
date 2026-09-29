@@ -4,9 +4,9 @@ import type { CSSProperties, ReactNode } from "react";
 import type { PageSettings } from "@/lib/page-content-config";
 
 const illustrations = {
-  casa: { src: "/philosophy/tasting-room.png", width: 1120, height: 1400, alt: "Hand pouring coffee into a dripper" },
-  zero: { src: "/philosophy/zero-degrees.png", width: 1280, height: 1280, alt: "Zero Degrees small batch coffee roaster" },
-  tominiko: { src: "/philosophy/tominiko.png", width: 1280, height: 1280, alt: "Tominiko coffee bag" },
+  casa: { src: "/images/philosophy/tasting-room.png", width: 1120, height: 1400, alt: "Hand pouring coffee into a dripper" },
+  zero: { src: "/images/philosophy/zero-degrees.png", width: 1280, height: 1280, alt: "Zero Degrees small batch coffee roaster" },
+  tominiko: { src: "/images/philosophy/tominiko.png", width: 1280, height: 1280, alt: "Tominiko coffee bag" },
 } as const;
 
 function BrandLogo({ src, fallback, alt, scale }: { src?: string; fallback: string; alt: string; scale: number }) {

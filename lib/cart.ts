@@ -4,10 +4,13 @@ import type { CartItem, Product, Weight } from "@/types";
 function isProduct(value: unknown): value is Product {
   if (!value || typeof value !== "object") return false;
   const product = value as Partial<Product>;
-  return typeof product.id === "string" && typeof product.name === "string" &&
-    Number.isInteger(product.price_150g) && Number(product.price_150g) >= 0 &&
-    Number.isInteger(product.price_400g) && Number(product.price_400g) >= 0 &&
-    Number.isInteger(product.stock_quantity) && Number(product.stock_quantity) >= 0;
+  // A cart line with a custom variant does not depend on the legacy 150g/400g
+  // price columns. Production contains products created before those fields
+  // were required, so rejecting the whole line here made ADD TO CART appear to
+  // succeed while sanitizeCart silently discarded it.
+  return typeof product.id === "string" && Boolean(product.id) &&
+    typeof product.name === "string" && Boolean(product.name) &&
+    Number.isFinite(Number(product.stock_quantity)) && Number(product.stock_quantity) >= 0;
 }
 
 export function itemPrice(product: Product, weight: Weight) {
@@ -15,8 +18,9 @@ export function itemPrice(product: Product, weight: Weight) {
   return variant ? variant.salePrice ?? variant.price : weight === "150g" ? product.price_150g : product.price_400g;
 }
 
-export function maxCartQuantity(item: Pick<CartItem, "product">) {
-  return Math.min(20, Math.max(0, item.product.stock_quantity));
+export function maxCartQuantity(item: Pick<CartItem, "product" | "variantId" | "weight" | "grind">) {
+  const variant = productVariants(item.product).find((value) => value.id === item.variantId || (value.size === item.weight && value.grindType === item.grind));
+  return Math.min(20, Math.max(0, Number(variant?.stock ?? item.product.stock_quantity) || 0));
 }
 
 /** A stable identity for a product option. This deliberately includes both the
@@ -38,7 +42,7 @@ export function sanitizeCart(value: unknown): CartItem[] {
     // Grind labels are editable in the product admin. The selected variant is
     // the source of truth, so do not silently reject otherwise valid custom or
     // localized labels (for example, "핸드드립") at the cart boundary.
-    const quantity = Math.min(20, item.product.stock_quantity, variant.stock, Math.max(1, Number(item.quantity)));
+    const quantity = Math.min(20, Number(variant.stock), Math.max(1, Number(item.quantity)));
     if (!Number.isInteger(quantity) || quantity < 1 || !variant.available) return [];
     return [{ product: item.product, variantId: variant.id, weight, grind: variant.grindType, quantity, unitPrice: variant.salePrice ?? variant.price }];
   });
