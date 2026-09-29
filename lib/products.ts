@@ -3,11 +3,15 @@ import type { Product, ProductVariant } from "@/types";
 export const productImage = (product: Product) => product.primary_image_url || product.image_url || product.thumbnail_url || "/images/coffee-card-fallback.svg";
 export const tastingNotes = (product: Product) => (product.tasting_notes ?? "").split(/[,/·]/).map((note) => note.trim()).filter(Boolean);
 
-const STANDARD_GRINDS = ["Whole Bean", "Pour Over", "Espresso"] as const;
+export const STANDARD_GRINDS = ["Whole Bean", "Pour Over", "Espresso"] as const;
 const finitePrice = (value: unknown, fallback = 0) => {
   const price = Number(value);
-  return Number.isFinite(price) && price >= 0 ? price : fallback;
+  return Number.isFinite(price) && price > 0 ? price : fallback;
 };
+
+const legacyPrice = (product: Product, size: string) => size.toLowerCase() === "400g"
+  ? finitePrice(product.price_400g, finitePrice(product.price_150g))
+  : finitePrice(product.price_150g);
 
 export function productIsSoldOut(product: Product) {
   return product.status === "sold-out" || Number(product.stock_quantity) <= 0;
@@ -16,7 +20,10 @@ export function productIsSoldOut(product: Product) {
 export function productVariants(product: Product): ProductVariant[] {
   const soldOut = productIsSoldOut(product);
   if (product.variants?.length) return product.variants.flatMap((variant) => {
-    const price = finitePrice(variant.price, finitePrice(product.price_150g));
+    // Older catalogue rows can contain a generated variant with price 0. A
+    // zero-priced option must never reach the storefront; recover it from the
+    // matching legacy tier until the data migration has repaired the row.
+    const price = finitePrice(variant.price, legacyPrice(product, variant.size));
     const salePrice = variant.salePrice == null ? null : finitePrice(variant.salePrice, price);
     const stock = Math.max(0, Math.trunc(Number(variant.stock) || 0));
     return variant.id && variant.size && variant.grindType && variant.available
@@ -26,8 +33,8 @@ export function productVariants(product: Product): ProductVariant[] {
   const stock = Math.max(0, Math.trunc(Number(product.stock_quantity) || 0));
   const available = !soldOut && stock > 0;
   return [
-    ...STANDARD_GRINDS.map((grindType) => ({ id: `150g-${grindType}`, size: "150g", grindType, price: finitePrice(product.price_150g), stock, available })),
-    ...STANDARD_GRINDS.map((grindType) => ({ id: `400g-${grindType}`, size: "400g", grindType, price: finitePrice(product.price_400g), stock, available })),
+    ...STANDARD_GRINDS.map((grindType) => ({ id: `150g-${grindType}`, size: "150g", grindType, price: legacyPrice(product, "150g"), stock, available })),
+    ...STANDARD_GRINDS.map((grindType) => ({ id: `400g-${grindType}`, size: "400g", grindType, price: legacyPrice(product, "400g"), stock, available })),
   ];
 }
 

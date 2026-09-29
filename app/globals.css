@@ -1043,6 +1043,10 @@ html { scroll-behavior: smooth; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .casa-drop, .roaster-steam span, .tominiko-motion, .zero-philosophy__visual img, .zero-philosophy__steam span { animation: none !important; } .brand-scene__art, .brand-scene__identity b { transition: none; }.brand-scene:hover .brand-scene__art, .brand-scene:focus-visible .brand-scene__art { transform: none; } }
 
+@media (max-width: 768px) {
+  .zero-principles article, .zero-principles article:first-child { min-height: 0; text-align: left; }
+}
+
 input:hover, select:hover, textarea:hover { border-color: var(--brown); }
 input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 4px 0 -2px var(--accent); }
 @keyframes page-enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
