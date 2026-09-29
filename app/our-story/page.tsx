@@ -7,7 +7,7 @@ export default async function OurStoryPage() {
 
   return <main className="philosophy-page">
     <OurStoryHero settings={content} />
-    <section className="zero-philosophy" id="zero-degrees" aria-labelledby="zero-philosophy-title">
+    <section className="zero-philosophy" id="zero-degrees" aria-label="Zero Degrees roasting philosophy">
       <div className="zero-philosophy__intro">
         <div>
           <p className="zero-philosophy__brand">ZERO DEGREES</p>
@@ -20,7 +20,7 @@ export default async function OurStoryPage() {
       </div>
       <div className="zero-principles">
         {[1, 2, 3].map((number) => <article key={number}>
-          <span>0{number}</span>
+          <PageText as="span" setting={content.texts[`principle_${number}_number`]} />
           <PageText as="h3" setting={content.texts[`principle_${number}_title`]} />
           <PageText as="p" setting={content.texts[`principle_${number}_description`]} />
         </article>)}
