@@ -17,7 +17,7 @@ export function ProductPurchase({ product, compact = false }: { product: Product
   const [added, setAdded] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { addToCart } = useCart();
-  const variant = variants.find((item) => item.id === variantId) ?? availableGrinds[0];
+  const variant = availableGrinds.find((item) => item.id === variantId) ?? availableGrinds[0];
   const price = variant ? variant.salePrice ?? variant.price : product.price_150g;
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
