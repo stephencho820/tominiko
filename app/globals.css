@@ -95,9 +95,7 @@
   --coffee-soft: #4a3629;
 }
 
-html[data-lang="ko"] .lang-en,
-html:not([data-lang="en"]) .lang-en { display: none; }
-html[data-lang="en"] .lang-ko { display: none; }
+.lang-en { display: none; }
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }

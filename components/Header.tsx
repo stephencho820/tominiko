@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { useCart } from "./CartProvider";
-import { LanguageSwitcher } from "./LanguageSwitcher";
 
 const primaryLinks = [
   ["SHOP", "/shop"],
@@ -60,7 +59,6 @@ export function Header() {
               {itemCount}
             </span>
           </Link>
-          <LanguageSwitcher />
         </div>
 
         <button
@@ -92,7 +90,6 @@ export function Header() {
               Cart ({itemCount})
             </Link>
           </div>
-          <LanguageSwitcher />
         </nav>
       )}
     </header>
