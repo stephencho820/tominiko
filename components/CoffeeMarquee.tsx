@@ -1,23 +1,42 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { ShoppingBag } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import type { Product } from "@/types";
-import { productImage } from "@/lib/products";
+import { defaultProductVariant, productImage } from "@/lib/products";
+import { useCart } from "./CartProvider";
 
 const won = new Intl.NumberFormat("ko-KR");
 
 function CoffeeCard({ product, duplicate = false }: { product: Product; duplicate?: boolean }) {
   const image = productImage(product);
-  return <Link href={`/shop/${product.slug}`} className="marquee-coffee-card" draggable={false} tabIndex={duplicate ? -1 : undefined}>
-    <div className="marquee-coffee-image">
+  const variant = defaultProductVariant(product);
+  const { addToCart } = useCart();
+  const [added, setAdded] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  function addProduct(event: React.MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!variant) return;
+    addToCart({ product, variantId: variant.id, weight: variant.size, grind: variant.grindType, quantity: 1, unitPrice: variant.salePrice ?? variant.price });
+    setAdded(true);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => setAdded(false), 1800);
+  }
+  return <article className="marquee-coffee-card">
+    <Link href={`/shop/${product.slug}`} className="marquee-coffee-link" draggable={false} tabIndex={duplicate ? -1 : undefined}>
+      <div className="marquee-coffee-image">
       <img src={image} alt={product.image_url || product.primary_image_url || product.thumbnail_url ? product.name : "Casa di Stefano coffee"} draggable={false} />
-    </div>
-    <div className="marquee-coffee-copy">
-      <p>{product.origin}</p><h3>{product.korean_name || product.name}</h3>
-      <div><span>{product.tasting_notes || product.process || "Small batch roast"}</span><strong>₩{won.format(product.price_150g)}</strong></div>
-    </div>
-  </Link>;
+      </div>
+      <div className="marquee-coffee-copy">
+        <p>{product.origin}</p><h3>{product.korean_name || product.name}</h3>
+        <div><span>{product.tasting_notes || product.process || "Small batch roast"}</span><strong>₩{won.format(variant ? variant.salePrice ?? variant.price : product.price_150g)}</strong></div>
+      </div>
+    </Link>
+    <button className="marquee-add" type="button" onClick={addProduct} disabled={!variant} tabIndex={duplicate ? -1 : undefined} aria-live="polite"><ShoppingBag size={13} />{variant ? added ? "ADDED" : "ADD TO CART" : "SOLD OUT"}</button>
+  </article>;
 }
 
 export function CoffeeMarquee({ products }: { products: Product[] }) {

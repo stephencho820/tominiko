@@ -1,17 +1,25 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { itemPrice, maxCartQuantity, sanitizeCart } from "@/lib/cart";
+import { cartItemKey, itemPrice, maxCartQuantity, sanitizeCart } from "@/lib/cart";
 import type { CartItem } from "@/types";
 
 const CART_STORAGE_KEY = "casa-cart";
 
 type CartContext = {
   items: CartItem[];
+  cartItems: CartItem[];
   add: (item: CartItem) => void;
+  addToCart: (item: CartItem) => void;
+  removeFromCart: (itemKey: string) => void;
+  updateQuantity: (itemKey: string, quantity: number) => void;
+  updateOptions: (index: number, options: Partial<Pick<CartItem, "weight" | "grind">>) => void;
+  clearCart: () => void;
+  cartCount: number;
+  cartSubtotal: number;
+  // Backwards-compatible names used by the checkout flow.
   remove: (index: number) => void;
   update: (index: number, quantity: number) => void;
-  updateOptions: (index: number, options: Partial<Pick<CartItem, "weight" | "grind">>) => void;
   clear: () => void;
   total: number;
 };
@@ -47,12 +55,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const add = useCallback((item: CartItem) => setItems((current) => {
     const safeItem = sanitizeCart([item])[0];
     if (!safeItem) return current;
-    const existing = current.findIndex((currentItem) => currentItem.product.id === safeItem.product.id && currentItem.variantId === safeItem.variantId);
+    const existing = current.findIndex((currentItem) => cartItemKey(currentItem) === cartItemKey(safeItem));
     if (existing === -1) return [...current, safeItem];
     return current.map((currentItem, index) => index === existing
       ? { ...currentItem, quantity: Math.min(maxCartQuantity(currentItem), currentItem.quantity + safeItem.quantity) }
       : currentItem);
   }), []);
+  const removeFromCart = useCallback((itemKey: string) => setItems((current) => current.filter((item) => cartItemKey(item) !== itemKey)), []);
+  const updateQuantity = useCallback((itemKey: string, quantity: number) => setItems((current) => current.map((item) => cartItemKey(item) === itemKey
+    ? { ...item, quantity: Math.min(maxCartQuantity(item), Math.max(1, Math.trunc(quantity))) }
+    : item)), []);
   const remove = useCallback((index: number) => setItems((current) => current.filter((_, itemIndex) => itemIndex !== index)), []);
   const update = useCallback((index: number, quantity: number) => setItems((current) => current.map((item, itemIndex) => itemIndex === index
     ? { ...item, quantity: Math.min(maxCartQuantity(item), Math.max(1, Math.trunc(quantity))) }
@@ -64,11 +76,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   })), []);
   const clear = useCallback(() => setItems([]), []);
 
+  const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const cartSubtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const value = useMemo<CartContext>(() => ({
-    items,
-    add, remove, update, updateOptions, clear,
-    total: items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0),
-  }), [add, clear, items, remove, update, updateOptions]);
+    items, cartItems: items,
+    add, addToCart: add, remove, removeFromCart, update, updateQuantity, updateOptions, clear, clearCart: clear,
+    cartCount, cartSubtotal, total: cartSubtotal,
+  }), [add, cartCount, cartSubtotal, clear, items, remove, removeFromCart, update, updateOptions, updateQuantity]);
 
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

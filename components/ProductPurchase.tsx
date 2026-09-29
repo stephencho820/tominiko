@@ -16,7 +16,7 @@ export function ProductPurchase({ product, compact = false }: { product: Product
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { add } = useCart();
+  const { addToCart } = useCart();
   const variant = variants.find((item) => item.id === variantId) ?? availableGrinds[0];
   const price = variant ? variant.salePrice ?? variant.price : product.price_150g;
 
@@ -24,7 +24,7 @@ export function ProductPurchase({ product, compact = false }: { product: Product
   function chooseSize(next: string) { setSize(next); setVariantId(variants.find((item) => item.size === next)?.id ?? ""); setQuantity(1); }
   function addToBag() {
     if (!variant) return;
-    add({ product, variantId: variant.id, weight: variant.size, grind: variant.grindType, quantity, unitPrice: price });
+    addToCart({ product, variantId: variant.id, weight: variant.size, grind: variant.grindType, quantity, unitPrice: price });
     setAdded(true); if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(() => setAdded(false), 2500);
   }
   return <div className={`purchase-panel ${compact ? "purchase-panel-compact" : ""}`}>
