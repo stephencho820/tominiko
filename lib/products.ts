@@ -16,6 +16,10 @@ const legacyPrices = (product: Product, size: string) => {
   return { price, salePrice: salePrice < price ? salePrice : null };
 };
 
+const legacyPrice = (product: Product, size: string) => size.toLowerCase() === "400g"
+  ? finitePrice(product.price_400g, finitePrice(product.price_150g))
+  : finitePrice(product.price_150g);
+
 export function productIsSoldOut(product: Product) {
   return product.status === "sold-out" || Number(product.stock_quantity) <= 0;
 }
