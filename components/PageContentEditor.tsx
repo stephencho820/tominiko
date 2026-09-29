@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { pageDefinitions, type PageSettings, type PageSlug, type PromotionBanner } from "@/lib/page-content-config";
+import { TastingRoomEditor } from "./TastingRoomEditor";
 
 export function PageContentEditor({ slug, initial }: { slug: PageSlug; initial: PageSettings }) {
   const definition = pageDefinitions[slug];
@@ -47,6 +48,7 @@ export function PageContentEditor({ slug, initial }: { slug: PageSlug; initial: 
     }
   };
   return <div className="admin-page-editor">
+    {slug === "tasting-room" && settings.tastingRoom && <TastingRoomEditor value={settings.tastingRoom} onChange={(tastingRoom) => setSettings((current) => ({ ...current, tastingRoom }))} onStatus={setStatus} onBusy={setBusy} />}
     {Object.keys(definition.texts).length > 0 && <section className="admin-panel"><div className="admin-section-heading"><div><p className="eyebrow">Text &amp; typography</p><h2>Page copy</h2></div></div><p className="admin-muted">Line breaks are preserved. Leave text size empty to use the page&apos;s responsive default.</p>
       <div className="admin-content-fields">{Object.entries(definition.texts).map(([key, entry]) => <div className="admin-content-field" key={key}><label>{entry[0]}<textarea value={settings.texts[key]?.value ?? ""} onChange={(event) => updateText(key, { value: event.target.value })} /></label><div><label>Font<select value={settings.texts[key]?.font ?? "serif"} onChange={(event) => updateText(key, { font: event.target.value as "serif" | "sans" | "display" })}><option value="serif">Serif</option><option value="sans">Sans serif</option><option value="display">Display</option></select></label><label>Text size<input value={settings.texts[key]?.size ?? ""} placeholder="e.g. 48px, 5vw" onChange={(event) => updateText(key, { size: event.target.value })} /></label></div></div>)}</div>
     </section>}

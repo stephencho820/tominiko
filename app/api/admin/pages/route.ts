@@ -6,7 +6,7 @@ const fonts = new Set(["serif", "sans", "display"]);
 
 function parseSettings(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  const body = value as { slug?: unknown; texts?: unknown; images?: unknown; heroMedia?: unknown; promotions?: unknown };
+  const body = value as { slug?: unknown; texts?: unknown; images?: unknown; heroMedia?: unknown; promotions?: unknown; tastingRoom?: unknown };
   if (typeof body.slug !== "string" || !(body.slug in pageDefinitions) || !body.texts || typeof body.texts !== "object" || !body.images || typeof body.images !== "object") return null;
   const slug = body.slug as PageSlug;
   const definition = pageDefinitions[slug];
@@ -29,6 +29,20 @@ function parseSettings(value: unknown) {
   }
   let hero_media: PageSettings["heroMedia"];
   let promotions: PageSettings["promotions"];
+  let tasting_room: PageSettings["tastingRoom"];
+  if (slug === "tasting-room") {
+    const room = body.tastingRoom as Record<string, unknown> | undefined;
+    if (!room || typeof room.heroImage !== "string" || typeof room.address !== "string" || typeof room.phone !== "string" || typeof room.phoneNote !== "string" || typeof room.openingHours !== "string" || !Array.isArray(room.galleryImages)) return null;
+    if (room.heroImage.length > 2_000 || room.address.length > 5_000 || room.phone.length > 100 || room.phoneNote.length > 1_000 || room.openingHours.length > 5_000) return null;
+    const galleryImages = room.galleryImages.map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const image = item as Record<string, unknown>;
+      if (typeof image.id !== "string" || typeof image.url !== "string" || typeof image.alt !== "string" || typeof image.order !== "number" || image.url.length > 2_000 || image.alt.length > 300) return null;
+      return { id: image.id, url: image.url, alt: image.alt, order: image.order };
+    });
+    if (galleryImages.some((image) => !image) || galleryImages.length > 50) return null;
+    tasting_room = { heroImage: room.heroImage, address: room.address, phone: room.phone, phoneNote: room.phoneNote, openingHours: room.openingHours, galleryImages: galleryImages as NonNullable<PageSettings["tastingRoom"]>["galleryImages"] };
+  }
   if (slug === "home") {
     const hero = body.heroMedia as Record<string, unknown> | undefined;
     if (!hero || typeof hero.url !== "string" || hero.url.length > 2_000 || (hero.type !== "image" && hero.type !== "video") || typeof hero.mobileUrl !== "string" || hero.mobileUrl.length > 2_000 || (hero.mobileType !== "image" && hero.mobileType !== "video") || typeof hero.active !== "boolean" || typeof hero.overlay !== "boolean") return null;
@@ -46,7 +60,7 @@ function parseSettings(value: unknown) {
       promotions.push({ id: banner.id, placement: banner.placement, image: banner.image, mobileImage: banner.mobileImage, hyperlink: banner.hyperlink, active: banner.active, sortOrder: banner.sortOrder, alt: banner.alt });
     }
   }
-  return { slug, texts, images, hero_media, promotions };
+  return { slug, texts, images, hero_media, promotions, tasting_room };
 }
 
 export async function PUT(request: Request) {
