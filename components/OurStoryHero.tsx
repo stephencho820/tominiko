@@ -48,9 +48,9 @@ export function OurStoryHero({ settings }: { settings: PageSettings }) {
       <p>커피를 볶고, 맛보고, 당신의 하루에 건넵니다.</p>
     </header>
     <div className="brand-stage__scenes">
-      <HeroBrandItem href="/tasting-room" className="brand-scene--casa" label="Visit Casa di Stefano Tasting Room" image={illustrations.casa} overlay={<TastingRoomOverlay />} logo={settings.images.casa_logo} fallback="CASA DI STEFANO" alt={alt("casa_logo_alt", "Casa di Stefano")} scale={scale("casa_logo_scale")} microcopy="TASTING ROOM" />
-      <HeroBrandItem href="#zero-degrees" className="brand-scene--zero" label="Explore Zero Degrees roasting philosophy" image={illustrations.zero} overlay={<RoasterSmoke />} logo={settings.images.zero_logo} fallback="ZERO DEGREES" alt={alt("zero_logo_alt", "Zero Degrees")} scale={scale("zero_logo_scale")} microcopy="ROASTING PHILOSOPHY" />
       <HeroBrandItem href="/shop" className="brand-scene--tominiko" label="Shop Tominiko coffee" image={illustrations.tominiko} logo={settings.images.tominiko_logo} fallback="TOMINIKO" alt={alt("tominiko_logo_alt", "Tominiko")} scale={scale("tominiko_logo_scale")} microcopy="SHOP COFFEE" />
+      <HeroBrandItem href="#zero-degrees" className="brand-scene--zero" label="Explore Zero Degrees roasting philosophy" image={illustrations.zero} overlay={<RoasterSmoke />} logo={settings.images.zero_logo} fallback="ZERO DEGREES" alt={alt("zero_logo_alt", "Zero Degrees")} scale={scale("zero_logo_scale")} microcopy="ROASTING PHILOSOPHY" />
+      <HeroBrandItem href="/tasting-room" className="brand-scene--casa" label="Visit Casa di Stefano Tasting Room" image={illustrations.casa} overlay={<TastingRoomOverlay />} logo={settings.images.casa_logo} fallback="CASA DI STEFANO" alt={alt("casa_logo_alt", "Casa di Stefano")} scale={scale("casa_logo_scale")} microcopy="TASTING ROOM" />
     </div>
   </section>;
 }

@@ -14,7 +14,7 @@ export function HeroMediaSection({ media }: { media: HeroMedia }) {
       {showMedia ? <>{renderMedia(media.url, media.type, "home-hero-media-desktop")}{renderMedia(mobileUrl, mobileType, "home-hero-media-mobile")}</> : <div className="home-hero-fallback" />}
       {media.overlay && <div className="home-hero-shade" />}
       <a className="home-hero-cta" href="#coffee-marquee">
-        <span className="lang-ko">내 커피 찾기</span><span className="lang-en">Find my coffee</span><span aria-hidden="true">↓</span>
+        <span className="lang-ko">내 원두 찾기</span><span className="lang-en">Find my beans</span><span aria-hidden="true">↓</span>
       </a>
     </section>
   );
