@@ -16,18 +16,23 @@ function BrandLogo({ src, fallback, alt, scale }: { src?: string; fallback: stri
 }
 
 function TastingRoomOverlay() {
-  return <span className="pour-overlay" aria-hidden="true"><i className="water-stream" /><i className="coffee-drop" /></span>;
+  return <span className="casa-drop" aria-hidden="true" />;
 }
 
 function RoasterSmoke() {
-  return <span className="roaster-smoke" aria-hidden="true"><i /><i /><i /></span>;
+  return <span className="roaster-steam" aria-hidden="true">
+    {[0, 1, 2].map((line) => <span key={line}>
+      <svg viewBox="0 0 18 42" focusable="false"><path d="M10 41 C2 32, 16 25, 8 16 C3 10, 11 6, 9 1" /></svg>
+    </span>)}
+  </span>;
 }
 
 function HeroBrandItem({ href, className, label, image, logo, fallback, alt, scale, microcopy, overlay }: {
   href: string; className: string; label: string; image: (typeof illustrations)[keyof typeof illustrations]; logo?: string;
   fallback: string; alt: string; scale: number; microcopy: string; overlay?: ReactNode;
 }) {
-  const contents = <article className="philosophy-card"><div className="brand-scene__art philosophy-visual"><Image src={image.src} width={image.width} height={image.height} sizes="(max-width: 768px) 75vw, 340px" alt={image.alt} priority />{overlay}</div><div className="brand-scene__identity philosophy-copy"><BrandLogo src={logo} fallback={fallback} alt={alt} scale={scale} /><p>{microcopy} <b aria-hidden="true">{href.startsWith("#") ? "↓" : "↗"}</b></p></div></article>;
+  const motionClass = className === "brand-scene--tominiko" ? " tominiko-motion" : "";
+  const contents = <article className="philosophy-card"><div className="brand-scene__art philosophy-visual"><div className={`philosophy-illustration${motionClass}`}><Image src={image.src} width={image.width} height={image.height} sizes="(max-width: 768px) 75vw, 340px" alt={image.alt} priority />{overlay}</div></div><div className="brand-scene__identity philosophy-copy"><BrandLogo src={logo} fallback={fallback} alt={alt} scale={scale} /><p>{microcopy} <b aria-hidden="true">{href.startsWith("#") ? "↓" : "↗"}</b></p></div></article>;
   return href.startsWith("#")
     ? <a href={href} className={`brand-scene ${className}`} aria-label={label}>{contents}</a>
     : <Link href={href} className={`brand-scene ${className}`} aria-label={label}>{contents}</Link>;
