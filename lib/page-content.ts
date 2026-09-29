@@ -2,7 +2,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { runSupabaseQuery } from "@/lib/supabase/query";
-import { defaultPageSettings, type PageSettings, type PageSlug, type PromotionBanner } from "@/lib/page-content-config";
+import { defaultPageSettings, type GalleryImage, type PageSettings, type PageSlug, type PromotionBanner } from "@/lib/page-content-config";
 
 function isPromotionBanner(item: unknown): item is PromotionBanner {
   if (!item || typeof item !== "object") return false;
@@ -13,7 +13,13 @@ function isPromotionBanner(item: unknown): item is PromotionBanner {
     && typeof banner.active === "boolean" && typeof banner.sortOrder === "number" && typeof banner.alt === "string";
 }
 
-function mergePageSettings(fallback: PageSettings, data: { texts: unknown; images: unknown; hero_media?: unknown; promotions?: unknown }): PageSettings {
+function isGalleryImage(item: unknown): item is GalleryImage {
+  if (!item || typeof item !== "object") return false;
+  const image = item as Record<string, unknown>;
+  return typeof image.id === "string" && typeof image.url === "string" && typeof image.alt === "string" && typeof image.order === "number";
+}
+
+function mergePageSettings(fallback: PageSettings, data: { texts: unknown; images: unknown; hero_media?: unknown; promotions?: unknown; tasting_room?: unknown }): PageSettings {
   const storedTexts = data.texts && typeof data.texts === "object" ? data.texts as Record<string, unknown> : {};
   const storedImages = data.images && typeof data.images === "object" ? data.images as Record<string, unknown> : {};
 
@@ -40,7 +46,17 @@ function mergePageSettings(fallback: PageSettings, data: { texts: unknown; image
   const promotions = fallback.promotions?.map((defaultBanner) =>
     storedPromotions.find((banner) => banner.placement === defaultBanner.placement) ?? defaultBanner
   );
-  return { texts, images, heroMedia, promotions };
+  const rawRoom = data.tasting_room && typeof data.tasting_room === "object" ? data.tasting_room as Record<string, unknown> : null;
+  const roomFallback = fallback.tastingRoom;
+  const tastingRoom = roomFallback && rawRoom ? {
+    heroImage: typeof rawRoom.heroImage === "string" && rawRoom.heroImage ? rawRoom.heroImage : roomFallback.heroImage,
+    address: typeof rawRoom.address === "string" ? rawRoom.address : roomFallback.address,
+    phone: typeof rawRoom.phone === "string" ? rawRoom.phone : roomFallback.phone,
+    phoneNote: typeof rawRoom.phoneNote === "string" ? rawRoom.phoneNote : roomFallback.phoneNote,
+    openingHours: typeof rawRoom.openingHours === "string" ? rawRoom.openingHours : roomFallback.openingHours,
+    galleryImages: Array.isArray(rawRoom.galleryImages) ? rawRoom.galleryImages.filter(isGalleryImage).sort((a, b) => a.order - b.order) : roomFallback.galleryImages,
+  } : roomFallback;
+  return { texts, images, heroMedia, promotions, tastingRoom };
 }
 
 export async function getPageSettings(slug: PageSlug): Promise<PageSettings> {
@@ -49,7 +65,7 @@ export async function getPageSettings(slug: PageSlug): Promise<PageSettings> {
   try {
     const supabase = await createClient();
     const { data, error } = await runSupabaseQuery(async (signal) =>
-      await supabase.from("page_settings").select("texts,images,hero_media,promotions").eq("slug", slug).abortSignal(signal).maybeSingle(),
+      await supabase.from("page_settings").select("texts,images,hero_media,promotions,tasting_room").eq("slug", slug).abortSignal(signal).maybeSingle(),
     );
     if (error || !data) return fallback;
     return mergePageSettings(fallback, data);

@@ -43,6 +43,7 @@ create table public.order_items (
 create table public.page_settings (
   slug text primary key, texts jsonb not null default '{}'::jsonb,
   images jsonb not null default '{}'::jsonb,
+  tasting_room jsonb not null default '{}'::jsonb,
   hero_media jsonb, promotions jsonb not null default '[]'::jsonb,
   updated_at timestamptz not null default now()
 );
