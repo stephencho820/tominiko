@@ -11,7 +11,7 @@ export default async function TastingRoomPage() {
   const heroImage = room.heroImage || defaultHero;
   const phoneHref = room.phone.replace(/[^\d+]/g, "");
   return <main className="tasting-room-page">
-    <section className="room-visit-hero"><SafeHeroImage src={heroImage} fallback={defaultHero} alt="Casa di Stefano Tasting Room" /><Link href="/our-story" className="room-story-link">OUR STORY <span>↗</span></Link></section>
+    <section className="room-visit-hero"><SafeHeroImage src={heroImage} fallback={defaultHero} alt="Casa di Stefano Tasting Room" /><Link href="/our-story" className="room-story-link">PHILOSOPHY <span>↗</span></Link></section>
     <section className="room-visit" aria-labelledby="visit-title"><p className="section-label" id="visit-title">VISIT</p><div className="room-visit-layout">
       <figure className="room-map"><img src="/images/tasting-room/map.svg" alt="Casa di Stefano Tasting Room location map" /></figure>
       <div className="room-visit-details">

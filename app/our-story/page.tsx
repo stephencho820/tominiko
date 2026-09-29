@@ -1,10 +1,30 @@
-import Link from "next/link";
+import { OurStoryHero } from "@/components/OurStoryHero";
 import { PageText } from "@/components/PageText";
 import { getPageSettings } from "@/lib/page-content";
 
 export default async function OurStoryPage() {
-  const [content, zero] = await Promise.all([getPageSettings("our-story"), getPageSettings("zero-degrees")]);
-  return <main><section className="story-opening" style={content.images.opening ? { backgroundImage: `url(${content.images.opening})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}><p className="section-label">OUR STORY</p><h1><PageText className="lang-ko" setting={content.texts.title_ko} /><PageText className="lang-en" setting={content.texts.title_en} /></h1><p><PageText className="lang-ko" setting={content.texts.intro_ko} /><PageText className="lang-en" setting={content.texts.intro_en} /></p></section><section className="brand-diagram"><div className="story-brand casa"><span>HOUSE</span><h2>CASA DI<br />STEFANO</h2><p>A house for coffee.</p></div><div className="diagram-arrow">↓</div><div className="story-brand zero"><span>CRAFT</span><h2>ZERO<br />DEGREES</h2><p>Our way of roasting.</p></div><div className="diagram-arrow">↓</div><div className="story-brand tominiko"><span>COFFEE</span><h2>TOMINIKO</h2><p>Coffee made to be enjoyed.</p></div></section><section className="story-explanation"><div><p className="section-label">HOUSE → CRAFT → COFFEE</p><h2><span className="lang-ko">장소가 철학을 만나<br />매일의 커피가 됩니다.</span><span className="lang-en">Place becomes philosophy,<br />and philosophy becomes coffee.</span></h2></div><div><p><PageText className="lang-ko" setting={content.texts.explanation_ko} /><PageText className="lang-en" setting={content.texts.explanation_en} /></p></div></section>
-    <section className="story-zero-philosophy"><p className="section-label">ZERO DEGREES · OUR PHILOSOPHY</p><div><h2><PageText className="lang-ko" setting={zero.texts.why_ko} /><PageText className="lang-en" setting={zero.texts.why_en} /></h2><div><p className="story-zero-tagline"><PageText setting={zero.texts.tagline} /></p><p><PageText className="lang-ko" setting={zero.texts.why_body_ko} /><PageText className="lang-en" setting={zero.texts.why_body_en} /></p></div></div><div className="story-zero-principles"><span>01 · ZERO ADDITIVES</span><span>02 · ZERO MASKING</span><span>03 · ZERO GUESSWORK</span></div></section>
-    <section className="story-closing"><PageText as="p" setting={content.texts.closing} /><Link href="/shop" className="button-primary"><span className="lang-ko">Tominiko 커피 보기</span><span className="lang-en">Explore Tominiko</span> ↗</Link></section></main>;
+  const content = await getPageSettings("our-story");
+
+  return <main className="philosophy-page">
+    <OurStoryHero settings={content} />
+    <section className="zero-philosophy" id="zero-degrees" aria-label="Zero Degrees roasting philosophy">
+      <div className="zero-philosophy__intro">
+        <div>
+          <p className="zero-philosophy__brand">ZERO DEGREES</p>
+          <PageText as="p" className="section-label" setting={content.texts.philosophy_eyebrow} />
+        </div>
+        <div>
+          <PageText as="h2" setting={content.texts.philosophy_title} />
+          <PageText as="p" className="zero-philosophy__description" setting={content.texts.philosophy_description} />
+        </div>
+      </div>
+      <div className="zero-principles">
+        {[1, 2, 3].map((number) => <article key={number}>
+          <PageText as="span" setting={content.texts[`principle_${number}_number`]} />
+          <PageText as="h3" setting={content.texts[`principle_${number}_title`]} />
+          <PageText as="p" setting={content.texts[`principle_${number}_description`]} />
+        </article>)}
+      </div>
+    </section>
+  </main>;
 }

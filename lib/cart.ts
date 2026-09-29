@@ -1,7 +1,5 @@
 import { productVariants } from "@/lib/products";
-import type { CartItem, Grind, Product, Weight } from "@/types";
-
-const grinds = new Set<Grind>(["Whole Bean", "Filter", "Espresso", "Moka Pot", "Pour Over", "Coffee Maker", "French Press", "Other"]);
+import type { CartItem, Product, Weight } from "@/types";
 
 function isProduct(value: unknown): value is Product {
   if (!value || typeof value !== "object") return false;
@@ -33,12 +31,15 @@ export function sanitizeCart(value: unknown): CartItem[] {
   return value.flatMap((entry): CartItem[] => {
     if (!entry || typeof entry !== "object") return [];
     const item = entry as Partial<CartItem>;
-    if (!isProduct(item.product) || typeof item.weight !== "string" || !item.weight || !grinds.has(item.grind as Grind)) return [];
-    const quantity = Math.min(20, item.product.stock_quantity, Math.max(1, Number(item.quantity)));
-    if (!Number.isInteger(quantity) || quantity < 1) return [];
+    if (!isProduct(item.product) || typeof item.weight !== "string" || !item.weight || typeof item.grind !== "string" || !item.grind.trim()) return [];
     const weight = item.weight as Weight;
     const variant = productVariants(item.product).find((value) => value.id === item.variantId || (value.size === weight && value.grindType === item.grind));
     if (!variant) return [];
+    // Grind labels are editable in the product admin. The selected variant is
+    // the source of truth, so do not silently reject otherwise valid custom or
+    // localized labels (for example, "핸드드립") at the cart boundary.
+    const quantity = Math.min(20, item.product.stock_quantity, variant.stock, Math.max(1, Number(item.quantity)));
+    if (!Number.isInteger(quantity) || quantity < 1 || !variant.available) return [];
     return [{ product: item.product, variantId: variant.id, weight, grind: variant.grindType, quantity, unitPrice: variant.salePrice ?? variant.price }];
   });
 }
