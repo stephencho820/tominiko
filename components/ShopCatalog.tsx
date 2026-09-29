@@ -25,7 +25,8 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
     event.preventDefault();
     event.stopPropagation();
     if (!variant) return;
-    addToCart({ product, variantId: variant.id, weight: variant.size, grind: variant.grindType, quantity: 1, unitPrice: variant.salePrice ?? variant.price });
+    const didAdd = addToCart({ product, variantId: variant.id, weight: variant.size, grind: variant.grindType, quantity: 1, unitPrice: variant.salePrice ?? variant.price });
+    if (!didAdd) return;
     setAdded(true);
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setAdded(false), 1800);

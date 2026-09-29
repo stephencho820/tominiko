@@ -9,8 +9,8 @@ const CART_STORAGE_KEY = "casa-cart";
 type CartContext = {
   items: CartItem[];
   cartItems: CartItem[];
-  add: (item: CartItem) => void;
-  addToCart: (item: CartItem) => void;
+  add: (item: CartItem) => boolean;
+  addToCart: (item: CartItem) => boolean;
   removeFromCart: (itemKey: string) => void;
   updateQuantity: (itemKey: string, quantity: number) => void;
   updateOptions: (index: number, options: Partial<Pick<CartItem, "weight" | "grind">>) => void;
@@ -52,15 +52,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [hasHydrated, items]);
 
-  const add = useCallback((item: CartItem) => setItems((current) => {
+  const add = useCallback((item: CartItem) => {
     const safeItem = sanitizeCart([item])[0];
-    if (!safeItem) return current;
-    const existing = current.findIndex((currentItem) => cartItemKey(currentItem) === cartItemKey(safeItem));
-    if (existing === -1) return [...current, safeItem];
-    return current.map((currentItem, index) => index === existing
-      ? { ...currentItem, quantity: Math.min(maxCartQuantity(currentItem), currentItem.quantity + safeItem.quantity) }
-      : currentItem);
-  }), []);
+    if (!safeItem) return false;
+    setItems((current) => {
+      const existing = current.findIndex((currentItem) => cartItemKey(currentItem) === cartItemKey(safeItem));
+      if (existing === -1) return [...current, safeItem];
+      return current.map((currentItem, index) => index === existing
+        ? { ...currentItem, quantity: Math.min(maxCartQuantity(currentItem), currentItem.quantity + safeItem.quantity) }
+        : currentItem);
+    });
+    return true;
+  }, []);
   const removeFromCart = useCallback((itemKey: string) => setItems((current) => current.filter((item) => cartItemKey(item) !== itemKey)), []);
   const updateQuantity = useCallback((itemKey: string, quantity: number) => setItems((current) => current.map((item) => cartItemKey(item) === itemKey
     ? { ...item, quantity: Math.min(maxCartQuantity(item), Math.max(1, Math.trunc(quantity))) }
