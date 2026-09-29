@@ -19,7 +19,7 @@ export function productPrice(product: Product) {
 
 
 export function defaultProductVariant(product: Product) {
-  return productVariants(product).reduce<ProductVariant | undefined>((cheapest, variant) => {
+  return productVariants(product).filter((variant) => variant.stock > 0).reduce<ProductVariant | undefined>((cheapest, variant) => {
     if (!cheapest) return variant;
     return (variant.salePrice ?? variant.price) < (cheapest.salePrice ?? cheapest.price) ? variant : cheapest;
   }, undefined);
