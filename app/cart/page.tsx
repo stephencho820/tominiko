@@ -4,12 +4,12 @@ import Link from "next/link";
 import { Minus, Plus, X } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
 import { productImage, productVariants } from "@/lib/products";
+import { cartItemKey } from "@/lib/cart";
 
 const money = (value: number) => `₩${value.toLocaleString("ko-KR")}`;
 
 export default function CartPage() {
-  const { items, total, remove, update, updateOptions } = useCart();
-  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const { cartItems: items, cartSubtotal: total, cartCount: itemCount, removeFromCart, updateQuantity, updateOptions } = useCart();
 
   return (
     <main className="purchase-page cart-page">
@@ -30,23 +30,23 @@ export default function CartPage() {
         <div className="cart-layout">
           <section className="cart-list" aria-label="Cart items">
             {items.map((item, index) => (
-              <article className="cart-item" key={`${item.product.id}-${item.weight}-${item.grind}-${index}`}>
+              <article className="cart-item" key={cartItemKey(item)}>
                 <div className="cart-image grain">
                   <img src={productImage(item.product)} alt={item.product.name} />
                 </div>
                 <div className="cart-item-main">
                   <div className="cart-item-title">
                     <div><p className="section-label">Tominiko Coffee</p><h2>{item.product.name}</h2></div>
-                    <button type="button" className="cart-remove" onClick={() => remove(index)} aria-label={`${item.product.name} remove`}><X size={16} /><span><span className="lang-ko">삭제</span><span className="lang-en">Remove</span></span></button>
+                    <button type="button" className="cart-remove" onClick={() => removeFromCart(cartItemKey(item))} aria-label={`${item.product.name} remove`}><X size={16} /><span><span className="lang-ko">삭제</span><span className="lang-en">Remove</span></span></button>
                   </div>
                   <div className="cart-options">
                     <label><span><span className="lang-ko">옵션</span><span className="lang-en">Variant</span></span><select value={item.variantId} onChange={(event) => { const variant = productVariants(item.product).find((value) => value.id === event.target.value); if (variant) updateOptions(index, { weight: variant.size, grind: variant.grindType }); }} disabled>{productVariants(item.product).filter((variant) => variant.id === item.variantId).map((variant) => <option key={variant.id} value={variant.id}>{variant.size} · {variant.grindType}</option>)}</select></label>
                   </div>
                   <div className="cart-item-footer">
                     <div className="quantity-control" aria-label="Quantity selector">
-                      <button type="button" onClick={() => update(index, item.quantity - 1)} disabled={item.quantity <= 1} aria-label="Decrease quantity"><Minus size={15} /></button>
+                      <button type="button" onClick={() => updateQuantity(cartItemKey(item), item.quantity - 1)} disabled={item.quantity <= 1} aria-label="Decrease quantity"><Minus size={15} /></button>
                       <span aria-live="polite">{item.quantity}</span>
-                      <button type="button" onClick={() => update(index, item.quantity + 1)} disabled={item.quantity >= 20 || item.quantity >= item.product.stock_quantity} aria-label="Increase quantity"><Plus size={15} /></button>
+                      <button type="button" onClick={() => updateQuantity(cartItemKey(item), item.quantity + 1)} disabled={item.quantity >= 20 || item.quantity >= item.product.stock_quantity} aria-label="Increase quantity"><Plus size={15} /></button>
                     </div>
                     <strong>{money(item.unitPrice * item.quantity)}</strong>
                   </div>

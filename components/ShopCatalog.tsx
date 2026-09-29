@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { Grid2X2, List, Rows3, ShoppingBag } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "./CartProvider";
-import { productImage, productPrice, productVariants, tastingNotes } from "@/lib/products";
+import { defaultProductVariant, productImage, productPrice, tastingNotes } from "@/lib/products";
 import type { Product, ProductCategory } from "@/types";
 
 type View = "grid" | "list" | "large";
@@ -24,10 +24,21 @@ function categoryOf(product: Product): ProductCategory {
 }
 
 function CatalogCard({ product, view }: { product: Product; view: View }) {
-  const { add } = useCart();
-  const variant = productVariants(product)[0];
+  const { addToCart } = useCart();
+  const variant = defaultProductVariant(product);
+  const [added, setAdded] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const notes = tastingNotes(product).join(" · ");
-  const addProduct = () => variant && add({ product, variantId: variant.id, weight: variant.size, grind: variant.grindType, quantity: 1, unitPrice: variant.salePrice ?? variant.price });
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  const addProduct = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!variant) return;
+    addToCart({ product, variantId: variant.id, weight: variant.size, grind: variant.grindType, quantity: 1, unitPrice: variant.salePrice ?? variant.price });
+    setAdded(true);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => setAdded(false), 1800);
+  };
   return <article className={`catalog-card catalog-card--${view}`}>
     <Link href={`/shop/${product.slug}`} className="catalog-card-image"><img src={productImage(product)} alt={product.name} /></Link>
     <div className="catalog-card-copy">
@@ -37,7 +48,7 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
       {notes && <p className="catalog-notes">{notes}</p>}
       {view === "list" && product.short_description && <p className="catalog-description">{product.short_description}</p>}
       <div className="catalog-buy"><strong>₩{productPrice(product).toLocaleString("ko-KR")}</strong>
-        <button type="button" onClick={addProduct} disabled={!variant}><ShoppingBag size={14} />{variant ? "ADD TO CART" : "SOLD OUT"}</button>
+        <button type="button" onClick={addProduct} disabled={!variant} aria-live="polite"><ShoppingBag size={14} />{variant ? added ? "ADDED" : "ADD TO CART" : "SOLD OUT"}</button>
       </div>
     </div>
   </article>;

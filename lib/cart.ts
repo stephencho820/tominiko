@@ -21,6 +21,12 @@ export function maxCartQuantity(item: Pick<CartItem, "product">) {
   return Math.min(20, Math.max(0, item.product.stock_quantity));
 }
 
+/** A stable identity for a product option. This deliberately includes both the
+ * product and variant so future sizes/grinds remain separate cart lines. */
+export function cartItemKey(item: Pick<CartItem, "product" | "variantId" | "weight" | "grind">) {
+  return [item.product.id, item.variantId || item.weight, item.grind].join("::");
+}
+
 export function sanitizeCart(value: unknown): CartItem[] {
   if (!Array.isArray(value)) return [];
 

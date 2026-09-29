@@ -16,3 +16,11 @@ export function productPrice(product: Product) {
   const variants = productVariants(product);
   return variants.length ? Math.min(...variants.map((variant) => variant.salePrice ?? variant.price)) : product.sale_price ?? product.price_150g;
 }
+
+
+export function defaultProductVariant(product: Product) {
+  return productVariants(product).reduce<ProductVariant | undefined>((cheapest, variant) => {
+    if (!cheapest) return variant;
+    return (variant.salePrice ?? variant.price) < (cheapest.salePrice ?? cheapest.price) ? variant : cheapest;
+  }, undefined);
+}

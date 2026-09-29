@@ -15,8 +15,7 @@ const primaryLinks = [
 export function Header() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const { items } = useCart();
-  const itemCount = items.reduce((total, item) => total + item.quantity, 0);
+  const { cartCount: itemCount } = useCart();
 
   useEffect(() => {
     const story = document.querySelector<HTMLElement>(".home-story");
@@ -57,11 +56,9 @@ export function Header() {
           </Link>
           <Link href="/cart" className="nav-meta flex items-center gap-2 transition-colors hover:text-[var(--accent)]">
             <span>Cart</span>
-            {itemCount > 0 && (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--ink)] px-1 text-[9px] font-semibold text-[var(--paper)]">
-                {itemCount}
-              </span>
-            )}
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--ink)] px-1 text-[9px] font-semibold text-[var(--paper)]" aria-label={`${itemCount} items in cart`}>
+              {itemCount}
+            </span>
           </Link>
           <LanguageSwitcher />
         </div>
@@ -92,7 +89,7 @@ export function Header() {
               Account
             </Link>
             <Link href="/cart" className="nav-meta" onClick={() => setOpen(false)}>
-              Cart {itemCount > 0 ? `(${itemCount})` : ""}
+              Cart ({itemCount})
             </Link>
           </div>
           <LanguageSwitcher />
