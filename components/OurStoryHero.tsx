@@ -27,7 +27,7 @@ function HeroBrandItem({ href, className, label, image, logo, fallback, alt, sca
   href: string; className: string; label: string; image: (typeof illustrations)[keyof typeof illustrations]; logo?: string;
   fallback: string; alt: string; scale: number; microcopy: string; overlay?: ReactNode;
 }) {
-  const contents = <><div className="brand-scene__art"><Image src={image.src} width={image.width} height={image.height} sizes="(max-width: 767px) 75vw, 340px" alt={image.alt} priority />{overlay}</div><div className="brand-scene__identity"><BrandLogo src={logo} fallback={fallback} alt={alt} scale={scale} /><p>{microcopy} <b aria-hidden="true">{href.startsWith("#") ? "↓" : "↗"}</b></p></div></>;
+  const contents = <article className="philosophy-card"><div className="brand-scene__art philosophy-visual"><Image src={image.src} width={image.width} height={image.height} sizes="(max-width: 768px) 75vw, 340px" alt={image.alt} priority />{overlay}</div><div className="brand-scene__identity philosophy-copy"><BrandLogo src={logo} fallback={fallback} alt={alt} scale={scale} /><p>{microcopy} <b aria-hidden="true">{href.startsWith("#") ? "↓" : "↗"}</b></p></div></article>;
   return href.startsWith("#")
     ? <a href={href} className={`brand-scene ${className}`} aria-label={label}>{contents}</a>
     : <Link href={href} className={`brand-scene ${className}`} aria-label={label}>{contents}</Link>;
