@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { cartItemKey, itemPrice, maxCartQuantity, sanitizeCart } from "@/lib/cart";
+import { cartItemKey, maxCartQuantity, sanitizeCart } from "@/lib/cart";
+import { productVariants } from "@/lib/products";
 import type { CartItem } from "@/types";
 
 const CART_STORAGE_KEY = "casa-cart";
@@ -13,7 +14,7 @@ type CartContext = {
   addToCart: (item: CartItem) => boolean;
   removeFromCart: (itemKey: string) => void;
   updateQuantity: (itemKey: string, quantity: number) => void;
-  updateOptions: (index: number, options: Partial<Pick<CartItem, "weight" | "grind">>) => void;
+  updateOptions: (index: number, options: Partial<Pick<CartItem, "variantId" | "weight" | "grind">>) => void;
   clearCart: () => void;
   cartCount: number;
   cartSubtotal: number;
@@ -72,11 +73,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const update = useCallback((index: number, quantity: number) => setItems((current) => current.map((item, itemIndex) => itemIndex === index
     ? { ...item, quantity: Math.min(maxCartQuantity(item), Math.max(1, Math.trunc(quantity))) }
     : item)), []);
-  const updateOptions = useCallback((index: number, options: Partial<Pick<CartItem, "weight" | "grind">>) => setItems((current) => current.map((item, itemIndex) => {
-    if (itemIndex !== index) return item;
-    const weight = options.weight ?? item.weight;
-    return { ...item, ...options, unitPrice: itemPrice(item.product, weight) };
-  })), []);
+  const updateOptions = useCallback((index: number, options: Partial<Pick<CartItem, "variantId" | "weight" | "grind">>) => setItems((current) => {
+    const item = current[index];
+    if (!item) return current;
+    const variant = productVariants(item.product).find((value) => value.id === options.variantId)
+      ?? productVariants(item.product).find((value) => value.size === (options.weight ?? item.weight) && value.grindType === (options.grind ?? item.grind));
+    if (!variant?.available || variant.stock < 1) return current;
+    const updated = { ...item, variantId: variant.id, weight: variant.size, grind: variant.grindType, unitPrice: variant.salePrice ?? variant.price, quantity: Math.min(item.quantity, variant.stock) };
+    const duplicate = current.findIndex((value, itemIndex) => itemIndex !== index && cartItemKey(value) === cartItemKey(updated));
+    if (duplicate < 0) return current.map((value, itemIndex) => itemIndex === index ? updated : value);
+    return current.flatMap((value, itemIndex) => itemIndex === index ? [] : [itemIndex === duplicate
+      ? { ...value, quantity: Math.min(maxCartQuantity(value), value.quantity + updated.quantity) }
+      : value]);
+  }), []);
   const clear = useCallback(() => setItems([]), []);
 
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
