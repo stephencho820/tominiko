@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { synchronizeProductPricing } from "@/lib/product-admin";
 
-const allowed = new Set(["name", "korean_name", "subtitle", "slug", "short_description", "product_type", "category", "status", "origin", "region", "producer", "washing_station", "variety", "process", "altitude", "harvest", "grade", "roast_level", "tasting_notes", "description", "about", "why_we_chose_it", "roaster_note", "roasted_date", "price_150g", "price_400g_original", "price_400g", "sale_price", "stock_quantity", "active", "featured", "todays_roast", "discovery_tags", "display_order", "image_url", "gallery_images", "acidity", "sweetness", "body", "recommended_brewing_methods", "brewing_dose", "brewing_water", "brewing_temperature", "brewing_grind", "brewing_time", "use_default_recipe", "variants"]);
+const allowed = new Set(["name", "korean_name", "subtitle", "slug", "short_description", "product_type", "category", "status", "origin", "region", "producer", "washing_station", "variety", "process", "altitude", "harvest", "grade", "roast_level", "tasting_notes", "description", "about", "why_we_chose_it", "roaster_note", "roasted_date", "price_150g", "price_150g_original", "price_400g_original", "price_400g", "sale_price", "stock_quantity", "active", "featured", "todays_roast", "discovery_tags", "display_order", "image_url", "gallery_images", "acidity", "sweetness", "body", "recommended_brewing_methods", "brewing_dose", "brewing_water", "brewing_temperature", "brewing_grind", "brewing_time", "use_default_recipe", "variants"]);
 
 async function payloadFrom(request: Request) {
   const value: unknown = await request.json();

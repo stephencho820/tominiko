@@ -19,6 +19,7 @@ export function ProductPurchase({ product, compact = false }: { product: Product
   const { addToCart } = useCart();
   const variant = availableGrinds.find((item) => item.id === variantId) ?? availableGrinds[0];
   const price = variant ? variant.salePrice ?? variant.price : product.price_150g;
+  const regularPrice = variant?.price ?? product.price_150g_original ?? product.price_150g;
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
   function chooseSize(next: string) { setSize(next); setVariantId(variants.find((item) => item.size === next)?.id ?? ""); setQuantity(1); }
@@ -29,7 +30,7 @@ export function ProductPurchase({ product, compact = false }: { product: Product
     setAdded(true); if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(() => setAdded(false), 2500);
   }
   return <div className={`purchase-panel ${compact ? "purchase-panel-compact" : ""}`}>
-    <div className="purchase-price"><span>₩{price.toLocaleString("ko-KR")}</span><small>/ {variant?.size}</small></div>
+    <div className="purchase-price">{price < regularPrice && <del>₩{regularPrice.toLocaleString("ko-KR")}</del>}<span>₩{price.toLocaleString("ko-KR")}</span><small>/ {variant?.size}</small></div>
     <fieldset className="option-group"><legend>SIZE</legend><div className="option-grid option-grid-weight">{sizes.map((value) => <button type="button" key={value} aria-pressed={size === value} onClick={() => chooseSize(value)}>{value}</button>)}</div></fieldset>
     <fieldset className="option-group"><legend>GRIND</legend><div className="option-grid option-grid-grind">{availableGrinds.map((item) => <button type="button" key={item.id} aria-pressed={variant?.id === item.id} onClick={() => setVariantId(item.id)}>{item.grindType}</button>)}</div></fieldset>
     <div className="purchase-actions"><div className="quantity-stepper"><button type="button" aria-label="Decrease" disabled={quantity <= 1} onClick={() => setQuantity((value) => value - 1)}><Minus size={14}/></button><span>{quantity}</span><button type="button" aria-label="Increase" disabled={!variant || quantity >= variant.stock} onClick={() => setQuantity((value) => value + 1)}><Plus size={14}/></button></div>

@@ -16,7 +16,7 @@ create table public.products (
   id uuid primary key default gen_random_uuid(), name text not null, slug text unique not null,
   product_type text not null default 'single-origin' check (product_type in ('single-origin', 'blend', 'decaf')),
   origin text not null, region text, producer text, variety text, process text, roast_level text,
-  tasting_notes text, description text, roasted_date date, price_150g integer not null default 0,
+  tasting_notes text, description text, roasted_date date, price_150g_original integer, price_150g integer not null default 0,
   price_400g_original integer,
   price_400g integer not null default 0, stock_quantity integer not null default 0,
   active boolean not null default true, featured boolean not null default false,

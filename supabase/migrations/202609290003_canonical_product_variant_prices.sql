@@ -1,51 +1,29 @@
--- Product variants are the editing source of truth. Repair the known zero-price
--- variant data, then keep the legacy tier columns as checkout-compatible
--- projections of the effective variant prices.
-update public.products p
-set variants = repaired.variants,
-    updated_at = now()
-from (
-  select product.id,
-    jsonb_agg(
-      case
-        when coalesce((variant.value->>'price')::integer, 0) <= 0
-          then jsonb_set(
-            variant.value,
-            '{price}',
-            to_jsonb(case lower(variant.value->>'size')
-              when '400g' then product.price_400g
-              else product.price_150g
-            end)
-          )
-        else variant.value
-      end
-      order by variant.ordinality
-    ) as variants
-  from public.products product
-  cross join lateral jsonb_array_elements(product.variants) with ordinality as variant(value, ordinality)
-  group by product.id
-) repaired
-where p.id = repaired.id;
+-- Product variants are the editing source of truth. The launch promotion is
+-- 150g ₩19,000 -> ₩13,000 and 400g ₩44,000 -> ₩29,000.
+alter table public.products add column if not exists price_150g_original integer;
 
--- Ensure both legacy columns follow the canonical variants. These columns are
--- retained because the current atomic order function reads them server-side.
-update public.products p
-set price_150g = coalesce(prices.price_150g, p.price_150g),
-    price_400g = coalesce(prices.price_400g, p.price_400g),
-    updated_at = now()
-from (
-  select product.id,
-    min(coalesce(nullif((variant.value->>'salePrice')::integer, 0), (variant.value->>'price')::integer))
-      filter (where lower(variant.value->>'size') = '150g') as price_150g,
-    min(coalesce(nullif((variant.value->>'salePrice')::integer, 0), (variant.value->>'price')::integer))
-      filter (where lower(variant.value->>'size') = '400g') as price_400g
-  from public.products product
-  cross join lateral jsonb_array_elements(product.variants) as variant(value)
-  group by product.id
-) prices
-where p.id = prices.id;
+update public.products
+set price_150g_original = 19000,
+    price_150g = 13000,
+    price_400g_original = 44000,
+    price_400g = 29000,
+    variants = coalesce((
+      select jsonb_agg(
+        variant.value || jsonb_build_object(
+          'price', case lower(variant.value->>'size') when '400g' then 44000 else 19000 end,
+          'salePrice', case lower(variant.value->>'size') when '400g' then 29000 else 13000 end
+        ) order by variant.ordinality
+      )
+      from jsonb_array_elements(products.variants) with ordinality as variant(value, ordinality)
+    ), '[]'::jsonb),
+    sale_price = null,
+    updated_at = now();
 
 alter table public.products drop constraint if exists products_price_150g_positive;
 alter table public.products add constraint products_price_150g_positive check (price_150g > 0);
+alter table public.products drop constraint if exists products_price_150g_original_positive;
+alter table public.products add constraint products_price_150g_original_positive check (price_150g_original > 0);
 alter table public.products drop constraint if exists products_price_400g_positive;
 alter table public.products add constraint products_price_400g_positive check (price_400g > 0);
+alter table public.products drop constraint if exists products_price_400g_original_positive;
+alter table public.products add constraint products_price_400g_original_positive check (price_400g_original > 0);

@@ -21,21 +21,22 @@ export function synchronizeProductPricing(payload: Record<string, unknown>) {
     }
   }
 
-  const effectivePrices = new Map<string, number>();
+  const prices = new Map<string, { regular: number; sale: number }>();
   for (const variant of variants) {
     const size = variant.size!.trim().toLowerCase();
-    const effectivePrice = Number(variant.salePrice || variant.price);
-    if (effectivePrices.has(size) && effectivePrices.get(size) !== effectivePrice) {
+    const value = { regular: Number(variant.price), sale: Number(variant.salePrice || variant.price) };
+    const existing = prices.get(size);
+    if (existing && (existing.regular !== value.regular || existing.sale !== value.sale)) {
       throw new Error("Options of the same size must have the same price");
     }
-    effectivePrices.set(size, effectivePrice);
+    prices.set(size, value);
   }
 
-  const priceFor = (size: string) => effectivePrices.get(size);
+  const priceFor = (size: string) => prices.get(size);
   const price150 = priceFor("150g");
   const price400 = priceFor("400g");
-  if (price150 != null) payload.price_150g = price150;
-  if (price400 != null) payload.price_400g = price400;
+  if (price150) { payload.price_150g_original = price150.regular; payload.price_150g = price150.sale; }
+  if (price400) { payload.price_400g_original = price400.regular; payload.price_400g = price400.sale; }
   payload.sale_price = null;
   payload.variants = variants.map((variant) => ({ ...variant, salePrice: variant.salePrice || null }));
   return payload;

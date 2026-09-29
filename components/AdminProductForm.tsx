@@ -8,8 +8,8 @@ import { productVariants, STANDARD_GRINDS } from "@/lib/products";
 import { ImageUpload } from "./ImageUpload";
 
 const fields = ["name","korean_name","subtitle","slug","short_description","product_type","category","status","origin","region","producer","washing_station","variety","process","altitude","harvest","grade","roast_level","tasting_notes","description","about","why_we_chose_it","roaster_note","stock_quantity","display_order","image_url","brewing_dose","brewing_water","brewing_temperature","brewing_grind","brewing_time"] as const;
-const emptyVariant = (): ProductVariant => ({ id: crypto.randomUUID(), size: "150g", grindType: "Whole Bean", price: 0, salePrice: null, sku: "", stock: 0, available: true });
-const newProductVariants = () => ["150g", "400g"].flatMap(size => STANDARD_GRINDS.map(grindType => ({ ...emptyVariant(), size, grindType })));
+const emptyVariant = (size = "150g"): ProductVariant => ({ id: crypto.randomUUID(), size, grindType: "Whole Bean", price: size === "400g" ? 44000 : 19000, salePrice: size === "400g" ? 29000 : 13000, sku: "", stock: 0, available: true });
+const newProductVariants = () => ["150g", "400g"].flatMap(size => STANDARD_GRINDS.map(grindType => ({ ...emptyVariant(size), grindType })));
 export function AdminProductForm({ product }: { product?: Product }) {
  const router=useRouter(); const [form,setForm]=useState<Record<string, unknown>>(()=>({...Object.fromEntries(fields.map(k=>[k,product?.[k as keyof Product]??""])),active:product?.active??true,featured:product?.featured??false,todays_roast:product?.todays_roast??false,use_default_recipe:product?.use_default_recipe??true,acidity:product?.acidity??3,sweetness:product?.sweetness??3,body:product?.body??3,discovery_tags:product?.discovery_tags??[],gallery_images:product?.gallery_images??[],recommended_brewing_methods:product?.recommended_brewing_methods??[],gallery_images_text:(product?.gallery_images??[]).join("\n"),variants:product?productVariants(product):newProductVariants()}));
  const [message,setMessage]=useState(""); const [saving,setSaving]=useState(false); const change=(key:string,value:unknown)=>setForm(v=>({...v,[key]:value}));
