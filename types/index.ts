@@ -13,6 +13,7 @@ export type Product = {
   description: string | null;
   roasted_date: string | null;
   price_150g: number;
+  price_150g_original?: number | null;
   price_400g: number;
   price_400g_original: number | null;
   stock_quantity: number;

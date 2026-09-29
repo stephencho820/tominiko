@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { synchronizeProductPricing } from "@/lib/product-admin";
 
-const allowed = new Set(["name", "korean_name", "subtitle", "slug", "short_description", "product_type", "category", "status", "origin", "region", "producer", "washing_station", "variety", "process", "altitude", "harvest", "grade", "roast_level", "tasting_notes", "description", "about", "why_we_chose_it", "roaster_note", "roasted_date", "price_150g", "price_400g_original", "price_400g", "sale_price", "stock_quantity", "active", "featured", "todays_roast", "discovery_tags", "display_order", "image_url", "gallery_images", "acidity", "sweetness", "body", "recommended_brewing_methods", "brewing_dose", "brewing_water", "brewing_temperature", "brewing_grind", "brewing_time", "use_default_recipe", "variants"]);
+const allowed = new Set(["name", "korean_name", "subtitle", "slug", "short_description", "product_type", "category", "status", "origin", "region", "producer", "washing_station", "variety", "process", "altitude", "harvest", "grade", "roast_level", "tasting_notes", "description", "about", "why_we_chose_it", "roaster_note", "roasted_date", "price_150g", "price_150g_original", "price_400g_original", "price_400g", "sale_price", "stock_quantity", "active", "featured", "todays_roast", "discovery_tags", "display_order", "image_url", "gallery_images", "acidity", "sweetness", "body", "recommended_brewing_methods", "brewing_dose", "brewing_water", "brewing_temperature", "brewing_grind", "brewing_time", "use_default_recipe", "variants"]);
 
 async function payloadFrom(request: Request) {
   const value: unknown = await request.json();
@@ -19,7 +20,9 @@ function validate(payload: Record<string, unknown>) {
   }
   if ("product_type" in payload && !productTypes.has(String(payload.product_type))) return "invalid product_type";
   for (const key of ["acidity", "sweetness", "body"]) if (key in payload && (Number(payload[key]) < 1 || Number(payload[key]) > 5)) return `${key} must be between 1 and 5`;
-  if ("variants" in payload && !Array.isArray(payload.variants)) return "variants must be an array";
+  if ("variants" in payload) {
+    try { synchronizeProductPricing(payload); } catch (error) { return error instanceof Error ? error.message : "invalid variants"; }
+  }
   if ("discovery_tags" in payload && (!Array.isArray(payload.discovery_tags) || payload.discovery_tags.some((tag) => typeof tag !== "string" || !discoveryTags.has(tag)))) return "discovery_tags contains an invalid tag";
   return null;
 }
