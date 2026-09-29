@@ -1660,7 +1660,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 .admin-gallery-list button { min-height: 35px; border: 1px solid #c8bfb2; padding: 0 10px; background: white; font-size: 11px; }
 
 @media (max-width: 760px) {
-  .room-visit-hero { min-height: 0; aspect-ratio: 4 / 3; }
+  .room-visit-hero { min-height: 0; aspect-ratio: 4 / 5; }
   .room-story-link { right: 16px; bottom: 16px; }
   .room-visit { padding: 64px 18px 78px; }
   .room-visit-layout { grid-template-columns: 1fr; gap: 42px; }
@@ -1736,3 +1736,22 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 @keyframes philosophy-zero-motion { 0%,100% { transform: translateY(0) rotate(.2deg); } 50% { transform: translateY(-6px) rotate(-.2deg); } }
 @media (max-width: 700px) { .coffee-marquee-group { gap: 20px; padding-right: 20px; } }
 @media (prefers-reduced-motion: reduce) { .brand-scene--casa .philosophy-illustration, .brand-scene--zero .philosophy-illustration { animation: none; } }
+
+/* These rules intentionally follow the legacy page styles above so every
+   philosophy principle receives the same mobile box model and alignment. */
+@media (max-width: 768px) {
+  .zero-principles { grid-auto-rows: minmax(240px, auto); margin-top: 26px; }
+  .zero-principles article,
+  .zero-principles article:first-child,
+  .zero-principles article + article {
+    box-sizing: border-box;
+    min-height: 240px;
+    padding: 30px 0;
+    border-right: 0;
+    text-align: left;
+  }
+  .zero-principles article + article { border-top: 1px solid rgba(247,239,226,.12); }
+  .zero-principles span { margin-top: 0; }
+  .zero-principles h3 { margin-top: 18px; }
+  .zero-principles p { margin-top: 24px; }
+}
