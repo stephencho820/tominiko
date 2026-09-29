@@ -15,8 +15,7 @@ export default function CartPage() {
     <main className="purchase-page cart-page">
       <header className="purchase-heading">
         <div>
-          <p className="section-label"><span className="lang-ko">선택한 커피</span><span className="lang-en">Your selection</span></p>
-          <h1><span className="lang-ko">장바구니</span><span className="lang-en">Your bag</span></h1>
+          <p className="section-label"><span className="lang-ko">선택한 원두</span><span className="lang-en">Your selection</span></p>
         </div>
         <p className="purchase-count">{itemCount} <span className="lang-ko">개</span><span className="lang-en">items</span></p>
       </header>

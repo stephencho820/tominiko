@@ -37,7 +37,7 @@ function CoffeeCard({ product, duplicate = false }: { product: Product; duplicat
         <div><span>{product.tasting_notes || product.process || "Small batch roast"}</span><strong>₩{won.format(variant ? variant.salePrice ?? variant.price : product.price_150g)}</strong></div>
       </div>
     </Link>
-    <button className="marquee-add" type="button" onClick={addProduct} disabled={!variant} tabIndex={duplicate ? -1 : undefined} aria-live="polite"><ShoppingBag size={13} />{variant ? added ? "ADDED" : "ADD TO CART" : "SOLD OUT"}</button>
+    <button className="marquee-add" type="button" onPointerDown={(event) => event.stopPropagation()} onClick={addProduct} disabled={!variant} tabIndex={duplicate ? -1 : undefined} aria-live="polite"><ShoppingBag size={13} />{variant ? added ? "ADDED" : "ADD TO CART" : "SOLD OUT"}</button>
   </article>;
 }
 
@@ -100,10 +100,10 @@ export function CoffeeMarquee({ products }: { products: Product[] }) {
     };
   }, [products.length]);
 
-  if (!products.length) return <section id="coffee-marquee" className="coffee-marquee coffee-marquee-empty"><p className="section-label">TODAY&apos;S COFFEE</p><h2>오늘 준비된 커피</h2><Link href="/shop">SHOP 보기 →</Link></section>;
+  if (!products.length) return <section id="coffee-marquee" className="coffee-marquee coffee-marquee-empty"><p className="section-label">TODAY&apos;S ROASTED BEANS</p><Link href="/shop">모든 원두 보기 →</Link></section>;
   const segmentProducts = Array.from({ length: Math.max(1, Math.ceil(6 / products.length)) }, () => products).flat();
   return <section id="coffee-marquee" className="coffee-marquee" aria-labelledby="coffee-marquee-title">
-    <header><div><p className="section-label">TODAY&apos;S COFFEE</p><h2 id="coffee-marquee-title"><span className="lang-ko">오늘 준비된 커피</span><span className="lang-en">Coffee for today</span></h2></div><Link href="/shop"><span className="lang-ko">모든 커피 보기</span><span className="lang-en">View all coffee</span> →</Link></header>
+    <header><p className="section-label" id="coffee-marquee-title">TODAY&apos;S ROASTED BEANS</p><Link href="/shop"><span className="lang-ko">모든 원두 보기</span><span className="lang-en">View all beans</span> →</Link></header>
     <div className="coffee-marquee-viewport" ref={rail}
       onWheel={() => { pauseUntil.current = performance.now() + 1500; }}
       onPointerDown={(event) => { dragging.current = true; draggedDistance.current = 0; lastX.current = event.clientX; pauseUntil.current = Number.POSITIVE_INFINITY; event.currentTarget.setPointerCapture(event.pointerId); }}

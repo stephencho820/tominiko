@@ -22,6 +22,8 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
   const grinds = variants.filter((item) => item.size === size);
   const [variantId, setVariantId] = useState(() => grinds.find((item) => item.grindType === "Whole Bean")?.id ?? grinds[0]?.id ?? "");
   const variant = variants.find((item) => item.id === variantId) ?? grinds[0];
+  const regularPrice = size === "400g" ? 44500 : 19500;
+  const salePrice = size === "400g" ? 29500 : 13000;
   const [added, setAdded] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const notes = tastingNotes(product).join(" · ");
@@ -35,7 +37,7 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
     event.preventDefault();
     event.stopPropagation();
     if (!variant) return;
-    const didAdd = addToCart({ product, variantId: variant.id, weight: variant.size, grind: variant.grindType, quantity: 1, unitPrice: variant.salePrice ?? variant.price });
+    const didAdd = addToCart({ product, variantId: variant.id, weight: variant.size, grind: variant.grindType, quantity: 1, unitPrice: salePrice });
     if (!didAdd) return;
     setAdded(true);
     if (timer.current) clearTimeout(timer.current);
@@ -53,7 +55,7 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
         <select aria-label="Size" value={size} onChange={(event) => chooseSize(event.target.value)}>{sizes.map((value) => <option key={value} value={value}>{value}</option>)}</select>
         <select aria-label="Grind" value={variant?.id ?? ""} onChange={(event) => setVariantId(event.target.value)}>{grinds.map((item) => <option key={item.id} value={item.id} disabled={!item.available || item.stock < 1}>{item.grindType}{item.stock < 1 ? " · Sold out" : ""}</option>)}</select>
       </div>
-      <div className="catalog-buy"><strong>₩{(variant ? variant.salePrice ?? variant.price : productPrice(product)).toLocaleString("ko-KR")}</strong>
+      <div className="catalog-buy"><strong className="catalog-price"><del>₩{regularPrice.toLocaleString("ko-KR")}</del><span>₩{salePrice.toLocaleString("ko-KR")}</span></strong>
         <button type="button" onClick={addProduct} disabled={!variant?.available || variant.stock < 1} aria-live="polite"><ShoppingBag size={14} />{variant?.available && variant.stock > 0 ? added ? "ADDED" : "ADD TO CART" : "SOLD OUT"}</button>
       </div>
     </div>
