@@ -24,7 +24,7 @@ export default function CartPage() {
       {!items.length ? (
         <section className="empty-bag" aria-live="polite">
           <p><span className="lang-ko">아직 담긴 커피가 없습니다.</span><span className="lang-en">Your bag is ready for something good.</span></p>
-          <Link href="/shop" className="button-primary purchase-button"><span className="lang-ko">커피 둘러보기</span><span className="lang-en">Browse coffee</span><span>→</span></Link>
+          <Link href="/shop" className="button-primary purchase-button"><span>Back to Shop</span><span>→</span></Link>
         </section>
       ) : (
         <div className="cart-layout">
@@ -40,7 +40,7 @@ export default function CartPage() {
                     <button type="button" className="cart-remove" onClick={() => removeFromCart(cartItemKey(item))} aria-label={`${item.product.name} remove`}><X size={16} /><span><span className="lang-ko">삭제</span><span className="lang-en">Remove</span></span></button>
                   </div>
                   <div className="cart-options">
-                    <label><span><span className="lang-ko">옵션</span><span className="lang-en">Variant</span></span><select value={item.variantId} onChange={(event) => { const variant = productVariants(item.product).find((value) => value.id === event.target.value); if (variant) updateOptions(index, { weight: variant.size, grind: variant.grindType }); }} disabled>{productVariants(item.product).filter((variant) => variant.id === item.variantId).map((variant) => <option key={variant.id} value={variant.id}>{variant.size} · {variant.grindType}</option>)}</select></label>
+                    <label><span><span className="lang-ko">옵션</span><span className="lang-en">Variant</span></span><select value={item.variantId} onChange={(event) => updateOptions(index, { variantId: event.target.value })}>{productVariants(item.product).map((variant) => <option disabled={!variant.available || variant.stock < 1} key={variant.id} value={variant.id}>{variant.size} · {variant.grindType}{variant.stock < 1 ? " · Sold out" : ""}</option>)}</select></label>
                   </div>
                   <div className="cart-item-footer">
                     <div className="quantity-control" aria-label="Quantity selector">

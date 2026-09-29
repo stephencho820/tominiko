@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Grid2X2, List, Rows3, ShoppingBag } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "./CartProvider";
-import { defaultProductVariant, productImage, productPrice, tastingNotes } from "@/lib/products";
+import { productImage, productPrice, productVariants, tastingNotes } from "@/lib/products";
 import { isShopTag, SHOP_TAGS, type ShopTag } from "@/lib/shop-tags";
 import type { Product } from "@/types";
 
@@ -16,11 +16,21 @@ const categories: { value: "all" | ShopTag; label: string }[] = [
 
 function CatalogCard({ product, view }: { product: Product; view: View }) {
   const { addToCart } = useCart();
-  const variant = defaultProductVariant(product);
+  const variants = useMemo(() => productVariants(product), [product]);
+  const sizes = [...new Set(variants.map((item) => item.size))];
+  const [size, setSize] = useState(() => sizes.includes("150g") ? "150g" : sizes[0] ?? "");
+  const grinds = variants.filter((item) => item.size === size);
+  const [variantId, setVariantId] = useState(() => grinds.find((item) => item.grindType === "Whole Bean")?.id ?? grinds[0]?.id ?? "");
+  const variant = variants.find((item) => item.id === variantId) ?? grinds[0];
   const [added, setAdded] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const notes = tastingNotes(product).join(" · ");
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  const chooseSize = (nextSize: string) => {
+    const nextGrinds = variants.filter((item) => item.size === nextSize);
+    setSize(nextSize);
+    setVariantId(nextGrinds.find((item) => item.grindType === "Whole Bean")?.id ?? nextGrinds[0]?.id ?? "");
+  };
   const addProduct = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
@@ -39,8 +49,12 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
       {product.korean_name && <p className="catalog-english">{product.name}</p>}
       {notes && <p className="catalog-notes">{notes}</p>}
       {view === "list" && product.short_description && <p className="catalog-description">{product.short_description}</p>}
-      <div className="catalog-buy"><strong>₩{productPrice(product).toLocaleString("ko-KR")}</strong>
-        <button type="button" onClick={addProduct} disabled={!variant} aria-live="polite"><ShoppingBag size={14} />{variant ? added ? "ADDED" : "ADD TO CART" : "SOLD OUT"}</button>
+      <div className="catalog-options" aria-label={`${product.name} options`}>
+        <select aria-label="Size" value={size} onChange={(event) => chooseSize(event.target.value)}>{sizes.map((value) => <option key={value} value={value}>{value}</option>)}</select>
+        <select aria-label="Grind" value={variant?.id ?? ""} onChange={(event) => setVariantId(event.target.value)}>{grinds.map((item) => <option key={item.id} value={item.id} disabled={!item.available || item.stock < 1}>{item.grindType}{item.stock < 1 ? " · Sold out" : ""}</option>)}</select>
+      </div>
+      <div className="catalog-buy"><strong>₩{(variant ? variant.salePrice ?? variant.price : productPrice(product)).toLocaleString("ko-KR")}</strong>
+        <button type="button" onClick={addProduct} disabled={!variant?.available || variant.stock < 1} aria-live="polite"><ShoppingBag size={14} />{variant?.available && variant.stock > 0 ? added ? "ADDED" : "ADD TO CART" : "SOLD OUT"}</button>
       </div>
     </div>
   </article>;

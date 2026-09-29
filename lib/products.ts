@@ -3,23 +3,44 @@ import type { Product, ProductVariant } from "@/types";
 export const productImage = (product: Product) => product.primary_image_url || product.image_url || product.thumbnail_url || "/images/coffee-card-fallback.svg";
 export const tastingNotes = (product: Product) => (product.tasting_notes ?? "").split(/[,/·]/).map((note) => note.trim()).filter(Boolean);
 
+const STANDARD_GRINDS = ["Whole Bean", "Pour Over", "Espresso"] as const;
+const finitePrice = (value: unknown, fallback = 0) => {
+  const price = Number(value);
+  return Number.isFinite(price) && price >= 0 ? price : fallback;
+};
+
+export function productIsSoldOut(product: Product) {
+  return product.status === "sold-out" || Number(product.stock_quantity) <= 0;
+}
+
 export function productVariants(product: Product): ProductVariant[] {
-  if (product.variants?.length) return product.variants.filter((variant) => variant.available);
-  const grinds = ["Whole Bean", "Pour Over", "Espresso"] as const;
+  const soldOut = productIsSoldOut(product);
+  if (product.variants?.length) return product.variants.flatMap((variant) => {
+    const price = finitePrice(variant.price, finitePrice(product.price_150g));
+    const salePrice = variant.salePrice == null ? null : finitePrice(variant.salePrice, price);
+    const stock = Math.max(0, Math.trunc(Number(variant.stock) || 0));
+    return variant.id && variant.size && variant.grindType && variant.available
+      ? [{ ...variant, price, salePrice, stock, available: !soldOut && stock > 0 }]
+      : [];
+  });
+  const stock = Math.max(0, Math.trunc(Number(product.stock_quantity) || 0));
+  const available = !soldOut && stock > 0;
   return [
-    ...grinds.map((grindType) => ({ id: `150g-${grindType}`, size: "150g", grindType, price: product.price_150g, stock: product.stock_quantity, available: true })),
-    ...grinds.map((grindType) => ({ id: `400g-${grindType}`, size: "400g", grindType, price: product.price_400g, salePrice: product.price_400g_original ? product.price_400g : null, stock: product.stock_quantity, available: true })),
+    ...STANDARD_GRINDS.map((grindType) => ({ id: `150g-${grindType}`, size: "150g", grindType, price: finitePrice(product.price_150g), stock, available })),
+    ...STANDARD_GRINDS.map((grindType) => ({ id: `400g-${grindType}`, size: "400g", grindType, price: finitePrice(product.price_400g), stock, available })),
   ];
 }
 
 export function productPrice(product: Product) {
-  const variants = productVariants(product);
-  return variants.length ? Math.min(...variants.map((variant) => variant.salePrice ?? variant.price)) : product.sale_price ?? product.price_150g;
+  const prices = productVariants(product).map((variant) => finitePrice(variant.salePrice ?? variant.price)).filter((price) => price > 0);
+  return prices.length ? Math.min(...prices) : finitePrice(product.sale_price ?? product.price_150g);
 }
 
-
-export function defaultProductVariant(product: Product) {
-  return productVariants(product).filter((variant) => variant.stock > 0).reduce<ProductVariant | undefined>((cheapest, variant) => {
+export function defaultProductVariant(product: Product, preferredSize?: string, preferredGrind?: string) {
+  const available = productVariants(product).filter((variant) => variant.available && variant.stock > 0);
+  const preferred = available.find((variant) => variant.size.toLowerCase() === preferredSize?.toLowerCase() && variant.grindType === preferredGrind);
+  if (preferred) return preferred;
+  return available.reduce<ProductVariant | undefined>((cheapest, variant) => {
     if (!cheapest) return variant;
     return (variant.salePrice ?? variant.price) < (cheapest.salePrice ?? cheapest.price) ? variant : cheapest;
   }, undefined);

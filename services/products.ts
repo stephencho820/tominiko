@@ -9,7 +9,9 @@ export async function getProducts(options?: { activeOnly?: boolean; todaysRoast?
     const supabase = await createClient();
     let query = supabase.from("products").select("*");
     query = options?.latestFirst ? query.order("created_at", { ascending: false }) : query.order("display_order").order("created_at", { ascending: false });
-    if (options?.activeOnly) query = query.eq("active", true).gt("stock_quantity", 0);
+    // Keep active out-of-stock products in the catalog so customers can see
+    // the SOLD OUT state instead of having products silently disappear.
+    if (options?.activeOnly) query = query.eq("active", true);
     if (options?.todaysRoast) query = query.eq("todays_roast", true);
     if (options?.featured) query = query.eq("featured", true);
     const { data, error } = await runSupabaseQuery(async (signal) => await query.abortSignal(signal));

@@ -11,7 +11,8 @@ const won = new Intl.NumberFormat("ko-KR");
 
 function CoffeeCard({ product, duplicate = false }: { product: Product; duplicate?: boolean }) {
   const image = productImage(product);
-  const variant = defaultProductVariant(product);
+  // The home card is intentionally a one-click purchase of the standard bag.
+  const variant = defaultProductVariant(product, "150g", "Whole Bean");
   const { addToCart } = useCart();
   const [added, setAdded] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -20,7 +21,8 @@ function CoffeeCard({ product, duplicate = false }: { product: Product; duplicat
     event.preventDefault();
     event.stopPropagation();
     if (!variant) return;
-    addToCart({ product, variantId: variant.id, weight: variant.size, grind: variant.grindType, quantity: 1, unitPrice: variant.salePrice ?? variant.price });
+    const didAdd = addToCart({ product, variantId: variant.id, weight: variant.size, grind: variant.grindType, quantity: 1, unitPrice: variant.salePrice ?? variant.price });
+    if (!didAdd) return;
     setAdded(true);
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setAdded(false), 1800);
