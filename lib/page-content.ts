@@ -50,6 +50,7 @@ function mergePageSettings(fallback: PageSettings, data: { texts: unknown; image
   const roomFallback = fallback.tastingRoom;
   const tastingRoom = roomFallback && rawRoom ? {
     heroImage: typeof rawRoom.heroImage === "string" && rawRoom.heroImage ? rawRoom.heroImage : roomFallback.heroImage,
+    mobileHeroImage: typeof rawRoom.mobileHeroImage === "string" ? rawRoom.mobileHeroImage : roomFallback.mobileHeroImage,
     address: typeof rawRoom.address === "string" ? rawRoom.address : roomFallback.address,
     phone: typeof rawRoom.phone === "string" ? rawRoom.phone : roomFallback.phone,
     phoneNote: typeof rawRoom.phoneNote === "string" ? rawRoom.phoneNote : roomFallback.phoneNote,

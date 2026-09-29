@@ -4,15 +4,15 @@ import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Product } from "@/types";
-import { defaultProductVariant, productImage } from "@/lib/products";
+import { productImage, productVariants } from "@/lib/products";
 import { useCart } from "./CartProvider";
 
 const won = new Intl.NumberFormat("ko-KR");
 
-function CoffeeCard({ product, duplicate = false }: { product: Product; duplicate?: boolean }) {
+function CoffeeCard({ product, size, duplicate = false }: { product: Product; size: string; duplicate?: boolean }) {
   const image = productImage(product);
-  // The home card is intentionally a one-click purchase of the standard bag.
-  const variant = defaultProductVariant(product, "150g", "Whole Bean");
+  const sizeVariants = productVariants(product).filter((item) => item.size === size);
+  const variant = sizeVariants.find((item) => item.grindType === "Whole Bean") ?? sizeVariants[0];
   const { addToCart } = useCart();
   const [added, setAdded] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -33,7 +33,7 @@ function CoffeeCard({ product, duplicate = false }: { product: Product; duplicat
       <img src={image} alt={product.image_url || product.primary_image_url || product.thumbnail_url ? product.name : "Casa di Stefano coffee"} draggable={false} />
       </div>
       <div className="marquee-coffee-copy">
-        <p>{product.origin}</p><h3>{product.korean_name || product.name}</h3>
+        <p>{product.origin}</p><h3>{product.korean_name || product.name} · {size}</h3>
         <div><span>{product.tasting_notes || product.process || "Small batch roast"}</span><strong>₩{won.format(variant ? variant.salePrice ?? variant.price : product.price_150g)}</strong></div>
       </div>
     </Link>
@@ -101,7 +101,11 @@ export function CoffeeMarquee({ products }: { products: Product[] }) {
   }, [products.length]);
 
   if (!products.length) return <section id="coffee-marquee" className="coffee-marquee coffee-marquee-empty"><p className="section-label">TODAY&apos;S ROASTED BEANS</p><Link href="/shop">모든 원두 보기 →</Link></section>;
-  const segmentProducts = Array.from({ length: Math.max(1, Math.ceil(6 / products.length)) }, () => products).flat();
+  const productsBySize = products.flatMap((product) => {
+    const sizes = [...new Set(productVariants(product).map((variant) => variant.size))];
+    return sizes.map((size) => ({ product, size }));
+  });
+  const segmentProducts = Array.from({ length: Math.max(1, Math.ceil(6 / productsBySize.length)) }, () => productsBySize).flat();
   return <section id="coffee-marquee" className="coffee-marquee" aria-labelledby="coffee-marquee-title">
     <header><p className="section-label" id="coffee-marquee-title">TODAY&apos;S ROASTED BEANS</p><Link href="/shop"><span className="lang-ko">모든 원두 보기</span><span className="lang-en">View all beans</span> →</Link></header>
     <div className="coffee-marquee-viewport" ref={rail}
@@ -111,7 +115,7 @@ export function CoffeeMarquee({ products }: { products: Product[] }) {
       onPointerUp={() => { dragging.current = false; pauseUntil.current = performance.now() + 1500; }}
       onPointerCancel={() => { dragging.current = false; pauseUntil.current = performance.now() + 1500; }}
       onClickCapture={(event) => { if (draggedDistance.current > 8) { event.preventDefault(); event.stopPropagation(); } }}>
-      <div className="coffee-marquee-track">{[0, 1].map((groupIndex) => <div className="coffee-marquee-group" ref={groupIndex === 0 ? firstGroup : undefined} aria-hidden={groupIndex !== 0} key={groupIndex}>{segmentProducts.map((product, index) => <CoffeeCard key={`${product.id}-${groupIndex}-${index}`} product={product} duplicate={groupIndex !== 0} />)}</div>)}</div>
+      <div className="coffee-marquee-track">{[0, 1].map((groupIndex) => <div className="coffee-marquee-group" ref={groupIndex === 0 ? firstGroup : undefined} aria-hidden={groupIndex !== 0} key={groupIndex}>{segmentProducts.map(({ product, size }, index) => <CoffeeCard key={`${product.id}-${size}-${groupIndex}-${index}`} product={product} size={size} duplicate={groupIndex !== 0} />)}</div>)}</div>
     </div>
   </section>;
 }
