@@ -963,6 +963,63 @@ main { animation: page-enter .65s cubic-bezier(.2,.75,.25,1) both; }
 .product-card-editorial, .product-card-editorial img, .product-card-editorial .product-card-meta { transition: transform .45s cubic-bezier(.2,.75,.25,1), border-color .3s ease; }
 .product-card-editorial:hover { transform: translateY(-5px); }
 .product-card-editorial:hover .product-card-meta { border-color: var(--accent); }
+
+/* Philosophy — one continuous brand landscape */
+html { scroll-behavior: smooth; }
+.brand-stage { position: relative; min-height: calc(100svh - 72px); overflow: hidden; background: var(--ivory); padding: clamp(28px,4vw,58px) clamp(20px,4vw,64px) 24px; isolation: isolate; }
+.brand-stage::before { content: ""; position: absolute; inset: 0; z-index: -2; background: radial-gradient(circle at 50% 52%, rgba(255,255,255,.7), transparent 36%), linear-gradient(112deg, transparent 0 30%, rgba(104,76,56,.035) 30% 67%, transparent 67%); }
+.brand-stage__heading { display: flex; justify-content: space-between; align-items: baseline; max-width: 1320px; margin: auto; color: var(--brown); font-family: "Avenir Next","Helvetica Neue",Arial,sans-serif; font-size: 9px; font-weight: 700; letter-spacing: .2em; }
+.brand-stage__heading span { color: var(--muted); font-weight: 500; }
+.brand-stage__scenes { display: grid; grid-template-columns: 1fr 1.08fr 1fr; align-items: end; gap: clamp(8px,2vw,36px); width: min(1320px,100%); min-height: calc(100svh - 180px); margin: auto; }
+.brand-scene { position: relative; display: flex; min-width: 0; min-height: 510px; flex-direction: column; align-items: center; justify-content: flex-end; padding: 20px 10px clamp(36px,6vh,70px); color: var(--ink); text-align: center; cursor: pointer; }
+.brand-scene__art { width: min(100%,350px); transform-origin: 50% 90%; transition: transform .7s cubic-bezier(.2,.7,.2,1); }
+.brand-scene--zero .brand-scene__art { width: min(108%,390px); }
+.brand-scene:hover .brand-scene__art, .brand-scene:focus-visible .brand-scene__art { transform: translateY(-3px) scale(1.02); }
+.brand-illustration { display: block; width: 100%; height: auto; overflow: visible; }
+.illustration-line { fill: none; stroke: var(--brown-dark); stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+.coffee-level, .bag-body { fill: rgba(104,76,56,.13); }
+.coffee-drop { fill: var(--brown-dark); animation: coffee-drop 6.4s cubic-bezier(.45,0,.55,1) infinite; transform-origin: center; }
+.smoke { fill: none; stroke: var(--brown); stroke-width: 2; stroke-linecap: round; }
+.smoke path { opacity: 0; transform-origin: center bottom; animation: smoke-rise 7.5s ease-out infinite; }
+.smoke .smoke-two { animation-delay: 2.4s; }.smoke .smoke-three { animation-delay: 4.8s; }
+.roaster-drum { animation: drum-breathe 8s ease-in-out infinite; transform-origin: center; }
+.coffee-bag { animation: bag-breathe 7.2s ease-in-out infinite; transform-origin: 50% 90%; }
+.coffee-bag text { fill: var(--brown-dark); font: 700 6px "Avenir Next",Arial,sans-serif; letter-spacing: 1px; }
+.brand-scene__identity { display: flex; min-height: 116px; flex-direction: column; align-items: center; justify-content: flex-start; }
+.brand-scene__logo { display: grid; width: min(220px,75%); height: 54px; place-items: center; }
+.brand-scene__logo img { width: 100%; height: 100%; object-fit: contain; transform: scale(var(--logo-scale)); }
+.brand-scene__logo > span { font-family: Georgia,"Times New Roman",serif; font-size: clamp(16px,1.6vw,25px); letter-spacing: .08em; }
+.brand-scene__identity p, .brand-scene__identity > span { font-family: "Avenir Next","Helvetica Neue",Arial,sans-serif; font-size: 8px; font-weight: 700; letter-spacing: .2em; }
+.brand-scene__identity p { margin-top: 9px; color: var(--muted); }.brand-scene__identity > span { margin-top: 18px; opacity: .58; transition: opacity .3s, transform .3s; }
+.brand-scene:hover .brand-scene__identity > span { opacity: 1; transform: translateX(2px); }
+.brand-stage__landscape { position: absolute; inset: auto 0 0; z-index: -1; height: 27%; border-top: 1px solid rgba(104,76,56,.13); background: linear-gradient(180deg, rgba(216,208,195,.16), rgba(216,208,195,.4)); }
+.zero-philosophy { scroll-margin-top: 72px; padding: clamp(80px,10vw,150px) clamp(24px,7vw,110px); background: var(--coffee-dark); color: var(--paper); }
+.zero-philosophy__intro { display: grid; grid-template-columns: .75fr 1.25fr; gap: 8vw; max-width: 1240px; margin: auto; }
+.zero-philosophy__brand { margin-bottom: 18px; font: 500 clamp(24px,3vw,42px) Georgia,serif; letter-spacing: .06em; }.zero-philosophy .section-label { color: rgba(251,250,247,.55); }
+.zero-philosophy h2 { max-width: 760px; white-space: pre-line; font-size: clamp(38px,5vw,75px); font-weight: 400; line-height: 1.02; letter-spacing: -.035em; }
+.zero-philosophy__description { max-width: 600px; margin-top: 35px; color: rgba(251,250,247,.7); font-size: clamp(15px,1.3vw,18px); line-height: 1.8; }
+.zero-principles { display: grid; grid-template-columns: repeat(3,1fr); gap: clamp(28px,5vw,80px); max-width: 1240px; margin: clamp(75px,10vw,140px) auto 0; border-top: 1px solid rgba(251,250,247,.22); }
+.zero-principles article { padding-top: 24px; }.zero-principles span { color: rgba(251,250,247,.42); font: 700 9px "Avenir Next",Arial,sans-serif; letter-spacing: .16em; }.zero-principles h3 { margin-top: 35px; font: 500 clamp(18px,2vw,25px) "Avenir Next",Arial,sans-serif; letter-spacing: .1em; }.zero-principles p { margin-top: 14px; color: rgba(251,250,247,.62); font-size: 14px; line-height: 1.7; }
+@keyframes coffee-drop { 0%,17% { opacity: 0; transform: translateY(-8px) scale(.7); } 23% { opacity: 1; } 42% { opacity: 0; transform: translateY(34px) scale(.9); } 43%,100% { opacity: 0; transform: translateY(-8px) scale(.7); } }
+@keyframes smoke-rise { 0% { opacity: 0; transform: translate(0,8px) scale(.92); } 20% { opacity: .45; } 75%,100% { opacity: 0; transform: translate(5px,-25px) scale(1.05); } }
+@keyframes bag-breathe { 0%,100% { transform: translateY(0) rotate(-.35deg); } 50% { transform: translateY(-2px) rotate(.35deg); } }
+@keyframes drum-breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.012); } }
+@media (max-width: 767px) {
+  .brand-stage { min-height: auto; padding: 24px 14px 20px; }
+  .brand-stage__heading { padding: 0 6px; }.brand-stage__heading span { font-size: 8px; }
+  .brand-stage__scenes { grid-template-columns: 1fr; min-height: auto; gap: 0; padding: 20px 0 12px; }
+  .brand-scene { min-height: 0; height: clamp(190px,30svh,250px); flex-direction: row; justify-content: center; padding: 0 5px; text-align: left; }
+  .brand-scene:nth-child(even) { flex-direction: row-reverse; text-align: right; }
+  .brand-scene__art, .brand-scene--zero .brand-scene__art { width: min(55%,210px); }
+  .brand-scene__identity { width: 43%; min-height: 90px; align-items: flex-start; justify-content: center; }.brand-scene:nth-child(even) .brand-scene__identity { align-items: flex-end; }
+  .brand-scene__logo { width: 100%; height: 42px; place-items: center start; }.brand-scene:nth-child(even) .brand-scene__logo { place-items: center end; }
+  .brand-scene__logo img { object-position: left center; }.brand-scene:nth-child(even) .brand-scene__logo img { object-position: right center; }
+  .brand-scene__logo > span { font-size: 15px; }.brand-scene__identity p { font-size: 7px; }.brand-scene__identity > span { margin-top: 11px; }
+  .brand-stage__landscape { height: 74%; }
+  .zero-philosophy__intro, .zero-principles { grid-template-columns: 1fr; }.zero-philosophy__intro { gap: 48px; }
+  .zero-principles { gap: 38px; }.zero-principles article { padding-top: 20px; }.zero-principles h3 { margin-top: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .coffee-drop, .smoke path, .coffee-bag, .roaster-drum { animation: none !important; } .coffee-drop { opacity: .8; transform: translateY(8px); } .brand-scene__art { transition: none; } }
 input, select, textarea { transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease; }
 input:hover, select:hover, textarea:hover { border-color: var(--brown); }
 input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 4px 0 -2px var(--accent); }

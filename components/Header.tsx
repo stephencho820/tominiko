@@ -8,7 +8,7 @@ import { LanguageSwitcher } from "./LanguageSwitcher";
 
 const primaryLinks = [
   ["SHOP", "/shop"],
-  ["OUR STORY", "/our-story"],
+  ["PHILOSOPHY", "/our-story"],
   ["TASTING ROOM", "/tasting-room"],
 ];
 
