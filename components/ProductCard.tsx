@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Product } from "@/types";
-import { defaultProductVariant, productImage } from "@/lib/products";
+import { defaultProductVariant, productImage, productPricing } from "@/lib/products";
 
 export function formatCoffeeText(value: string | null, fallback = "") {
   return value?.replace(/\s*[,/]\s*/g, " · ") ?? fallback;
@@ -12,8 +12,9 @@ export function ProductCard({ product }: { product: Product }) {
     .filter(Boolean)
     .join(" · ");
   const variant = defaultProductVariant(product, "150g");
-  const regularPrice = variant?.price ?? product.price_150g_original ?? product.price_150g;
-  const salePrice = variant?.salePrice ?? product.price_150g;
+  const pricing = productPricing(product, "150g", variant);
+  const regularPrice = pricing.price;
+  const salePrice = pricing.salePrice ?? pricing.price;
 
   return (
     <article className="product-card">

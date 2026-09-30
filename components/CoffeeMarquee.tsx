@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Product } from "@/types";
-import { productImage, productVariants } from "@/lib/products";
+import { productImage, productPricing, productVariants } from "@/lib/products";
 import { useCart } from "./CartProvider";
 
 const won = new Intl.NumberFormat("ko-KR");
@@ -13,8 +13,9 @@ function CoffeeCard({ product, size, duplicate = false }: { product: Product; si
   const image = productImage(product);
   const sizeVariants = productVariants(product).filter((item) => item.size === size);
   const variant = sizeVariants.find((item) => item.grindType === "Whole Bean") ?? sizeVariants[0];
-  const regularPrice = variant?.price ?? product.price_150g_original ?? product.price_150g;
-  const salePrice = variant?.salePrice ?? product.price_150g;
+  const pricing = productPricing(product, size, variant);
+  const regularPrice = pricing.price;
+  const salePrice = pricing.salePrice ?? pricing.price;
   const { addToCart } = useCart();
   const [added, setAdded] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);

@@ -5,6 +5,10 @@ export const tastingNotes = (product: Product) => (product.tasting_notes ?? "").
 
 export const STANDARD_GRINDS = ["Whole Bean", "Pour Over", "Espresso"] as const;
 export const normalizeProductSize = (value: string) => value.trim().toLowerCase().replace(/\s+/g, "");
+const DEFAULT_PRICES = {
+  "150g": { price: 19000, salePrice: 13000 },
+  "400g": { price: 44000, salePrice: 29000 },
+} as const;
 const finitePrice = (value: unknown, fallback = 0) => {
   const price = Number(value);
   return Number.isFinite(price) && price > 0 ? price : fallback;
@@ -12,21 +16,29 @@ const finitePrice = (value: unknown, fallback = 0) => {
 
 const legacyPrices = (product: Product, size: string) => {
   const is400g = normalizeProductSize(size) === "400g";
-  const salePrice = finitePrice(is400g ? product.price_400g : product.price_150g);
-  const price = finitePrice(is400g ? product.price_400g_original : product.price_150g_original, salePrice);
+  const defaults = is400g ? DEFAULT_PRICES["400g"] : DEFAULT_PRICES["150g"];
+  let salePrice = finitePrice(is400g ? product.price_400g : product.price_150g, defaults.salePrice);
+  let price = finitePrice(is400g ? product.price_400g_original : product.price_150g_original, defaults.price);
+  if (is400g) {
+    const price150 = finitePrice(product.price_150g_original, DEFAULT_PRICES["150g"].price);
+    const sale150 = finitePrice(product.price_150g, DEFAULT_PRICES["150g"].salePrice);
+    if (price <= price150) price = defaults.price;
+    if (salePrice <= sale150) salePrice = defaults.salePrice;
+  }
   return { price, salePrice: salePrice < price ? salePrice : null };
 };
 
-const legacyPrices = (product: Product, size: string) => {
-  const is400g = size.toLowerCase() === "400g";
-  const salePrice = finitePrice(is400g ? product.price_400g : product.price_150g);
-  const price = finitePrice(is400g ? product.price_400g_original : product.price_150g_original, salePrice);
-  return { price, salePrice: salePrice < price ? salePrice : null };
-};
-
-const legacyPrice = (product: Product, size: string) => size.toLowerCase() === "400g"
-  ? finitePrice(product.price_400g, finitePrice(product.price_150g))
-  : finitePrice(product.price_150g);
+export function productPricing(product: Product, size: string, variant?: ProductVariant) {
+  const normalizedSize = normalizeProductSize(size);
+  const fallback = legacyPrices(product, normalizedSize);
+  if (!variant) return fallback;
+  const price = finitePrice(variant.price, fallback.price);
+  const salePrice = variant.salePrice == null ? price : finitePrice(variant.salePrice, fallback.salePrice ?? price);
+  const isBroken400g = normalizedSize === "400g" &&
+    (price <= finitePrice(product.price_150g_original, DEFAULT_PRICES["150g"].price) ||
+      salePrice <= finitePrice(product.price_150g, DEFAULT_PRICES["150g"].salePrice));
+  return isBroken400g ? fallback : { price, salePrice: salePrice < price ? salePrice : null };
+}
 
 export function productIsSoldOut(product: Product) {
   return product.status === "sold-out" || Number(product.stock_quantity) <= 0;
@@ -38,9 +50,7 @@ export function productVariants(product: Product): ProductVariant[] {
     // Older catalogue rows can contain a generated variant with price 0. A
     // zero-priced option must never reach the storefront; recover it from the
     // matching legacy tier until the data migration has repaired the row.
-    const fallback = legacyPrices(product, variant.size);
-    const price = finitePrice(variant.price, fallback.price);
-    const salePrice = variant.salePrice == null ? null : finitePrice(variant.salePrice, price);
+    const { price, salePrice } = productPricing(product, variant.size, variant);
     const stock = Math.max(0, Math.trunc(Number(variant.stock) || 0));
     const size = normalizeProductSize(variant.size);
     return variant.id && size && variant.grindType && variant.available
@@ -62,7 +72,7 @@ export function productPrice(product: Product) {
 
 export function defaultProductVariant(product: Product, preferredSize?: string, preferredGrind?: string) {
   const available = productVariants(product).filter((variant) => variant.available && variant.stock > 0);
-  const preferred = available.find((variant) => variant.size.toLowerCase() === preferredSize?.toLowerCase() && variant.grindType === preferredGrind);
+  const preferred = available.find((variant) => variant.size.toLowerCase() === preferredSize?.toLowerCase() && (!preferredGrind || variant.grindType === preferredGrind));
   if (preferred) return preferred;
   return available.reduce<ProductVariant | undefined>((cheapest, variant) => {
     if (!cheapest) return variant;

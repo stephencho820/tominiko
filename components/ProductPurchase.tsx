@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Check, Minus, Plus } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { productVariants } from "@/lib/products";
+import { productPricing, productVariants } from "@/lib/products";
 import type { Product } from "@/types";
 import { useCart } from "./CartProvider";
 
@@ -18,8 +18,9 @@ export function ProductPurchase({ product, compact = false }: { product: Product
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { addToCart } = useCart();
   const variant = availableGrinds.find((item) => item.id === variantId) ?? availableGrinds[0];
-  const price = variant ? variant.salePrice ?? variant.price : product.price_150g;
-  const regularPrice = variant?.price ?? product.price_150g_original ?? product.price_150g;
+  const pricing = productPricing(product, size, variant);
+  const price = pricing.salePrice ?? pricing.price;
+  const regularPrice = pricing.price;
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
   function chooseSize(next: string) { setSize(next); setVariantId(variants.find((item) => item.size === next)?.id ?? ""); setQuantity(1); }

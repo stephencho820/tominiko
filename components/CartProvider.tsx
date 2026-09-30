@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { cartItemKey, maxCartQuantity, sanitizeCart } from "@/lib/cart";
-import { productVariants } from "@/lib/products";
+import { normalizeProductSize, productVariants } from "@/lib/products";
 import type { CartItem } from "@/types";
 
 const CART_STORAGE_KEY = "casa-cart";
@@ -50,7 +50,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               const product = currentProducts.get(item.product.id);
               if (!product) return [];
               const variant = productVariants(product).find((value) => value.id === item.variantId)
-                ?? productVariants(product).find((value) => value.size === item.weight && value.grindType === item.grind);
+                ?? productVariants(product).find((value) => normalizeProductSize(value.size) === normalizeProductSize(item.weight) && value.grindType === item.grind);
               if (!variant?.available || variant.stock < 1) return [];
               return [{ ...item, product, variantId: variant.id, weight: variant.size, grind: variant.grindType,
                 unitPrice: variant.salePrice ?? variant.price, quantity: Math.min(item.quantity, variant.stock) }];
@@ -103,7 +103,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const item = current[index];
     if (!item) return current;
     const variant = productVariants(item.product).find((value) => value.id === options.variantId)
-      ?? productVariants(item.product).find((value) => value.size === (options.weight ?? item.weight) && value.grindType === (options.grind ?? item.grind));
+      ?? productVariants(item.product).find((value) => normalizeProductSize(value.size) === normalizeProductSize(options.weight ?? item.weight) && value.grindType === (options.grind ?? item.grind));
     if (!variant?.available || variant.stock < 1) return current;
     const updated = { ...item, variantId: variant.id, weight: variant.size, grind: variant.grindType, unitPrice: variant.salePrice ?? variant.price, quantity: Math.min(item.quantity, variant.stock) };
     const duplicate = current.findIndex((value, itemIndex) => itemIndex !== index && cartItemKey(value) === cartItemKey(updated));
