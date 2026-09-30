@@ -1,0 +1,3 @@
+import DeliverySettingsForm from "@/components/DeliverySettingsForm";
+import { createClient } from "@/lib/supabase/server";
+export default async function DeliveryAdminPage(){const supabase=await createClient();const [{data:settings},{data:zones}]=await Promise.all([supabase.from("delivery_settings").select("*").eq("id",true).single(),supabase.from("local_delivery_zones").select("*").order("created_at")]);return <main className="admin-main"><div className="admin-page-heading"><div><p className="eyebrow">STORE OPERATIONS</p><h1>Delivery settings</h1><p>택배와 CASA LOCAL DELIVERY 정책을 관리합니다.</p></div></div>{settings&&<DeliverySettingsForm settings={settings} zones={zones??[]}/>}</main>}
