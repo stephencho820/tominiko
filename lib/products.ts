@@ -4,9 +4,17 @@ export const productImage = (product: Product) => product.primary_image_url || p
 export const tastingNotes = (product: Product) => (product.tasting_notes ?? "").split(/[,/·]/).map((note) => note.trim()).filter(Boolean);
 
 export const STANDARD_GRINDS = ["Whole Bean", "Pour Over", "Espresso"] as const;
+export const normalizeProductSize = (value: string) => value.trim().toLowerCase().replace(/\s+/g, "");
 const finitePrice = (value: unknown, fallback = 0) => {
   const price = Number(value);
   return Number.isFinite(price) && price > 0 ? price : fallback;
+};
+
+const legacyPrices = (product: Product, size: string) => {
+  const is400g = normalizeProductSize(size) === "400g";
+  const salePrice = finitePrice(is400g ? product.price_400g : product.price_150g);
+  const price = finitePrice(is400g ? product.price_400g_original : product.price_150g_original, salePrice);
+  return { price, salePrice: salePrice < price ? salePrice : null };
 };
 
 const legacyPrices = (product: Product, size: string) => {
@@ -34,8 +42,9 @@ export function productVariants(product: Product): ProductVariant[] {
     const price = finitePrice(variant.price, fallback.price);
     const salePrice = variant.salePrice == null ? null : finitePrice(variant.salePrice, price);
     const stock = Math.max(0, Math.trunc(Number(variant.stock) || 0));
-    return variant.id && variant.size && variant.grindType && variant.available
-      ? [{ ...variant, price, salePrice, stock, available: !soldOut && stock > 0 }]
+    const size = normalizeProductSize(variant.size);
+    return variant.id && size && variant.grindType && variant.available
+      ? [{ ...variant, size, price, salePrice, stock, available: !soldOut && stock > 0 }]
       : [];
   });
   const stock = Math.max(0, Math.trunc(Number(product.stock_quantity) || 0));
