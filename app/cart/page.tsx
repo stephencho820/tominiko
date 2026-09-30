@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Minus, Plus, X } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
 import { productImage, productVariants } from "@/lib/products";
-import { cartItemKey } from "@/lib/cart";
+import { cartItemKey, cartItemRegularPrice } from "@/lib/cart";
 
 const money = (value: number) => `₩${value.toLocaleString("ko-KR")}`;
 
@@ -47,7 +47,7 @@ export default function CartPage() {
                       <span aria-live="polite">{item.quantity}</span>
                       <button type="button" onClick={() => updateQuantity(cartItemKey(item), item.quantity + 1)} disabled={item.quantity >= 20 || item.quantity >= (productVariants(item.product).find((variant) => variant.id === item.variantId)?.stock ?? item.product.stock_quantity)} aria-label="Increase quantity"><Plus size={15} /></button>
                     </div>
-                    <strong>{money(item.unitPrice * item.quantity)}</strong>
+                    <strong className="cart-price-pair">{item.unitPrice < cartItemRegularPrice(item) && <del>{money(cartItemRegularPrice(item) * item.quantity)}</del>}<span>{money(item.unitPrice * item.quantity)}</span></strong>
                   </div>
                 </div>
               </article>
