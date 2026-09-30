@@ -7,7 +7,7 @@ export type DeliverySettings = {
   localDeliveryMessage: string;
 };
 export type AddressForEligibility = { zonecode?: string; bname?: string; roadAddress?: string; jibunAddress?: string };
-export type LocalDeliveryZone = { zone_type: "postal_prefix" | "postal_range" | "district"; zone_value: string; enabled: boolean };
+export type LocalDeliveryZone = { zone_type: "postal_prefix" | "postal_range" | "district" | "address_keyword"; zone_value: string; enabled: boolean };
 
 export const DEFAULT_DELIVERY_SETTINGS: DeliverySettings = {
   freeShippingThreshold: 50_000,
@@ -37,6 +37,7 @@ export function isLocalDeliveryEligible(address: AddressForEligibility, zones: L
   if (!enabled) return false;
   const zonecode = (address.zonecode ?? "").replace(/\D/g, "");
   const districts = new Set([address.bname, districtFromAddress(address.roadAddress), districtFromAddress(address.jibunAddress)].filter(Boolean));
+  const searchableAddresses = [address.roadAddress, address.jibunAddress].filter(Boolean).map(normalizeAddressText);
   return zones.some((zone) => {
     if (!zone.enabled) return false;
     if (zone.zone_type === "postal_prefix") return Boolean(zonecode) && zonecode.startsWith(zone.zone_value.replace(/\D/g, ""));
@@ -44,8 +45,16 @@ export function isLocalDeliveryEligible(address: AddressForEligibility, zones: L
       const [start, end] = zone.zone_value.split("-").map((value) => Number(value.replace(/\D/g, "")));
       return Boolean(zonecode) && Number(zonecode) >= start && Number(zonecode) <= end;
     }
+    if (zone.zone_type === "address_keyword") {
+      const keyword = normalizeAddressText(zone.zone_value);
+      return keyword.length >= 2 && searchableAddresses.some((addressText) => addressText.includes(keyword));
+    }
     return districts.has(zone.zone_value.trim());
   });
+}
+
+function normalizeAddressText(value?: string) {
+  return (value ?? "").normalize("NFC").replace(/\s+/g, " ").trim().toLocaleLowerCase("ko-KR");
 }
 
 function districtFromAddress(value?: string) {

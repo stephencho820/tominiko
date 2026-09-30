@@ -9,7 +9,10 @@ export async function POST(request: Request) {
     const { error } = await supabase.from("delivery_settings").upsert(payload); return error ? NextResponse.json({ error: error.message }, { status: 400 }) : NextResponse.json({ ok: true });
   }
   if (body.action === "zone") {
-    const { error } = await supabase.from("local_delivery_zones").insert({ name: String(body.name).trim(), zone_type: body.zoneType, zone_value: String(body.zoneValue).trim(), enabled: true }); return error ? NextResponse.json({ error: error.message }, { status: 400 }) : NextResponse.json({ ok: true });
+    const zoneTypes = new Set(["district", "address_keyword", "postal_prefix", "postal_range"]);
+    const name = String(body.name ?? "").trim(); const zoneValue = String(body.zoneValue ?? "").trim();
+    if (!name || !zoneTypes.has(body.zoneType) || zoneValue.length < 2) return NextResponse.json({ error: "지역명과 2자 이상의 올바른 지역 값을 입력해 주세요." }, { status: 400 });
+    const { error } = await supabase.from("local_delivery_zones").insert({ name, zone_type: body.zoneType, zone_value: zoneValue, enabled: true }); return error ? NextResponse.json({ error: error.message }, { status: 400 }) : NextResponse.json({ ok: true });
   }
   if (body.action === "toggle") { const { error } = await supabase.from("local_delivery_zones").update({ enabled: Boolean(body.enabled) }).eq("id", body.id); return error ? NextResponse.json({ error: error.message }, { status: 400 }) : NextResponse.json({ ok: true }); }
   if (body.action === "delete") { const { error } = await supabase.from("local_delivery_zones").delete().eq("id", body.id); return error ? NextResponse.json({ error: error.message }, { status: 400 }) : NextResponse.json({ ok: true }); }
