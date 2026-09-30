@@ -1660,7 +1660,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 .admin-gallery-list button { min-height: 35px; border: 1px solid #c8bfb2; padding: 0 10px; background: white; font-size: 11px; }
 
 @media (max-width: 760px) {
-  .room-visit-hero { min-height: 0; aspect-ratio: 4 / 3; }
+  .room-visit-hero { min-height: 0; aspect-ratio: 4 / 5; }
   .room-story-link { right: 16px; bottom: 16px; }
   .room-visit { padding: 64px 18px 78px; }
   .room-visit-layout { grid-template-columns: 1fr; gap: 42px; }

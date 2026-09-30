@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, ShoppingBag, X } from "lucide-react";
 import { useCart } from "./CartProvider";
 
 const primaryLinks = [
@@ -61,13 +61,29 @@ export function Header() {
           </Link>
         </div>
 
-        <button
-          className="rounded p-2 md:hidden"
-          aria-label={open ? "Close navigation" : "Open navigation"}
-          onClick={() => setOpen(!open)}
-        >
-          {open ? <X size={20} /> : <Menu size={20} />}
-        </button>
+        <div className="flex items-center gap-1 md:hidden">
+          <Link
+            href="/cart"
+            className="relative grid h-11 w-11 place-items-center rounded"
+            aria-label={`Cart with ${itemCount} items`}
+            onClick={() => setOpen(false)}
+          >
+            <ShoppingBag size={20} aria-hidden="true" />
+            {itemCount > 0 && (
+              <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--ink)] px-1 text-[8px] font-semibold leading-none text-[var(--paper)]">
+                {itemCount}
+              </span>
+            )}
+          </Link>
+          <button
+            className="grid h-11 w-11 place-items-center rounded"
+            aria-label={open ? "Close navigation" : "Open navigation"}
+            aria-expanded={open}
+            onClick={() => setOpen(!open)}
+          >
+            {open ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
       </div>
 
       {open && (
@@ -82,12 +98,9 @@ export function Header() {
               {label}
             </Link>
           ))}
-          <div className="flex items-center justify-between gap-4 border-t border-[var(--line)] pt-4">
+          <div className="border-t border-[var(--line)] pt-4">
             <Link href="/account" className="nav-meta" onClick={() => setOpen(false)}>
               Account
-            </Link>
-            <Link href="/cart" className="nav-meta" onClick={() => setOpen(false)}>
-              Cart ({itemCount})
             </Link>
           </div>
         </nav>

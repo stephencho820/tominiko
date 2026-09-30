@@ -31,7 +31,7 @@ export function defaultPageSettings(slug: PageSlug): PageSettings {
     ...(slug === "tasting-room" ? {
       tastingRoom: {
         heroImage: "/images/tasting-room-banner.svg",
-        mobileHeroImage: "",
+        mobileHeroImage: "/images/tasting-room-banner-mobile.svg",
         address: "",
         phone: "",
         phoneNote: "",

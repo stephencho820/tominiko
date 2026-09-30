@@ -4,6 +4,7 @@ import { SafeHeroImage } from "@/components/SafeHeroImage";
 import { getPageSettings } from "@/lib/page-content";
 
 const defaultHero = "/images/tasting-room-banner.svg";
+const defaultMobileHero = "/images/tasting-room-banner-mobile.svg";
 
 export default async function TastingRoomPage() {
   const content = await getPageSettings("tasting-room");
@@ -11,7 +12,7 @@ export default async function TastingRoomPage() {
   const heroImage = room.heroImage || defaultHero;
   const phoneHref = room.phone.replace(/[^\d+]/g, "");
   return <main className="tasting-room-page">
-    <section className="room-visit-hero"><picture>{room.mobileHeroImage && <source media="(max-width: 700px)" srcSet={room.mobileHeroImage} />}<SafeHeroImage src={heroImage} fallback={defaultHero} alt="Casa di Stefano Tasting Room" /></picture><Link href="/our-story" className="room-story-link">PHILOSOPHY <span>↗</span></Link></section>
+    <section className="room-visit-hero"><picture><source media="(max-width: 700px)" srcSet={room.mobileHeroImage || defaultMobileHero} /><SafeHeroImage src={heroImage} fallback={defaultHero} alt="Casa di Stefano Tasting Room" /></picture><Link href="/our-story" className="room-story-link">PHILOSOPHY <span>↗</span></Link></section>
     <section className="room-visit" aria-labelledby="visit-title"><p className="section-label" id="visit-title">VISIT</p><div className="room-visit-layout">
       <figure className="room-map"><img src="/images/tasting-room/map.svg" alt="Casa di Stefano Tasting Room location map" /></figure>
       <div className="room-visit-details">
