@@ -1736,22 +1736,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 @keyframes philosophy-zero-motion { 0%,100% { transform: translateY(0) rotate(.2deg); } 50% { transform: translateY(-6px) rotate(-.2deg); } }
 @media (max-width: 700px) { .coffee-marquee-group { gap: 20px; padding-right: 20px; } }
 @media (prefers-reduced-motion: reduce) { .brand-scene--casa .philosophy-illustration, .brand-scene--zero .philosophy-illustration { animation: none; } }
-
-/* These rules intentionally follow the legacy page styles above so every
-   philosophy principle receives the same mobile box model and alignment. */
-@media (max-width: 768px) {
-  .zero-principles { grid-auto-rows: minmax(240px, auto); margin-top: 26px; }
-  .zero-principles article,
-  .zero-principles article:first-child,
-  .zero-principles article + article {
-    box-sizing: border-box;
-    min-height: 240px;
-    padding: 30px 0;
-    border-right: 0;
-    text-align: left;
-  }
-  .zero-principles article + article { border-top: 1px solid rgba(247,239,226,.12); }
-  .zero-principles span { margin-top: 0; }
-  .zero-principles h3 { margin-top: 18px; }
-  .zero-principles p { margin-top: 24px; }
-}
+.variant-price-editor { display:grid; gap:12px; margin-top:20px; }
+.variant-price-editor>.admin-form-grid { align-items:end; border:1px solid #d2cabd; padding:14px; background:#fff; }
+.variant-price-editor strong { align-self:center; font:600 18px Georgia,serif; }
+.cart-price-pair { display:flex; align-items:flex-end; flex-direction:column; }.cart-price-pair del { color:var(--muted); font-size:11px; font-weight:400; }

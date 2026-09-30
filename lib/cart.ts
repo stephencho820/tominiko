@@ -18,6 +18,12 @@ export function itemPrice(product: Product, weight: Weight) {
   return variant ? variant.salePrice ?? variant.price : weight === "150g" ? product.price_150g : product.price_400g;
 }
 
+export function cartItemRegularPrice(item: Pick<CartItem, "product" | "variantId" | "weight" | "grind" | "unitPrice">) {
+  const variant = productVariants(item.product).find((value) => value.id === item.variantId)
+    ?? productVariants(item.product).find((value) => value.size === item.weight && value.grindType === item.grind);
+  return variant?.price ?? item.unitPrice;
+}
+
 export function maxCartQuantity(item: Pick<CartItem, "product" | "variantId" | "weight" | "grind">) {
   const variant = productVariants(item.product).find((value) => value.id === item.variantId || (value.size === item.weight && value.grindType === item.grind));
   return Math.min(20, Math.max(0, Number(variant?.stock ?? item.product.stock_quantity) || 0));
