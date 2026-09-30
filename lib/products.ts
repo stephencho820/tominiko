@@ -17,6 +17,17 @@ const legacyPrices = (product: Product, size: string) => {
   return { price, salePrice: salePrice < price ? salePrice : null };
 };
 
+const legacyPrices = (product: Product, size: string) => {
+  const is400g = size.toLowerCase() === "400g";
+  const salePrice = finitePrice(is400g ? product.price_400g : product.price_150g);
+  const price = finitePrice(is400g ? product.price_400g_original : product.price_150g_original, salePrice);
+  return { price, salePrice: salePrice < price ? salePrice : null };
+};
+
+const legacyPrice = (product: Product, size: string) => size.toLowerCase() === "400g"
+  ? finitePrice(product.price_400g, finitePrice(product.price_150g))
+  : finitePrice(product.price_150g);
+
 export function productIsSoldOut(product: Product) {
   return product.status === "sold-out" || Number(product.stock_quantity) <= 0;
 }
