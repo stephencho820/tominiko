@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Product } from "@/types";
-import { productImage, productVariants } from "@/lib/products";
+import { productImage, productPricing, productVariants } from "@/lib/products";
 import { useCart } from "./CartProvider";
 
 const won = new Intl.NumberFormat("ko-KR");
@@ -13,6 +13,9 @@ function CoffeeCard({ product, size, duplicate = false }: { product: Product; si
   const image = productImage(product);
   const sizeVariants = productVariants(product).filter((item) => item.size === size);
   const variant = sizeVariants.find((item) => item.grindType === "Whole Bean") ?? sizeVariants[0];
+  const pricing = productPricing(product, size, variant);
+  const regularPrice = pricing.price;
+  const salePrice = pricing.salePrice ?? pricing.price;
   const { addToCart } = useCart();
   const [added, setAdded] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -34,7 +37,7 @@ function CoffeeCard({ product, size, duplicate = false }: { product: Product; si
       </div>
       <div className="marquee-coffee-copy">
         <p>{product.origin}</p><h3>{product.korean_name || product.name} · {size}</h3>
-        <div><span>{product.tasting_notes || product.process || "Small batch roast"}</span><strong>₩{won.format(variant ? variant.salePrice ?? variant.price : product.price_150g)}</strong></div>
+        <div><span>{product.tasting_notes || product.process || "Small batch roast"}</span><strong className="product-price-pair">{salePrice < regularPrice && <del>₩{won.format(regularPrice)}</del>}<ins>₩{won.format(salePrice)}</ins></strong></div>
       </div>
     </Link>
     <button className="marquee-add" type="button" onPointerDown={(event) => event.stopPropagation()} onClick={addProduct} disabled={!variant} tabIndex={duplicate ? -1 : undefined} aria-live="polite"><ShoppingBag size={13} />{variant ? added ? "ADDED" : "ADD TO CART" : "SOLD OUT"}</button>

@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { cartItemKey, maxCartQuantity, sanitizeCart } from "@/lib/cart";
-import { productVariants } from "@/lib/products";
+import { normalizeProductSize, productVariants } from "@/lib/products";
 import type { CartItem } from "@/types";
 
 const CART_STORAGE_KEY = "casa-cart";
@@ -32,16 +32,42 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [hasHydrated, setHasHydrated] = useState(false);
 
   useEffect(() => {
-    try {
+    let cancelled = false;
+    async function hydrate() {
+      let storedItems: CartItem[] = [];
+      try {
       const stored = window.localStorage.getItem(CART_STORAGE_KEY);
-      if (stored) setItems(sanitizeCart(JSON.parse(stored)));
-    } catch {
+        if (stored) storedItems = sanitizeCart(JSON.parse(stored));
+        if (storedItems.length) {
+          const response = await fetch("/api/products/refresh", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ids: [...new Set(storedItems.map((item) => item.product.id))] }),
+          });
+          if (response.ok) {
+            const { products } = await response.json() as { products: CartItem["product"][] };
+            const currentProducts = new Map(products.map((product) => [product.id, product]));
+            storedItems = storedItems.flatMap((item) => {
+              const product = currentProducts.get(item.product.id);
+              if (!product) return [];
+              const variant = productVariants(product).find((value) => value.id === item.variantId)
+                ?? productVariants(product).find((value) => normalizeProductSize(value.size) === normalizeProductSize(item.weight) && value.grindType === item.grind);
+              if (!variant?.available || variant.stock < 1) return [];
+              return [{ ...item, product, variantId: variant.id, weight: variant.size, grind: variant.grindType,
+                unitPrice: variant.salePrice ?? variant.price, quantity: Math.min(item.quantity, variant.stock) }];
+            });
+          }
+        }
+        if (!cancelled) setItems(storedItems);
+      } catch {
       // Storage can be unavailable in private browsing, embedded previews, or
       // when the browser blocks site data. Do not touch it again in the error
       // path: even reading `window.localStorage` can itself throw.
-    } finally {
-      setHasHydrated(true);
+      } finally {
+        if (!cancelled) setHasHydrated(true);
+      }
     }
+    void hydrate();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -77,7 +103,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const item = current[index];
     if (!item) return current;
     const variant = productVariants(item.product).find((value) => value.id === options.variantId)
-      ?? productVariants(item.product).find((value) => value.size === (options.weight ?? item.weight) && value.grindType === (options.grind ?? item.grind));
+      ?? productVariants(item.product).find((value) => normalizeProductSize(value.size) === normalizeProductSize(options.weight ?? item.weight) && value.grindType === (options.grind ?? item.grind));
     if (!variant?.available || variant.stock < 1) return current;
     const updated = { ...item, variantId: variant.id, weight: variant.size, grind: variant.grindType, unitPrice: variant.salePrice ?? variant.price, quantity: Math.min(item.quantity, variant.stock) };
     const duplicate = current.findIndex((value, itemIndex) => itemIndex !== index && cartItemKey(value) === cartItemKey(updated));

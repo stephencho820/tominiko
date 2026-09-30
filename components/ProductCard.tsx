@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Product } from "@/types";
-import { productImage } from "@/lib/products";
+import { defaultProductVariant, productImage, productPricing } from "@/lib/products";
 
 export function formatCoffeeText(value: string | null, fallback = "") {
   return value?.replace(/\s*[,/]\s*/g, " · ") ?? fallback;
@@ -11,6 +11,10 @@ export function ProductCard({ product }: { product: Product }) {
   const coffeeDetails = [formatCoffeeText(product.origin), product.process]
     .filter(Boolean)
     .join(" · ");
+  const variant = defaultProductVariant(product, "150g");
+  const pricing = productPricing(product, "150g", variant);
+  const regularPrice = pricing.price;
+  const salePrice = pricing.salePrice ?? pricing.price;
 
   return (
     <article className="product-card">
@@ -30,7 +34,8 @@ export function ProductCard({ product }: { product: Product }) {
             <p className="product-card-origin">{coffeeDetails}</p>
           </div>
           <p className="product-card-price">
-            <span>₩{product.price_150g.toLocaleString()}</span>
+            {salePrice < regularPrice && <del>₩{regularPrice.toLocaleString()}</del>}
+            <span>₩{salePrice.toLocaleString()}</span>
             <small>/ 150g</small>
           </p>
         </div>

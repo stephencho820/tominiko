@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Grid2X2, List, Rows3, ShoppingBag } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "./CartProvider";
-import { productImage, productPrice, productVariants, tastingNotes } from "@/lib/products";
+import { productImage, productPrice, productPricing, productVariants, tastingNotes } from "@/lib/products";
 import { isShopTag, SHOP_TAGS, type ShopTag } from "@/lib/shop-tags";
 import type { Product } from "@/types";
 
@@ -22,8 +22,9 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
   const grinds = variants.filter((item) => item.size === size);
   const [variantId, setVariantId] = useState(() => grinds.find((item) => item.grindType === "Whole Bean")?.id ?? grinds[0]?.id ?? "");
   const variant = grinds.find((item) => item.id === variantId) ?? grinds[0];
-  const regularPrice = variant?.price ?? (size === "400g" ? product.price_400g : product.price_150g);
-  const salePrice = variant?.salePrice ?? regularPrice;
+  const pricing = productPricing(product, size, variant);
+  const regularPrice = pricing.price;
+  const salePrice = pricing.salePrice ?? pricing.price;
   const [added, setAdded] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const notes = tastingNotes(product).join(" · ");
