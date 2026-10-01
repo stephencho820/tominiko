@@ -32,6 +32,7 @@ export function ProductCard({ product }: { product: Product }) {
             <h3>{product.korean_name || product.name}</h3>
             {tastingNotes && <p className="product-card-notes">{tastingNotes}</p>}
             <p className="product-card-origin">{coffeeDetails}</p>
+            {Boolean(product.review_count) && <p className="product-rating">★★★★★ <b>{product.review_average?.toFixed(1)}</b> ({product.review_count})</p>}
           </div>
           <p className="product-card-price">
             {salePrice < regularPrice && <del>₩{regularPrice.toLocaleString()}</del>}
