@@ -4,6 +4,8 @@ import { ProductPurchase } from "@/components/ProductPurchase";
 import { ProductCard } from "@/components/ProductCard";
 import { productImage, tastingNotes } from "@/lib/products";
 import { getProduct, getProducts } from "@/services/products";
+import { getProductReviews } from "@/services/reviews";
+import { ProductReviews } from "@/components/ProductReviews";
 
 function Facts({ rows }: { rows: [string, string | null | undefined][] }) {
   const visible = rows.filter((row): row is [string, string] => Boolean(row[1]));
@@ -15,6 +17,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
   const slug = (await params).slug; const preview = (await searchParams).preview === "1";
   const [product, all] = await Promise.all([getProduct(slug, { includeInactive: preview }), getProducts({ activeOnly: true })]);
   if (!product) notFound();
+  const reviewData = await getProductReviews(product.id);
   const notes = tastingNotes(product); const images = [productImage(product), ...(product.gallery_images ?? [])].filter((value, index, list) => list.indexOf(value) === index);
   const related = all.filter((item) => item.id !== product.id).sort((a,b) => Number(b.category === product.category)-Number(a.category === product.category)).slice(0,3);
   const brew = product.use_default_recipe ? { brewing_dose:"20g", brewing_water:"300g", brewing_temperature:"92°C", brewing_grind:"Medium", brewing_time:"2:30–3:00" } : product;
@@ -28,6 +31,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
       {product.roaster_note && <section><p className="section-label">ROASTER&apos;S NOTE</p><p>{product.roaster_note}</p></section>}
       {(product.use_default_recipe || product.brewing_dose || product.brewing_water || product.brewing_temperature || product.brewing_grind || product.brewing_time) && <section><p className="section-label">BREWING GUIDE</p><Facts rows={[["Coffee",brew.brewing_dose],["Water",brew.brewing_water],["Temperature",brew.brewing_temperature],["Grind",brew.brewing_grind],["Brew time",brew.brewing_time]]}/></section>}
     </div>
+    <ProductReviews productId={product.id} initialReviews={reviewData.reviews} stats={reviewData.stats} allowGuests={reviewData.allowGuests} user={reviewData.user}/>
     {related.length > 0 && <section className="related-products"><p className="section-label">YOU MAY ALSO LIKE</p><div>{related.map((item) => <ProductCard product={item} key={item.id}/>)}</div></section>}
   </main>;
 }

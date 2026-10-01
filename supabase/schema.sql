@@ -78,3 +78,6 @@ create policy "public page images" on storage.objects for select using (bucket_i
 create policy "admins upload page images" on storage.objects for insert with check (bucket_id = 'page-images' and public.is_admin());
 create policy "admins update page images" on storage.objects for update using (bucket_id = 'page-images' and public.is_admin());
 create policy "admins delete page images" on storage.objects for delete using (bucket_id = 'page-images' and public.is_admin());
+
+-- Product reviews, image storage, policies and cached rating summaries are defined in
+-- supabase/migrations/202610010001_product_reviews.sql.

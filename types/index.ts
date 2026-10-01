@@ -51,7 +51,13 @@ export type Product = {
   brewing_time?: string | null;
   use_default_recipe?: boolean;
   variants?: ProductVariant[];
+  review_average?: number;
+  review_count?: number;
 };
+
+export type ReviewImage = { id: string; review_id: string; image_url: string; sort_order: number; created_at: string };
+export type Review = { id: string; product_id: string; user_id: string | null; order_id: string | null; rating: number; title: string | null; content: string; reviewer_name: string; is_verified_purchase: boolean; status: "published" | "hidden"; created_at: string; updated_at: string; review_images: ReviewImage[]; products?: { name: string; slug: string } | null };
+export type ReviewStats = { average: number; count: number; distribution: Record<number, number> };
 
 export type ProductCategory = "comfortable" | "bright" | "decaf" | "blend" | "special";
 export type Grind = "Whole Bean" | "Espresso" | "Moka Pot" | "Pour Over" | "Coffee Maker" | "French Press" | "Filter" | "Other";
