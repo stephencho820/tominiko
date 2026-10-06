@@ -2,16 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { nextOrderStatus, orderStatusLabels } from "@/lib/admin";
+import { nextOrderStatus, orderStatusLabel, orderStatusesForMethod } from "@/lib/admin";
 
-const statuses = ["new", "confirmed", "roasting", "preparing", "ready_for_pickup", "shipped", "completed", "cancelled"];
+import type { DeliveryMethod } from "@/types";
 
-export function OrderStatusSelect({ id, initial, fulfillmentType, paymentStatus, mode = "quick" }: { id: string; initial: string; fulfillmentType: "delivery" | "pickup"; paymentStatus: string; mode?: "quick" | "select" }) {
+export function OrderStatusSelect({ id, initial, deliveryMethod, paymentStatus, mode = "quick" }: { id: string; initial: string; deliveryMethod: DeliveryMethod; paymentStatus: string; mode?: "quick" | "select" }) {
   const router = useRouter();
   const [status, setStatus] = useState(initial);
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const next = nextOrderStatus({ order_status: status, fulfillment_type: fulfillmentType });
+  const next = nextOrderStatus({ order_status: status, delivery_method: deliveryMethod });
   const paymentBlocked = paymentStatus !== "paid" && next && !["confirmed", "cancelled"].includes(next);
 
   const update = async (value: string) => {
@@ -25,7 +25,7 @@ export function OrderStatusSelect({ id, initial, fulfillmentType, paymentStatus,
   if (mode === "select") return (
     <div className="admin-status-control">
       <select value={status} disabled={isSaving} onChange={(event) => void update(event.target.value)} aria-label="Order status">
-        {statuses.filter((item) => fulfillmentType === "pickup" ? item !== "shipped" : item !== "ready_for_pickup").map((item) => <option value={item} key={item}>{orderStatusLabels[item]}</option>)}
+        {orderStatusesForMethod(deliveryMethod).map((item) => <option disabled={paymentStatus !== "paid" && !["new", "confirmed", "cancelled"].includes(item)} value={item} key={item}>{orderStatusLabel(item, deliveryMethod)}</option>)}
       </select>
       {error && <p role="alert">{error}</p>}
     </div>
@@ -33,7 +33,7 @@ export function OrderStatusSelect({ id, initial, fulfillmentType, paymentStatus,
 
   return (
     <div className="admin-order-action">
-      {next && <button type="button" disabled={isSaving || Boolean(paymentBlocked)} title={paymentBlocked ? "Payment must be completed first" : undefined} onClick={() => void update(next)}>{isSaving ? "Saving…" : `Mark ${orderStatusLabels[next]}`}</button>}
+      {next && <button type="button" disabled={isSaving || Boolean(paymentBlocked)} title={paymentBlocked ? "Payment must be completed first" : undefined} onClick={() => void update(next)}>{isSaving ? "Saving…" : `Mark ${orderStatusLabel(next, deliveryMethod)}`}</button>}
       {paymentBlocked && <p>Payment required before fulfillment</p>}
       {error && <p role="alert">{error}</p>}
     </div>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { LOW_STOCK_THRESHOLD, formatOrderTime, seoulTodayRange } from "@/lib/admin";
+import { LOW_STOCK_THRESHOLD, deliveryMethodLabels, formatOrderTime, seoulTodayRange } from "@/lib/admin";
 import { StatusBadge } from "@/components/AdminStatusBadge";
 import { ProductQuickActions } from "@/components/ProductQuickActions";
 import { OrderStatusSelect } from "@/components/OrderStatusSelect";
@@ -44,7 +44,7 @@ export default async function Admin() {
 
       <section className="admin-work-queue">
         <div className="admin-section-heading"><div><p className="eyebrow">Work queue</p><h2>What needs doing</h2></div></div>
-        {orders.length ? <div className="admin-order-list">{orders.map((order) => <article className="admin-order-card" key={order.id}><div className="admin-order-top"><div><Link href={`/admin/orders/${order.id}`}>{order.order_number}</Link><span>{formatOrderTime(order.created_at)} · {order.customer_name}</span></div><StatusBadge type="payment" value={order.payment_status} /></div><div className="admin-order-items">{order.order_items?.map((item) => <span key={item.id}>{item.product_name} · {item.weight} · {item.grind} × {item.quantity}</span>)}</div><div className="admin-order-bottom"><div><StatusBadge type="order" value={order.order_status} /><span>{order.fulfillment_type === "pickup" ? "Pickup" : "Delivery"} · ₩{order.total.toLocaleString()}</span></div><OrderStatusSelect id={order.id} initial={order.order_status} fulfillmentType={order.fulfillment_type} paymentStatus={order.payment_status} /></div></article>)}</div> : <p className="admin-empty">No open orders. You’re caught up.</p>}
+        {orders.length ? <div className="admin-order-list">{orders.map((order) => <article className="admin-order-card" key={order.id}><div className="admin-order-top"><div><Link href={`/admin/orders/${order.id}`}>{order.order_number}</Link><span>{formatOrderTime(order.created_at)} · {order.customer_name}</span></div><StatusBadge type="payment" value={order.payment_status} /></div><div className="admin-order-items">{order.order_items?.map((item) => <span key={item.id}>{item.product_name} · {item.weight} · {item.grind} × {item.quantity}</span>)}</div><div className="admin-order-bottom"><div><StatusBadge type="order" value={order.order_status} deliveryMethod={order.delivery_method} /><span>{deliveryMethodLabels[order.delivery_method]} · ₩{(order.final_amount ?? order.total).toLocaleString()}</span></div><OrderStatusSelect id={order.id} initial={order.order_status} deliveryMethod={order.delivery_method} paymentStatus={order.payment_status} /></div></article>)}</div> : <p className="admin-empty">No open orders. You’re caught up.</p>}
       </section>
     </main>
   );
