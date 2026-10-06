@@ -11,9 +11,11 @@ import { useEffect, useState } from "react";
 const money = (value: number) => `₩${value.toLocaleString("ko-KR")}`;
 
 export default function CartPage() {
-  const { cartItems: items, cartSubtotal: total, cartCount: itemCount, removeFromCart, updateQuantity, updateOptions } = useCart();
+  const { cartItems: items, cartSubtotal: total, cartCount: itemCount, removeFromCart, updateQuantity, updateOptions, cartReady, refreshError, refreshCart } = useCart();
+  const [settingsReady, setSettingsReady] = useState(false);
+  const [settingsError, setSettingsError] = useState("");
   const [deliverySettings, setDeliverySettings] = useState<DeliverySettings>(DEFAULT_DELIVERY_SETTINGS);
-  useEffect(() => { fetch("/api/checkout").then((response) => response.json()).then((data) => setDeliverySettings(data.settings)).catch(() => undefined); }, []);
+  useEffect(() => { fetch("/api/checkout").then((response) => { if (!response.ok) throw new Error("배송 설정을 확인하지 못했습니다."); return response.json(); }).then((data) => { setDeliverySettings(data.settings); setSettingsReady(true); }).catch((error) => setSettingsError(error.message)); }, []);
   const shippingProgress = freeShippingProgress(total, deliverySettings);
 
   return (
@@ -25,6 +27,7 @@ export default function CartPage() {
         <p className="purchase-count">{itemCount} <span className="lang-ko">개</span><span className="lang-en">items</span></p>
       </header>
 
+      {(refreshError || settingsError) && <p role="alert" className="submit-error">{refreshError || settingsError}{refreshError && <button type="button" onClick={() => { void refreshCart().catch(() => undefined); }}>다시 확인</button>}</p>}
       {!items.length ? (
         <section className="empty-bag" aria-live="polite">
           <p><span className="lang-ko">아직 담긴 커피가 없습니다.</span><span className="lang-en">Your bag is ready for something good.</span></p>
@@ -64,7 +67,7 @@ export default function CartPage() {
             <div className="total-line"><span><span className="lang-ko">상품 금액</span><span className="lang-en">Subtotal</span></span><span>{money(total)}</span></div>
             <div className="shipping-progress cart-progress"><div><span>{shippingProgress.qualified ? "✓ 무료배송 혜택을 받으셨어요." : `${money(shippingProgress.remaining)} 더 담으면 무료배송`}</span><small>{Math.round(shippingProgress.percent)}%</small></div><i><span style={{ width: `${shippingProgress.percent}%` }} /></i></div>
             <div className="total-line total-emphasis"><span>Total</span><strong>{money(total)}</strong></div>
-            <Link href="/checkout" className="button-primary purchase-button"><span className="lang-ko">주문 정보 입력</span><span className="lang-en">Continue to checkout</span><span>→</span></Link>
+            {cartReady && settingsReady ? <Link href="/checkout" className="button-primary purchase-button"><span className="lang-ko">주문 정보 입력</span><span className="lang-en">Continue to checkout</span><span>→</span></Link> : <button disabled className="button-primary purchase-button">상품 및 배송 정보 확인 필요</button>}
             <Link href="/shop" className="continue-link"><span className="lang-ko">쇼핑 계속하기</span><span className="lang-en">Continue shopping</span></Link>
           </aside>
         </div>

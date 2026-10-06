@@ -12,7 +12,7 @@ export function ProductCard({ product }: { product: Product }) {
     .filter(Boolean)
     .join(" · ");
   const variant = defaultProductVariant(product, "150g");
-  const pricing = productPricing(product, "150g", variant);
+  const pricing = productPricing(product, variant?.size ?? "150g", variant);
   const regularPrice = pricing.price;
   const salePrice = pricing.salePrice ?? pricing.price;
 
@@ -21,7 +21,7 @@ export function ProductCard({ product }: { product: Product }) {
       <Link
         href={`/shop/${product.slug}`}
         className="product-card-link group"
-        aria-label={`${product.name}, ₩${product.price_150g.toLocaleString()}`}
+        aria-label={`${product.name}, ₩${salePrice.toLocaleString()}, ${variant?.size ?? "150g"}`}
       >
         <div className="product-card-image grain">
           <img src={productImage(product)} alt={product.name} loading="lazy" />
@@ -37,7 +37,7 @@ export function ProductCard({ product }: { product: Product }) {
           <p className="product-card-price">
             {salePrice < regularPrice && <del>₩{regularPrice.toLocaleString()}</del>}
             <span>₩{salePrice.toLocaleString()}</span>
-            <small>/ 150g</small>
+            <small>/ {variant?.size ?? "150g"}</small>
           </p>
         </div>
       </Link>

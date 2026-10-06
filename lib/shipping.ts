@@ -36,7 +36,8 @@ export function freeShippingProgress(productSubtotal: number, settings: Delivery
 export function isLocalDeliveryEligible(address: AddressForEligibility, zones: LocalDeliveryZone[], enabled = true) {
   if (!enabled) return false;
   const zonecode = (address.zonecode ?? "").replace(/\D/g, "");
-  const districts = new Set([address.bname, districtFromAddress(address.roadAddress), districtFromAddress(address.jibunAddress)].filter(Boolean));
+  // The database matches district zones against the structured bname only.
+  const district = address.bname;
   const searchableAddresses = [address.roadAddress, address.jibunAddress].filter(Boolean).map(normalizeAddressText);
   return zones.some((zone) => {
     if (!zone.enabled) return false;
@@ -49,16 +50,12 @@ export function isLocalDeliveryEligible(address: AddressForEligibility, zones: L
       const keyword = normalizeAddressText(zone.zone_value);
       return keyword.length >= 2 && searchableAddresses.some((addressText) => addressText.includes(keyword));
     }
-    return districts.has(zone.zone_value.trim());
+    return district === zone.zone_value;
   });
 }
 
 function normalizeAddressText(value?: string) {
   return (value ?? "").normalize("NFC").replace(/\s+/g, " ").trim().toLocaleLowerCase("ko-KR");
-}
-
-function districtFromAddress(value?: string) {
-  return value?.trim().split(/\s+/).find((part) => /[읍면동가]$/.test(part));
 }
 
 export function settingsFromRow(row?: Record<string, unknown> | null): DeliverySettings {

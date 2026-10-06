@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Grid2X2, List, Rows3, ShoppingBag } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "./CartProvider";
-import { productImage, productPrice, productPricing, productVariants, tastingNotes, STANDARD_GRINDS } from "@/lib/products";
+import { defaultProductVariant, productImage, productPrice, productPricing, productVariants, tastingNotes, STANDARD_GRINDS } from "@/lib/products";
 import { isShopTag, SHOP_TAGS, type ShopTag } from "@/lib/shop-tags";
 import type { Product, Grind } from "@/types";
 
@@ -18,7 +18,7 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
   const { addToCart } = useCart();
   const variants = useMemo(() => productVariants(product), [product]);
   const sizes = [...new Set(variants.map((item) => item.size))];
-  const [size, setSize] = useState<string>(() => sizes.includes("150g") ? "150g" : sizes[0] ?? "");
+  const [size, setSize] = useState<string>(() => defaultProductVariant(product)?.size ?? "");
   const [grind, setGrind] = useState<Grind>("Whole Bean");
   const variant = variants.find((item) => item.size === size);
   const pricing = productPricing(product, size, variant);
