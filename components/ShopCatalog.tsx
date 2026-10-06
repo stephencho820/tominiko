@@ -51,6 +51,7 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
       <Link href={`/shop/${product.slug}`}><h2>{product.korean_name || product.name}</h2></Link>
       {product.korean_name && <p className="catalog-english">{product.name}</p>}
       {notes && <p className="catalog-notes">{notes}</p>}
+      {Boolean(product.review_count) && <p className="product-rating">★★★★★ <b>{product.review_average?.toFixed(1)}</b> ({product.review_count})</p>}
       {view === "list" && product.short_description && <p className="catalog-description">{product.short_description}</p>}
       <div className="catalog-options" aria-label={`${product.name} options`}>
         <select aria-label="Size" value={size} onChange={(event) => chooseSize(event.target.value)}>{sizes.map((value) => <option key={value} value={value}>{value}</option>)}</select>
