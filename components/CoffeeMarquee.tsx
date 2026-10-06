@@ -12,7 +12,7 @@ const won = new Intl.NumberFormat("ko-KR");
 function CoffeeCard({ product, size, duplicate = false }: { product: Product; size: string; duplicate?: boolean }) {
   const image = productImage(product);
   const sizeVariants = productVariants(product).filter((item) => item.size === size);
-  const variant = sizeVariants.find((item) => item.grindType === "Whole Bean") ?? sizeVariants[0];
+  const variant = sizeVariants[0];
   const pricing = productPricing(product, size, variant);
   const regularPrice = pricing.price;
   const salePrice = pricing.salePrice ?? pricing.price;
@@ -24,7 +24,7 @@ function CoffeeCard({ product, size, duplicate = false }: { product: Product; si
     event.preventDefault();
     event.stopPropagation();
     if (!variant) return;
-    const didAdd = addToCart({ product, variantId: variant.id, weight: variant.size, grind: variant.grindType, quantity: 1, unitPrice: variant.salePrice ?? variant.price });
+    const didAdd = addToCart({ product, variantId: variant.id, weight: variant.size, grind: "Whole Bean", quantity: 1, unitPrice: variant.salePrice ?? variant.price });
     if (!didAdd) return;
     setAdded(true);
     if (timer.current) clearTimeout(timer.current);
@@ -40,7 +40,7 @@ function CoffeeCard({ product, size, duplicate = false }: { product: Product; si
         <div><span>{product.tasting_notes || product.process || "Small batch roast"}</span><strong className="product-price-pair">{salePrice < regularPrice && <del>₩{won.format(regularPrice)}</del>}<ins>₩{won.format(salePrice)}</ins></strong></div>
       </div>
     </Link>
-    <button className="marquee-add" type="button" onPointerDown={(event) => event.stopPropagation()} onClick={addProduct} disabled={!variant} tabIndex={duplicate ? -1 : undefined} aria-live="polite"><ShoppingBag size={13} />{variant ? added ? "ADDED" : "ADD TO CART" : "SOLD OUT"}</button>
+    <button className="marquee-add" type="button" onPointerDown={(event) => event.stopPropagation()} onClick={addProduct} disabled={!variant?.available} tabIndex={duplicate ? -1 : undefined} aria-live="polite"><ShoppingBag size={13} />{variant?.available ? added ? "ADDED" : "ADD TO CART" : "SOLD OUT"}</button>
   </article>;
 }
 

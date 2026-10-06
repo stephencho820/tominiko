@@ -12,7 +12,7 @@ export async function getProducts(options?: { activeOnly?: boolean; todaysRoast?
     query = options?.latestFirst ? query.order("created_at", { ascending: false }) : query.order("display_order").order("created_at", { ascending: false });
     // Keep active out-of-stock products in the catalog so customers can see
     // the SOLD OUT state instead of having products silently disappear.
-    if (options?.activeOnly) query = query.eq("active", true);
+    if (options?.activeOnly) query = query.in("status", ["active", "sold-out"]);
     if (options?.todaysRoast) query = query.eq("todays_roast", true);
     if (options?.featured) query = query.eq("featured", true);
     const { data, error } = await runSupabaseQuery(async (signal) => await query.abortSignal(signal));
@@ -27,7 +27,7 @@ export async function getProduct(slug: string, options?: { includeInactive?: boo
   try {
     const supabase = await createClient();
     const { data, error } = await runSupabaseQuery(async (signal) =>
-      await (options?.includeInactive ? supabase.from("products").select("*").eq("slug", slug) : supabase.from("products").select("*").eq("slug", slug).eq("active", true)).abortSignal(signal).single(),
+      await (options?.includeInactive ? supabase.from("products").select("*").eq("slug", slug) : supabase.from("products").select("*").eq("slug", slug).in("status", ["active", "sold-out"])).abortSignal(signal).single(),
     );
     if (error || !data) return null;
     return (await attachReviewSummaries([data as Product]))[0];

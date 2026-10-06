@@ -1,3 +1,4 @@
+import { normalizeGrind, isSize } from "@/lib/product-contract";
 import { normalizeProductSize, productVariants } from "@/lib/products";
 import type { CartItem, Product, Weight } from "@/types";
 
@@ -20,13 +21,14 @@ export function itemPrice(product: Product, weight: Weight) {
 
 export function cartItemRegularPrice(item: Pick<CartItem, "product" | "variantId" | "weight" | "grind" | "unitPrice">) {
   const variant = productVariants(item.product).find((value) => value.id === item.variantId)
-    ?? productVariants(item.product).find((value) => normalizeProductSize(value.size) === normalizeProductSize(item.weight) && value.grindType === item.grind);
+    ?? productVariants(item.product).find((value) => normalizeProductSize(value.size) === normalizeProductSize(item.weight));
   return variant?.price ?? item.unitPrice;
 }
 
-export function maxCartQuantity(item: Pick<CartItem, "product" | "variantId" | "weight" | "grind">) {
-  const variant = productVariants(item.product).find((value) => value.id === item.variantId || (normalizeProductSize(value.size) === normalizeProductSize(item.weight) && value.grindType === item.grind));
-  return Math.min(20, Math.max(0, Number(variant?.stock ?? item.product.stock_quantity) || 0));
+export function maxCartQuantity(item: Pick<CartItem, "product" | "variantId" | "weight" | "grind">, items: CartItem[] = []) {
+  const variant = productVariants(item.product).find((value) => value.id === item.variantId || (normalizeProductSize(value.size) === normalizeProductSize(item.weight)));
+  const used = items.filter((v) => v.product.id === item.product.id && v.variantId === variant?.id && cartItemKey(v) !== cartItemKey(item)).reduce((sum, v) => sum + v.quantity, 0);
+  return Math.min(20, Math.max(0, (Number(variant?.stock) || 0) - used));
 }
 
 /** A stable identity for a product option. This deliberately includes both the
@@ -38,18 +40,29 @@ export function cartItemKey(item: Pick<CartItem, "product" | "variantId" | "weig
 export function sanitizeCart(value: unknown): CartItem[] {
   if (!Array.isArray(value)) return [];
 
-  return value.flatMap((entry): CartItem[] => {
+  const result = value.flatMap((entry): CartItem[] => {
     if (!entry || typeof entry !== "object") return [];
     const item = entry as Partial<CartItem>;
     if (!isProduct(item.product) || typeof item.weight !== "string" || !item.weight || typeof item.grind !== "string" || !item.grind.trim()) return [];
-    const weight = item.weight as Weight;
-    const variant = productVariants(item.product).find((value) => value.id === item.variantId || (normalizeProductSize(value.size) === normalizeProductSize(weight) && value.grindType === item.grind));
+    const weight = normalizeProductSize(item.weight);
+    const grind = normalizeGrind(item.grind);
+    if (!isSize(weight) || !grind) return [];
+    const legacySnapshot = item.product.variants?.some((v) => v && "grindType" in v) === true;
+    const variant = productVariants(item.product).find((value) => value.size === weight && (value.id === item.variantId || legacySnapshot));
     if (!variant) return [];
-    // Grind labels are editable in the product admin. The selected variant is
-    // the source of truth, so do not silently reject otherwise valid custom or
-    // localized labels (for example, "핸드드립") at the cart boundary.
     const quantity = Math.min(20, Number(variant.stock), Math.max(1, Number(item.quantity)));
     if (!Number.isInteger(quantity) || quantity < 1 || !variant.available) return [];
-    return [{ product: item.product, variantId: variant.id, weight: variant.size, grind: variant.grindType, quantity, unitPrice: variant.salePrice ?? variant.price }];
+    return [{ product: item.product, variantId: variant.id, weight: variant.size, grind, quantity, unitPrice: variant.salePrice ?? variant.price }];
   });
+  const accepted: CartItem[] = [];
+  for (const item of result) {
+    const used = accepted.filter((v) => v.product.id === item.product.id && v.variantId === item.variantId).reduce((sum, v) => sum + v.quantity, 0);
+    const quantity = Math.min(item.quantity, maxCartQuantity(item) - used);
+    if (quantity > 0) {
+      const duplicate = accepted.find((v) => cartItemKey(v) === cartItemKey(item));
+      if (duplicate) duplicate.quantity += quantity;
+      else accepted.push({ ...item, quantity });
+    }
+  }
+  return accepted;
 }

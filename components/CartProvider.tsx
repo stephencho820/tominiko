@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { normalizeGrind } from "@/lib/product-contract";
 import { cartItemKey, maxCartQuantity, sanitizeCart } from "@/lib/cart";
 import { normalizeProductSize, productVariants } from "@/lib/products";
 import type { CartItem } from "@/types";
@@ -50,14 +51,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               const product = currentProducts.get(item.product.id);
               if (!product) return [];
               const variant = productVariants(product).find((value) => value.id === item.variantId)
-                ?? productVariants(product).find((value) => normalizeProductSize(value.size) === normalizeProductSize(item.weight) && value.grindType === item.grind);
+                ?? productVariants(product).find((value) => normalizeProductSize(value.size) === normalizeProductSize(item.weight));
               if (!variant?.available || variant.stock < 1) return [];
-              return [{ ...item, product, variantId: variant.id, weight: variant.size, grind: variant.grindType,
+              return [{ ...item, product, variantId: variant.id, weight: variant.size, grind: item.grind,
                 unitPrice: variant.salePrice ?? variant.price, quantity: Math.min(item.quantity, variant.stock) }];
             });
           }
         }
-        if (!cancelled) setItems(storedItems);
+        if (!cancelled) setItems(sanitizeCart(storedItems));
       } catch {
       // Storage can be unavailable in private browsing, embedded previews, or
       // when the browser blocks site data. Do not touch it again in the error
@@ -81,37 +82,39 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const add = useCallback((item: CartItem) => {
     const safeItem = sanitizeCart([item])[0];
-    if (!safeItem) return false;
-    setItems((current) => {
+    if (!safeItem || maxCartQuantity(safeItem, items) <= (items.find((v) => cartItemKey(v) === cartItemKey(safeItem))?.quantity ?? 0)) return false;
+    setItems((previous) => sanitizeCart((() => {
+      const current = previous;
       const existing = current.findIndex((currentItem) => cartItemKey(currentItem) === cartItemKey(safeItem));
       if (existing === -1) return [...current, safeItem];
       return current.map((currentItem, index) => index === existing
-        ? { ...currentItem, quantity: Math.min(maxCartQuantity(currentItem), currentItem.quantity + safeItem.quantity) }
+        ? { ...currentItem, quantity: Math.min(maxCartQuantity(currentItem, current), currentItem.quantity + safeItem.quantity) }
         : currentItem);
-    });
+    })()));
     return true;
-  }, []);
+  }, [items]);
   const removeFromCart = useCallback((itemKey: string) => setItems((current) => current.filter((item) => cartItemKey(item) !== itemKey)), []);
-  const updateQuantity = useCallback((itemKey: string, quantity: number) => setItems((current) => current.map((item) => cartItemKey(item) === itemKey
-    ? { ...item, quantity: Math.min(maxCartQuantity(item), Math.max(1, Math.trunc(quantity))) }
-    : item)), []);
+  const updateQuantity = useCallback((itemKey: string, quantity: number) => setItems((current) => sanitizeCart(current.map((item) => cartItemKey(item) === itemKey
+    ? { ...item, quantity: Math.min(maxCartQuantity(item, current), Math.max(1, Math.trunc(quantity))) }
+    : item))), []);
   const remove = useCallback((index: number) => setItems((current) => current.filter((_, itemIndex) => itemIndex !== index)), []);
-  const update = useCallback((index: number, quantity: number) => setItems((current) => current.map((item, itemIndex) => itemIndex === index
-    ? { ...item, quantity: Math.min(maxCartQuantity(item), Math.max(1, Math.trunc(quantity))) }
-    : item)), []);
-  const updateOptions = useCallback((index: number, options: Partial<Pick<CartItem, "variantId" | "weight" | "grind">>) => setItems((current) => {
+  const update = useCallback((index: number, quantity: number) => setItems((current) => sanitizeCart(current.map((item, itemIndex) => itemIndex === index
+    ? { ...item, quantity: Math.min(maxCartQuantity(item, current), Math.max(1, Math.trunc(quantity))) }
+    : item))), []);
+  const updateOptions = useCallback((index: number, options: Partial<Pick<CartItem, "variantId" | "weight" | "grind">>) => setItems((previous) => sanitizeCart((() => {
+    const current = previous;
     const item = current[index];
     if (!item) return current;
     const variant = productVariants(item.product).find((value) => value.id === options.variantId)
-      ?? productVariants(item.product).find((value) => normalizeProductSize(value.size) === normalizeProductSize(options.weight ?? item.weight) && value.grindType === (options.grind ?? item.grind));
+      ?? productVariants(item.product).find((value) => normalizeProductSize(value.size) === normalizeProductSize(options.weight ?? item.weight));
     if (!variant?.available || variant.stock < 1) return current;
-    const updated = { ...item, variantId: variant.id, weight: variant.size, grind: variant.grindType, unitPrice: variant.salePrice ?? variant.price, quantity: Math.min(item.quantity, variant.stock) };
+    const updated = { ...item, variantId: variant.id, weight: variant.size, grind: normalizeGrind(options.grind ?? item.grind) ?? item.grind, unitPrice: variant.salePrice ?? variant.price, quantity: Math.min(item.quantity, maxCartQuantity({ ...item, variantId: variant.id, weight: variant.size, grind: normalizeGrind(options.grind ?? item.grind) ?? item.grind }, current.filter((_, i) => i !== index))) };
     const duplicate = current.findIndex((value, itemIndex) => itemIndex !== index && cartItemKey(value) === cartItemKey(updated));
     if (duplicate < 0) return current.map((value, itemIndex) => itemIndex === index ? updated : value);
     return current.flatMap((value, itemIndex) => itemIndex === index ? [] : [itemIndex === duplicate
-      ? { ...value, quantity: Math.min(maxCartQuantity(value), value.quantity + updated.quantity) }
+      ? { ...value, quantity: Math.min(maxCartQuantity(value, current), value.quantity + updated.quantity) }
       : value]);
-  }), []);
+  })())), []);
   const clear = useCallback(() => setItems([]), []);
 
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
