@@ -33,7 +33,8 @@ update public.products p set variants = (
   'price', case size when '150g' then greatest(coalesce(p.price_150g_original,p.price_150g),p.price_150g,1) else greatest(coalesce(p.price_400g_original,p.price_400g),p.price_400g,1) end,
   'salePrice', case size when '150g' then greatest(p.price_150g,1) else greatest(p.price_400g,1) end,
   'stock', case size when '150g' then a.allocated150 else a.allocated400 end,
-  'available', coalesce((select bool_and(coalesce(v->'available' = 'true'::jsonb,false)) from jsonb_array_elements(p.variants) v where replace(lower(v->>'size'),' ','')=size),false)
+  'available', coalesce((select bool_or(coalesce(v->'available' = 'true'::jsonb,false)) from jsonb_array_elements(p.variants) v where replace(lower(v->>'size'),' ','')=size),
+   (case size when '150g' then a.allocated150 else a.allocated400 end) > 0)
  ) order by size) from unnest(array['150g','400g']) size
 ) from allocations a where a.id=p.id;
 alter table public.order_items add column if not exists variant_id text;
