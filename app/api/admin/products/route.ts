@@ -65,6 +65,14 @@ export async function DELETE(request: Request) {
   let id: unknown;
   try { ({ id } = await request.json()); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   if (typeof id !== "string") return NextResponse.json({ error: "Invalid product" }, { status: 400 });
+  // Admin RLS permits all order items and reviews, including unpublished reviews.
+  // Fail closed: a failed lookup must never permit a cascading delete.
+  const references = await Promise.all([
+    supabase.from("order_items").select("id").eq("product_id", id).limit(1),
+    supabase.from("reviews").select("id").eq("product_id", id).limit(1),
+  ]);
+  if (references.some(result => result.error)) return NextResponse.json({ error: "상품 참조 이력을 확인하지 못했습니다. 삭제를 중단했습니다." }, { status: 503 });
+  if (references.some(result => (result.data?.length ?? 0) > 0)) return NextResponse.json({ error: "주문 또는 리뷰 이력이 있는 상품은 삭제할 수 없습니다. Hidden 상태로 변경해 주세요." }, { status: 409 });
   const { error } = await supabase.from("products").delete().eq("id", id);
   return error ? NextResponse.json({ error: error.message }, { status: 400 }) : NextResponse.json({ ok: true });
 }
