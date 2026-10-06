@@ -1,10 +1,10 @@
 import type { Product, ProductVariant } from "@/types";
+import { PRODUCT_SIZES, validateVariants, normalizeProductSize } from "@/lib/product-contract";
 
 export const productImage = (product: Product) => product.primary_image_url || product.image_url || product.thumbnail_url || "/images/coffee-card-fallback.svg";
 export const tastingNotes = (product: Product) => (product.tasting_notes ?? "").split(/[,/·]/).map((note) => note.trim()).filter(Boolean);
 
-export const STANDARD_GRINDS = ["Whole Bean", "Pour Over", "Espresso"] as const;
-export const normalizeProductSize = (value: string) => value.trim().toLowerCase().replace(/\s+/g, "");
+export { STANDARD_GRINDS, normalizeProductSize } from "@/lib/product-contract";
 const DEFAULT_PRICES = {
   "150g": { price: 19000, salePrice: 13000 },
   "400g": { price: 44000, salePrice: 29000 },
@@ -34,35 +34,24 @@ export function productPricing(product: Product, size: string, variant?: Product
   if (!variant) return fallback;
   const price = finitePrice(variant.price, fallback.price);
   const salePrice = variant.salePrice == null ? price : finitePrice(variant.salePrice, fallback.salePrice ?? price);
-  const isBroken400g = normalizedSize === "400g" &&
-    (price <= finitePrice(product.price_150g_original, DEFAULT_PRICES["150g"].price) ||
-      salePrice <= finitePrice(product.price_150g, DEFAULT_PRICES["150g"].salePrice));
-  return isBroken400g ? fallback : { price, salePrice: salePrice < price ? salePrice : null };
+  return { price, salePrice: salePrice < price ? salePrice : null };
 }
 
-export function productIsSoldOut(product: Product) {
-  return product.status === "sold-out" || Number(product.stock_quantity) <= 0;
-}
-
-export function productVariants(product: Product): ProductVariant[] {
-  const soldOut = productIsSoldOut(product);
-  if (product.variants?.length) return product.variants.flatMap((variant) => {
-    // Older catalogue rows can contain a generated variant with price 0. A
-    // zero-priced option must never reach the storefront; recover it from the
-    // matching legacy tier until the data migration has repaired the row.
-    const { price, salePrice } = productPricing(product, variant.size, variant);
-    const stock = Math.max(0, Math.trunc(Number(variant.stock) || 0));
-    const size = normalizeProductSize(variant.size);
-    return variant.id && size && variant.grindType && variant.available
-      ? [{ ...variant, size, price, salePrice, stock, available: !soldOut && stock > 0 }]
-      : [];
+/** Retain disabled and empty tiers for the admin and sold-out storefront. */
+export function inventoryVariants(product: Product): ProductVariant[] {
+  try { return validateVariants(product.variants); } catch { /* Legacy cart snapshots only. */ }
+  if (!Array.isArray(product.variants) || !product.variants.some((v) => v && "grindType" in v)) return [];
+  return PRODUCT_SIZES.map((size) => {
+    const legacy = (product.variants ?? []).filter((v) => normalizeProductSize(v.size) === size);
+    const stock = legacy.length ? Math.min(Math.floor(Math.max(0, Number(product.stock_quantity) || 0) / 2), ...legacy.map((v) => Math.max(0, Math.trunc(Number(v.stock) || 0)))) : 0;
+    return { id: size, size, ...legacyPrices(product, size), stock, available: legacy.length > 0 && legacy.every((v) => v.available === true) };
   });
-  const stock = Math.max(0, Math.trunc(Number(product.stock_quantity) || 0));
-  const available = !soldOut && stock > 0;
-  return [
-    ...STANDARD_GRINDS.map((grindType) => ({ id: `150g-${grindType}`, size: "150g", grindType, ...legacyPrices(product, "150g"), stock, available })),
-    ...STANDARD_GRINDS.map((grindType) => ({ id: `400g-${grindType}`, size: "400g", grindType, ...legacyPrices(product, "400g"), stock, available })),
-  ];
+}
+export function productVariants(product: Product): ProductVariant[] {
+  return inventoryVariants(product).map((variant) => ({ ...variant, available: variant.available && product.status === "active" && variant.stock > 0 }));
+}
+export function productIsSoldOut(product: Product) {
+  return product.status === "sold-out" || !productVariants(product).some((v) => v.available);
 }
 
 export function productPrice(product: Product) {
@@ -70,9 +59,9 @@ export function productPrice(product: Product) {
   return prices.length ? Math.min(...prices) : finitePrice(product.sale_price ?? product.price_150g);
 }
 
-export function defaultProductVariant(product: Product, preferredSize?: string, preferredGrind?: string) {
+export function defaultProductVariant(product: Product, preferredSize?: string, _preferredGrind?: string) {
   const available = productVariants(product).filter((variant) => variant.available && variant.stock > 0);
-  const preferred = available.find((variant) => variant.size.toLowerCase() === preferredSize?.toLowerCase() && (!preferredGrind || variant.grindType === preferredGrind));
+  const preferred = available.find((variant) => variant.size.toLowerCase() === preferredSize?.toLowerCase());
   if (preferred) return preferred;
   return available.reduce<ProductVariant | undefined>((cheapest, variant) => {
     if (!cheapest) return variant;

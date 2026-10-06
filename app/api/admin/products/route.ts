@@ -15,6 +15,10 @@ const productTypes = new Set(["single-origin", "blend", "decaf"]);
 const discoveryTags = new Set(["todays-roast", "nutty-comforting", "bright-fruity", "decaf", "morning-boost", "something-special", "for-gifting", "easy-brewing", "고소하고 편안한", "화사하고 산뜻한", "디카페인", "블렌드", "특별한 날"]);
 
 function validate(payload: Record<string, unknown>) {
+  if ("status" in payload) {
+    if (!["draft", "active", "sold-out", "hidden"].includes(String(payload.status))) return "invalid status";
+    payload.active = payload.status === "active" || payload.status === "sold-out";
+  } else { delete payload.active; }
   for (const key of ["price_150g", "price_400g", "stock_quantity", "display_order"]) {
     if (key in payload && (!Number.isInteger(payload[key]) || Number(payload[key]) < 0)) return `${key} must be a positive whole number`;
   }

@@ -1,9 +1,10 @@
+import { isSize, normalizeGrind, validVariantId } from "@/lib/product-contract";
 import { NextResponse } from "next/server";
 import { hashAccessToken } from "@/lib/order-access";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
-type OrderItemInput = { product?: { id?: unknown }; weight?: unknown; grind?: unknown; quantity?: unknown };
+type OrderItemInput = { product?: { id?: unknown }; variantId?: unknown; weight?: unknown; grind?: unknown; quantity?: unknown };
 type OrderInput = {
   customerName?: unknown; email?: unknown; phone?: unknown; fulfillmentType?: unknown;
   zonecode?: unknown; roadAddress?: unknown; jibunAddress?: unknown; detailAddress?: unknown; buildingName?: unknown; bname?: unknown;
@@ -11,8 +12,6 @@ type OrderInput = {
   items?: unknown; idempotencyKey?: unknown; accessToken?: unknown;
 };
 
-const validWeights = new Set(["150g", "400g"]);
-const validGrinds = new Set(["Whole Bean", "Filter", "Espresso"]);
 const text = (value: unknown, maxLength = 500) => typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 const within = (value: unknown, maxLength: number) => typeof value !== "string" || value.trim().length <= maxLength;
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -27,12 +26,13 @@ export async function POST(request: Request) {
   const email = text(body.email, 254).toLowerCase();
   const idempotencyKey = text(body.idempotencyKey);
   const accessToken = text(body.accessToken);
-  const invalidItem = items.some((item) => !uuidPattern.test(text(item.product?.id)) || !validWeights.has(text(item.weight)) ||
-    !validGrinds.has(text(item.grind)) || !Number.isInteger(item.quantity) || Number(item.quantity) < 1 || Number(item.quantity) > 20);
+  const invalidItem = items.some((item) => !item || typeof item !== "object" || !uuidPattern.test(text(item.product?.id)) || !isSize(text(item.weight)) || !validVariantId(item.variantId) ||
+    !normalizeGrind(item.grind) || !Number.isInteger(item.quantity) || Number(item.quantity) < 1 || Number(item.quantity) > 20);
   const quantities = new Map<string, number>();
   for (const item of items) {
+    if (!item || typeof item !== "object") continue;
     const productId = text(item.product?.id);
-    quantities.set(productId, (quantities.get(productId) ?? 0) + Number(item.quantity));
+    quantities.set(productId + "::" + text(item.variantId), (quantities.get(productId + "::" + text(item.variantId)) ?? 0) + Number(item.quantity));
   }
 
   if (!text(body.customerName, 100) || (email && !/^\S+@\S+\.\S+$/.test(email)) || !/^01[016789]-?\d{3,4}-?\d{4}$/.test(text(body.phone, 30)) ||
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     p_road_address: text(body.roadAddress, 300) || null, p_jibun_address: text(body.jibunAddress, 300) || null,
     p_detail_address: text(body.detailAddress, 300) || null, p_building_name: text(body.buildingName, 200) || null,
     p_bname: text(body.bname, 100) || null, p_memo_type: text(body.memoType, 100) || null, p_memo_text: text(body.memoText, 500) || null,
-    p_items: items.map((item) => ({ product_id: text(item.product?.id), weight: text(item.weight), grind: text(item.grind), quantity: Number(item.quantity) })),
+    p_items: items.map((item) => ({ product_id: text(item.product?.id), variant_id: text(item.variantId), weight: text(item.weight), grind: normalizeGrind(item.grind), quantity: Number(item.quantity) })),
   });
 
   if (error || !data?.[0]) {
