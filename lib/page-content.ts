@@ -60,6 +60,23 @@ function mergePageSettings(fallback: PageSettings, data: { texts: unknown; image
   return { texts, images, heroMedia, promotions, tastingRoom };
 }
 
+export async function getAdminPageSettings(slug: PageSlug): Promise<
+  { status: "loaded" | "missing"; settings: PageSettings } | { status: "error" }
+> {
+  if (!hasSupabaseEnv) return { status: "error" };
+  try {
+    const supabase = await createClient();
+    const { data, error } = await runSupabaseQuery(async (signal) =>
+      await supabase.from("page_settings").select("texts,images,hero_media,promotions,tasting_room").eq("slug", slug).abortSignal(signal).maybeSingle(),
+    );
+    if (error) return { status: "error" };
+    const fallback = defaultPageSettings(slug);
+    return data ? { status: "loaded", settings: mergePageSettings(fallback, data) } : { status: "missing", settings: fallback };
+  } catch {
+    return { status: "error" };
+  }
+}
+
 export async function getPageSettings(slug: PageSlug): Promise<PageSettings> {
   const fallback = defaultPageSettings(slug);
   if (!hasSupabaseEnv) return fallback;
