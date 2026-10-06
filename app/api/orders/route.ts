@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     p_delivery_method: fulfillmentType, p_zonecode: text(body.zonecode, 20) || null,
     p_road_address: text(body.roadAddress, 300) || null, p_jibun_address: text(body.jibunAddress, 300) || null,
     p_detail_address: text(body.detailAddress, 300) || null, p_building_name: text(body.buildingName, 200) || null,
-    p_bname: text(body.bname, 100) || null, p_memo_type: text(body.memoType, 100) || null, p_memo_text: text(body.memoText, 500) || null,
+    p_bname: text(body.bname, 100) || null, p_memo_type: fulfillmentType === "pickup" ? null : text(body.memoType, 100) || null, p_memo_text: fulfillmentType === "pickup" ? null : text(body.memoText, 500) || null,
     p_items: items.map((item) => ({ product_id: text(item.product?.id), variant_id: text(item.variantId), weight: text(item.weight), grind: normalizeGrind(item.grind), quantity: Number(item.quantity) })),
   });
 

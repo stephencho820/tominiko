@@ -289,10 +289,14 @@ test('canonical checkout uses saved default address, local eligibility, complete
   const C=load('components/PaymentCheckout.tsx',{...uiMocks,react:h.api,'@/components/CartProvider':{useCart:()=>({items,total:13000,cartReady:true,refreshError:'',refreshCart:async()=>items})}}).default;
   const render=()=>h.render(C);render();await h.effects();let tree=render();
   assert.equal(elements(tree).find((el)=>el.type==='input'&&el.props.value==='Recipient').props.value,'Recipient');
+  elements(tree).find((el)=>el.type==='select'&&el.props.value==='문 앞에 놓아주세요').props.onChange({target:{value:'직접 입력'}});tree=render();
+  elements(tree).find((el)=>el.type==='textarea').props.onChange({target:{value:'로컬배송 메모'}});tree=render();
   const local=elements(tree).find((el)=>el.type==='button'&&text(el).startsWith('CASA LOCAL DELIVERY'));
   assert.equal(local.props.disabled,false);local.props.onClick();tree=render();await h.effects();
   await elements(tree).find((el)=>el.type==='form').props.onSubmit({preventDefault(){}});
   assert.equal(orders.length,1);assert.equal(orders[0].fulfillmentType,'local_delivery');assert.equal(orders[0].bname,'이의동');assert.equal(orders[0].detailAddress,'101호');
+  assert.equal(orders[0].memoType,'직접 입력');assert.equal(orders[0].memoText,'로컬배송 메모');
+  assert.ok(elements(tree).some((el)=>el.props.className==='delivery-memo'));
   assert.equal(orders[0].items[0].variantId,'small');assert.equal(orders[0].items[0].grind,'Whole Bean');assert.ok(orders[0].accessToken.length>=32);
   assert.equal(payments[0].amount.value,12345); // Uses the server total, never the UI subtotal.
   tree=render();await elements(tree).find((el)=>el.type==='form').props.onSubmit({preventDefault(){}});
@@ -300,6 +304,8 @@ test('canonical checkout uses saved default address, local eligibility, complete
   tree=render();elements(tree).find((el)=>el.type==='button'&&text(el).startsWith('매장 픽업')).props.onClick();tree=render();await h.effects();
   await elements(tree).find((el)=>el.type==='form').props.onSubmit({preventDefault(){}});
   assert.notEqual(orders[2].idempotencyKey,orders[1].idempotencyKey);assert.equal(orders[2].fulfillmentType,'pickup');
+  assert.equal(orders[2].memoType,'');assert.equal(orders[2].memoText,'');
+  assert.ok(!elements(tree).some((el)=>el.props.className==='delivery-memo'));
   tree=render();elements(tree).find((el)=>el.type==='button'&&text(el).startsWith('CASA LOCAL DELIVERY')).props.onClick();tree=render();await h.effects();
   elements(tree).find((el)=>el.type==='button'&&text(el)==='+ 새 배송지').props.onClick();render();await h.effects();tree=render();
   const shippingButton=elements(tree).find((el)=>el.type==='button'&&text(el).startsWith('택배 배송'));
@@ -353,7 +359,9 @@ test('guest pickup needs no address; guest shipping uses Daum structured fields 
     input.props.onChange({target:{value}});tree=render();
   }
   elements(tree).find((el)=>el.type==='button'&&text(el).startsWith('매장 픽업')).props.onClick();tree=render();await h.effects();
+  assert.ok(!elements(tree).some((el)=>el.props.className==='delivery-memo'));
   await elements(tree).find((el)=>el.type==='form').props.onSubmit({preventDefault(){}});assert.equal(orders[0].fulfillmentType,'pickup');assert.equal(orders[0].zonecode,'');
+  assert.equal(orders[0].memoType,'');assert.equal(orders[0].memoText,'');
   tree=render();elements(tree).find((el)=>el.type==='button'&&text(el).startsWith('택배 배송')).props.onClick();tree=render();
   elements(tree).find((el)=>el.type==='button'&&text(el)==='주소 찾기').props.onClick();tree=render();
   const frame=elements(tree).find((el)=>el.props.className==='postcode-frame');frame.props.ref.current={innerHTML:''};
@@ -364,6 +372,48 @@ test('guest pickup needs no address; guest shipping uses Daum structured fields 
   daumComplete({zonecode:'16500',roadAddress:'수원 광교로 1',jibunAddress:'수원 이의동 1',buildingName:'Building',bname:'이의동'});tree=render();
   elements(tree).find((el)=>el.props.id==='detailAddress').props.onChange({target:{value:'101호'}});tree=render();
   await elements(tree).find((el)=>el.type==='form').props.onSubmit({preventDefault(){}});
+  assert.ok(elements(tree).some((el)=>el.props.className==='delivery-memo'));
+  assert.equal(orders[1].memoType,'문 앞에 놓아주세요');assert.equal(orders[1].memoText,'');
   assert.equal(orders[1].fulfillmentType,'shipping');assert.equal(orders[1].bname,'이의동');assert.equal(orders[1].roadAddress,'수원 광교로 1');assert.equal(orders[1].detailAddress,'101호');
   assert.notEqual(orders[1].idempotencyKey,orders[0].idempotencyKey);
+});
+
+
+test('orders API strips pickup memos from the Admin snapshot, preserving shipping/local delivery memos',async()=>{
+  for(const method of ['pickup','shipping','local_delivery']) {
+    const db=database();await pending(db,method);
+    const expectedType=method==='pickup'?null:'직접 입력',expectedText=method==='pickup'?null:'문 앞';
+    assert.equal(db.state.calls[0].args.p_memo_type,expectedType);
+    assert.equal(db.state.calls[0].args.p_memo_text,expectedText);
+    assert.equal(db.state.order.shipping_memo_type,expectedType);
+    assert.equal(db.state.order.shipping_memo_text,expectedText);
+  }
+});
+
+test('a saved address is posted once across retries after order creation or Toss initialization errors',async()=>{
+  for(const failure of ['order','toss']) {
+    const h=hooks(),items=[line()];let complete,saves=0,orders=0;
+    global.sessionStorage=storage();global.location={origin:'http://internal.test'};global.document={getElementById:()=>null};
+    const TossPayments=()=>{throw Error('mock Toss initialization error');};TossPayments.ANONYMOUS='guest';
+    global.window={TossPayments,daum:{Postcode:class{constructor(options){complete=options.oncomplete;}embed(){}}}};
+    global.fetch=async(url,init)=>{
+      if(url==='/api/checkout')return Response.json({settings:shipping.DEFAULT_DELIVERY_SETTINGS,zones:[],user:{name:'Member',phone:'01012345678'},addresses:[]});
+      if(url==='/api/addresses'){saves++;assert.equal(JSON.parse(init.body).detailAddress,'101호');return Response.json({address:{id:'saved'}});}
+      assert.equal(url,'/api/orders');orders++;
+      if(failure==='order'&&orders===1)return Response.json({error:'mock order error'},{status:503});
+      return Response.json({orderId:ORDER_ID,clientKey:'mock',amount:16000,orderName:'Product A'});
+    };
+    const C=load('components/PaymentCheckout.tsx',{...uiMocks,react:h.api,'@/components/CartProvider':{useCart:()=>({items,total:13000,cartReady:true,refreshCart:async()=>items})}}).default;
+    const render=()=>h.render(C);render();await h.effects();let tree=render();
+    elements(tree).find((el)=>el.type==='button'&&text(el)==='주소 찾기').props.onClick();tree=render();
+    elements(tree).find((el)=>el.props.className==='postcode-frame').props.ref.current={innerHTML:''};await h.effects();
+    complete({zonecode:'16500',roadAddress:'수원 광교로 1',jibunAddress:'수원 이의동 1',buildingName:'Building',bname:'이의동'});tree=render();
+    elements(tree).find((el)=>el.props.id==='detailAddress').props.onChange({target:{value:'101호'}});tree=render();
+    elements(tree).find((el)=>el.type==='input'&&el.props.type==='checkbox').props.onChange({target:{checked:true}});tree=render();
+    await elements(tree).find((el)=>el.type==='form').props.onSubmit({preventDefault(){}});tree=render();
+    assert.equal(saves,1,failure);assert.equal(elements(tree).find((el)=>el.type==='input'&&el.props.type==='checkbox').props.checked,false);
+    assert.match(text(tree),failure==='order'?/mock order error/:/mock Toss initialization error/);
+    await elements(tree).find((el)=>el.type==='form').props.onSubmit({preventDefault(){}});
+    assert.equal(saves,1,failure);assert.equal(orders,2,failure);
+  }
 });
