@@ -10,6 +10,7 @@ const safeError = (status = 400) => NextResponse.json({ error: "결제를 확인
 export async function POST(request: Request) {
   let input: { paymentKey?: unknown; orderId?: unknown; amount?: unknown; accessToken?: unknown };
   try { input = await request.json(); } catch { return safeError(); }
+  if (!input || typeof input !== "object" || Array.isArray(input)) return safeError();
   const paymentKey = typeof input.paymentKey === "string" ? input.paymentKey : "";
   const orderId = typeof input.orderId === "string" ? input.orderId : "";
   const accessToken = typeof input.accessToken === "string" ? input.accessToken : "";
@@ -27,46 +28,54 @@ export async function POST(request: Request) {
   }
   if (["cancelled", "refunded"].includes(order.payment_status)) return safeError(409);
 
-  // Re-price from canonical products and current delivery policy immediately before approval.
-  const productIds = order.order_items.map((item) => item.product_id).filter(Boolean);
-  const [{ data: products, error: productsError }, { data: settingsRow, error: settingsError }, { data: zones, error: zonesError }] = await Promise.all([
-    supabase.from("products").select("id,status,variants").in("id", productIds),
-    supabase.from("delivery_settings").select("*").eq("id", true).single(),
-    supabase.from("local_delivery_zones").select("zone_type,zone_value,enabled").eq("enabled", true),
-  ]);
-  if (productsError || settingsError || zonesError || !settingsRow) return safeError(503);
-  const productMap = new Map((products ?? []).map((product) => [product.id, product]));
-  let freshSubtotal = 0;
-  const quantities = new Map<string, number>();
-  for (const item of order.order_items) {
-    const product = productMap.get(item.product_id ?? "");
-    if (product?.status !== "active") return safeError(409);
-    let variant;
-    try { variant = validateVariants(product.variants).find((value) => value.id === item.variant_id && value.size === item.weight); }
-    catch { return safeError(409); }
-    if (!variant?.available) return safeError(409);
-    const key = `${product.id}::${variant.id}`;
-    const quantity = (quantities.get(key) ?? 0) + item.quantity;
-    quantities.set(key, quantity);
-    if (quantity > variant.stock) return safeError(409);
-    freshSubtotal += (variant.salePrice ?? variant.price) * item.quantity;
-  }
-  if (order.delivery_method === "local_delivery" && !isLocalDeliveryEligible({ zonecode: order.shipping_zonecode, roadAddress: order.shipping_road_address, jibunAddress: order.shipping_jibun_address, bname: order.shipping_bname }, zones ?? [], Boolean(settingsRow?.local_delivery_enabled))) return safeError(409);
-  const fresh = calculateCheckoutTotal(freshSubtotal, order.discount_amount ?? 0, order.delivery_method, settingsFromRow(settingsRow));
-  if (fresh.finalAmount !== order.total || fresh.finalAmount !== input.amount) return NextResponse.json({ error: "상품 가격 또는 배송 정책이 변경되었습니다. 주문을 다시 확인해 주세요." }, { status: 409 });
-
+  // An approval may already exist after an interrupted response or DB commit.
+  // Recover its original amount before applying policy for a new approval.
   let payment;
-  try { payment = await confirmPayment(paymentKey, order.id, order.total); }
-  catch (error) {
-    // Recover if the first approval succeeded at Toss but its response/our DB commit was interrupted.
-    try {
-      const existing = await getPayment(paymentKey);
-      if (isConfirmedPayment(existing, order.id, order.total)) payment = existing;
-    } catch { /* Never expose provider details. */ }
-    if (!payment) {
-      const code = typeof error === "object" && error && "code" in error ? String(error.code) : "CONFIRM_FAILED";
-      await supabase.rpc("record_payment_failure", { p_order_id: order.id, p_code: code, p_message: "Payment approval failed", p_cancelled: false });
-      return safeError();
+  try {
+    const existing = await getPayment(paymentKey);
+    if (isConfirmedPayment(existing, order.id, order.total)) payment = existing;
+  } catch { /* A new approval still requires canonical validation below. */ }
+  if (!payment) {
+    // Re-price from canonical products and current delivery policy immediately before approval.
+    const productIds = order.order_items.map((item) => item.product_id).filter(Boolean);
+    const [{ data: products, error: productsError }, { data: settingsRow, error: settingsError }, { data: zones, error: zonesError }] = await Promise.all([
+      supabase.from("products").select("id,status,variants").in("id", productIds),
+      supabase.from("delivery_settings").select("*").eq("id", true).single(),
+      supabase.from("local_delivery_zones").select("zone_type,zone_value,enabled").eq("enabled", true),
+    ]);
+    if (productsError || settingsError || zonesError || !settingsRow) return safeError(503);
+    const productMap = new Map((products ?? []).map((product) => [product.id, product]));
+    let freshSubtotal = 0;
+    const quantities = new Map<string, number>();
+    for (const item of order.order_items) {
+      const product = productMap.get(item.product_id ?? "");
+      if (product?.status !== "active") return safeError(409);
+      let variant;
+      try { variant = validateVariants(product.variants).find((value) => value.id === item.variant_id && value.size === item.weight); }
+      catch { return safeError(409); }
+      if (!variant?.available) return safeError(409);
+      const key = `${product.id}::${variant.id}`;
+      const quantity = (quantities.get(key) ?? 0) + item.quantity;
+      quantities.set(key, quantity);
+      if (quantity > variant.stock) return safeError(409);
+      freshSubtotal += (variant.salePrice ?? variant.price) * item.quantity;
+    }
+    if (order.delivery_method === "local_delivery" && !isLocalDeliveryEligible({ zonecode: order.shipping_zonecode, roadAddress: order.shipping_road_address, jibunAddress: order.shipping_jibun_address, bname: order.shipping_bname }, zones ?? [], Boolean(settingsRow?.local_delivery_enabled))) return safeError(409);
+    const fresh = calculateCheckoutTotal(freshSubtotal, order.discount_amount ?? 0, order.delivery_method, settingsFromRow(settingsRow));
+    if (fresh.finalAmount !== order.total || fresh.finalAmount !== input.amount) return NextResponse.json({ error: "상품 가격 또는 배송 정책이 변경되었습니다. 주문을 다시 확인해 주세요." }, { status: 409 });
+
+    try { payment = await confirmPayment(paymentKey, order.id, order.total); }
+    catch (error) {
+      // Recover if the first approval succeeded at Toss but its response/our DB commit was interrupted.
+      try {
+        const existing = await getPayment(paymentKey);
+        if (isConfirmedPayment(existing, order.id, order.total)) payment = existing;
+      } catch { /* Never expose provider details. */ }
+      if (!payment) {
+        const code = typeof error === "object" && error && "code" in error ? String(error.code) : "CONFIRM_FAILED";
+        await supabase.rpc("record_payment_failure", { p_order_id: order.id, p_code: code, p_message: "Payment approval failed", p_cancelled: false });
+        return safeError();
+      }
     }
   }
   if (!payment || !isConfirmedPayment(payment, order.id, order.total)) return safeError();
@@ -77,7 +86,11 @@ export async function POST(request: Request) {
   });
   if (error || !["paid", "already_paid"].includes(result)) {
     // Payment succeeded at Toss but inventory could not be committed. Compensate immediately.
-    await cancelPayment(payment.paymentKey, "재고 부족으로 인한 자동 취소").catch(() => undefined);
+    try { await cancelPayment(payment.paymentKey, "재고 부족으로 인한 자동 취소"); }
+    catch {
+      await supabase.rpc("record_payment_failure", { p_order_id: order.id, p_code: "CANCELLATION_FAILED", p_message: "Payment cancellation requires reconciliation", p_cancelled: false });
+      return NextResponse.json({ error: "결제 취소를 확인하지 못했습니다. 결제 내역을 확인하고 고객센터에 문의해 주세요." }, { status: 502 });
+    }
     await supabase.rpc("record_payment_failure", { p_order_id: order.id, p_code: result ?? "FINALIZE_FAILED", p_message: "Payment automatically cancelled", p_cancelled: true });
     return NextResponse.json({ error: "재고가 소진되어 결제가 자동 취소되었습니다. 다른 상품을 선택해 주세요." }, { status: 409 });
   }

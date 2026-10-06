@@ -5,6 +5,7 @@ import { cancelPayment, getPayment, isConfirmedPayment } from "@/services/paymen
 export async function POST(request: Request) {
   let event: { eventType?: unknown; data?: { paymentKey?: unknown; orderId?: unknown } };
   try { event = await request.json(); } catch { return NextResponse.json({ ok: false }, { status: 400 }); }
+  if (!event || typeof event !== "object" || Array.isArray(event)) return NextResponse.json({ ok: false }, { status: 400 });
   const paymentKey = typeof event.data?.paymentKey === "string" ? event.data.paymentKey : "";
   if (!paymentKey) return NextResponse.json({ ok: true });
 
@@ -21,7 +22,11 @@ export async function POST(request: Request) {
       p_method: payment.method ?? null, p_approved_at: payment.approvedAt ?? new Date().toISOString(),
     });
     if (!["paid", "already_paid"].includes(result)) {
-      await cancelPayment(payment.paymentKey, "재고 부족으로 인한 자동 취소").catch(() => undefined);
+      try { await cancelPayment(payment.paymentKey, "재고 부족으로 인한 자동 취소"); }
+      catch {
+        await supabase.rpc("record_payment_failure", { p_order_id: order.id, p_code: "CANCELLATION_FAILED", p_message: "Payment cancellation requires reconciliation", p_cancelled: false });
+        return NextResponse.json({ ok: false }, { status: 502 });
+      }
       await supabase.rpc("record_payment_failure", { p_order_id: order.id, p_code: result ?? "FINALIZE_FAILED", p_message: "Payment automatically cancelled", p_cancelled: true });
       return NextResponse.json({ ok: false }, { status: 409 });
     }

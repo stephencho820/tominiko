@@ -16,7 +16,9 @@ export default function PaymentSuccess() {
   useEffect(() => {
     if (started.current) return; started.current = true;
     const paymentKey = params.get("paymentKey"), orderId = params.get("orderId"), amount = Number(params.get("amount"));
-    const accessToken = sessionStorage.getItem("tominiko-order-access-token");
+    let accessToken;
+    try { accessToken = sessionStorage.getItem("tominiko-order-access-token"); }
+    catch { setError("결제 확인 정보를 읽지 못했습니다. 결제 내역을 확인하고 고객센터에 문의해 주세요."); return; }
     if (!paymentKey || !orderId || !Number.isInteger(amount) || !accessToken) { setError("결제 확인 정보가 없습니다."); return; }
     fetch("/api/payments/confirm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ paymentKey, orderId, amount, accessToken }) })
       .then(async (response) => { const data = await response.json(); if (!response.ok) throw new Error(data.error); return data; })
@@ -24,9 +26,11 @@ export default function PaymentSuccess() {
         if (data.order?.payment_status !== "paid") throw new Error("결제가 완료되지 않았습니다.");
         setOrder(data.order);
         clear();
-        sessionStorage.removeItem("tominiko-checkout-reference");
-        sessionStorage.removeItem("tominiko-checkout-cart");
-        sessionStorage.removeItem("tominiko-payment-order-id");
+        try {
+          sessionStorage.removeItem("tominiko-checkout-reference");
+          sessionStorage.removeItem("tominiko-checkout-cart");
+          sessionStorage.removeItem("tominiko-payment-order-id");
+        } catch { /* A paid order remains successful if storage cleanup fails. */ }
       })
       .catch((caught) => setError(caught instanceof Error ? caught.message : "결제를 확인하지 못했습니다."));
   }, [params, clear]);

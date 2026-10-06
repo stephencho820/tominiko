@@ -40,7 +40,7 @@ export async function POST(request: Request) {
   const invalid = validate(payload); if (invalid) return NextResponse.json({ error: invalid }, { status: 400 });
   if (!payload.name || !payload.slug || !payload.origin) return NextResponse.json({ error: "Name, slug and origin are required" }, { status: 400 });
   const { data, error } = await supabase.from("products").insert(payload).select().single();
-  return error ? NextResponse.json({ error: error.message }, { status: 400 }) : NextResponse.json(data);
+  return error ? NextResponse.json({ error: "변경 사항을 저장하지 못했습니다. 다시 시도해 주세요." }, { status: 400 }) : NextResponse.json(data);
 }
 
 export async function PATCH(request: Request) {
@@ -56,7 +56,7 @@ export async function PATCH(request: Request) {
     if (current.status !== "active") payload.todays_roast = false;
   }
   const { data, error } = await supabase.from("products").update(payload).eq("id", id).select().single();
-  return error ? NextResponse.json({ error: error.message }, { status: 400 }) : NextResponse.json(data);
+  return error ? NextResponse.json({ error: "변경 사항을 저장하지 못했습니다. 다시 시도해 주세요." }, { status: 400 }) : NextResponse.json(data);
 }
 
 export async function DELETE(request: Request) {
@@ -74,5 +74,5 @@ export async function DELETE(request: Request) {
   if (references.some(result => result.error)) return NextResponse.json({ error: "상품 참조 이력을 확인하지 못했습니다. 삭제를 중단했습니다." }, { status: 503 });
   if (references.some(result => (result.data?.length ?? 0) > 0)) return NextResponse.json({ error: "주문 또는 리뷰 이력이 있는 상품은 삭제할 수 없습니다. Hidden 상태로 변경해 주세요." }, { status: 409 });
   const { error } = await supabase.from("products").delete().eq("id", id);
-  return error ? NextResponse.json({ error: error.message }, { status: 400 }) : NextResponse.json({ ok: true });
+  return error ? NextResponse.json({ error: "변경 사항을 저장하지 못했습니다. 다시 시도해 주세요." }, { status: 400 }) : NextResponse.json({ ok: true });
 }

@@ -191,9 +191,9 @@ const request=(body)=>new Request('http://internal.test/api',{method:'POST',head
 function paymentRoutes(db) {
   let approvals=0,cancellations=0;
   const payment={confirmPayment:async(key,id,total)=>{approvals++;if(db.state.failApproval)throw Error('mock decline');return {paymentKey:key,orderId:id,totalAmount:total,status:'DONE',method:'CARD'};},
-    getPayment:async()=>{throw Error('mock not paid');},cancelPayment:async()=>{cancellations++;},isConfirmedPayment:(p,id,total)=>p.status==='DONE'&&p.orderId===id&&p.totalAmount===total};
+    getPayment:async()=>{if(db.state.approvedPayment)return db.state.approvedPayment;throw Error('mock not paid');},cancelPayment:async()=>{cancellations++;if(db.state.failCancellation)throw Error('mock cancellation unavailable');},isConfirmedPayment:(p,id,total)=>p.status==='DONE'&&p.orderId===id&&p.totalAmount===total};
   const mocks={'@/lib/supabase/service':{createServiceClient:()=>db.client},'@/services/payment':payment};
-  return {confirm:load('app/api/payments/confirm/route.ts',mocks).POST,fail:load('app/api/payments/fail/route.ts',mocks).POST,counts:()=>({approvals,cancellations})};
+  return {confirm:load('app/api/payments/confirm/route.ts',mocks).POST,fail:load('app/api/payments/fail/route.ts',mocks).POST,webhook:load('app/api/payments/webhook/route.ts',mocks).POST,counts:()=>({approvals,cancellations})};
 }
 async function pending(db,method='shipping') {
   const mocks={'@/lib/supabase/config':{hasSupabaseEnv:true},'@/lib/supabase/server':{createClient:async()=>db.client}};
@@ -416,4 +416,78 @@ test('a saved address is posted once across retries after order creation or Toss
     await elements(tree).find((el)=>el.type==='form').props.onSubmit({preventDefault(){}});
     assert.equal(saves,1,failure);assert.equal(orders,2,failure);
   }
+});
+
+
+test('approved pending payment recovers after price change without another approval or double deduction', async()=>{
+  const db=database(), created=await pending(db), routes=paymentRoutes(db);
+  db.state.approvedPayment={paymentKey:'mock-payment',orderId:ORDER_ID,totalAmount:created.amount,status:'DONE'};
+  db.state.product.variants[0].salePrice=14000;
+  const body={orderId:ORDER_ID,paymentKey:'mock-payment',amount:created.amount,accessToken:TOKEN};
+  assert.equal((await routes.confirm(request(body))).status,200);
+  assert.equal((await routes.confirm(request(body))).status,200);
+  assert.equal(routes.counts().approvals,0);
+  assert.equal(db.state.product.variants[0].stock,0);
+});
+
+test('failed compensation remains retryable and never records or claims successful cancellation', async()=>{
+  for(const endpoint of ['confirm','webhook']) {
+    const db=database(), created=await pending(db), routes=paymentRoutes(db);
+    db.state.finalizeResult='out_of_stock';db.state.failCancellation=true;
+    db.state.approvedPayment={paymentKey:'mock-payment',orderId:ORDER_ID,totalAmount:created.amount,status:'DONE'};
+    const body=endpoint==='confirm'?{orderId:ORDER_ID,paymentKey:'mock-payment',amount:created.amount,accessToken:TOKEN}:{data:{paymentKey:'mock-payment'}};
+    const response=await routes[endpoint](request(body));
+    assert.equal(response.status,502);
+    const failure=db.state.calls.find(c=>c.name==='record_payment_failure');
+    assert.equal(failure.args.p_cancelled,false);assert.equal(failure.args.p_code,'CANCELLATION_FAILED');
+    assert.doesNotMatch(JSON.stringify(await response.json()),/자동 취소되었습니다/);
+    db.state.failCancellation=false;
+    assert.equal((await routes[endpoint](request(body))).status,409);
+    assert.equal(db.state.order.payment_status,'cancelled');assert.equal(db.state.product.variants[0].stock,3);
+  }
+});
+
+test('payment routes reject null JSON without runtime errors', async()=>{
+  const routes=paymentRoutes(database());
+  for(const endpoint of ['confirm','fail','webhook']) assert.equal((await routes[endpoint](request(null))).status,400);
+});
+
+test('payment result pages survive unavailable browser session storage',async()=>{
+  const previous=global.sessionStorage;global.sessionStorage={getItem(){throw Error('storage unavailable');}};
+  try { for(const entry of ['app/checkout/success/page.tsx','app/checkout/fail/page.tsx']) {
+    const h=hooks(), C=load(entry,{...uiMocks,react:h.api,'next/navigation':{useSearchParams:()=>new URLSearchParams()},'@/components/CartProvider':{useCart:()=>({clear(){throw Error('must retain cart');}})}}).default;
+    h.render(C);await h.effects();assert.match(text(h.render(C)),/다시 시도/);
+  }}finally{global.sessionStorage=previous;}
+});
+
+test('Admin order network failure rolls back status and enables retry',async()=>{
+  const h=hooks(), C=load('components/OrderStatusSelect.tsx',{react:h.api,'next/navigation':{useRouter:()=>({refresh(){}})}}).OrderStatusSelect;
+  const render=()=>C({id:ORDER_ID,initial:'confirmed',deliveryMethod:'shipping',paymentStatus:'paid'});
+  let tree=h.render(render);global.fetch=async()=>{throw Error('offline');};
+  await elements(tree).find(e=>e.type==='button').props.onClick();await new Promise(setImmediate);
+  tree=h.render(render);assert.equal(elements(tree).find(e=>e.type==='button').props.disabled,false);assert.match(text(tree),/다시/);
+});
+
+test('login configuration/network and OAuth errors show a retryable alert',async()=>{
+ for(const oauth of [false,true]) {
+  const h=hooks(), C=load('app/login/page.tsx',{react:h.api,'next/navigation':{useRouter:()=>({push(){},refresh(){}})},'@/lib/supabase/client':{createClient(){throw Error('mock configuration unavailable');}}}).default;
+  const tree=h.render(C);
+  if(oauth) await elements(tree).find(e=>e.type==='button'&&text(e)==='CONTINUE WITH GOOGLE').props.onClick();
+  else await elements(tree).find(e=>e.type==='form').props.onSubmit({preventDefault(){}});
+  const after=h.render(C);assert.match(text(after),/다시 시도/);assert.equal(elements(after).find(e=>e.props.type==='submit').props.disabled,false);
+ }
+});
+
+test('Admin auth rejects guests/members and pending orders cannot advance fulfillment',async()=>{
+ for(const role of [null,'member','admin']) {
+  const client={auth:{getUser:async()=>({data:{user:role?{id:'user'}:null}})},from(){const q={select(){return q},eq(){return q},single:async()=>({data:{role}})};return q;}};
+  const admin=load('lib/supabase/admin.ts',{'@/lib/supabase/config':{hasSupabaseEnv:true},'@/lib/supabase/server':{createClient:async()=>client}});
+  assert.equal(await admin.getAdminClient(),role==='admin'?client:null);
+ }
+ const denied=load('app/api/admin/orders/route.ts',{'@/lib/supabase/admin':{getAdminClient:async()=>null}}).PATCH;
+ assert.equal((await denied(request({id:ORDER_ID,order_status:'shipped'}))).status,403);
+ const db=database();await pending(db);
+ const allowed=load('app/api/admin/orders/route.ts',{'@/lib/supabase/admin':{getAdminClient:async()=>db.client}}).PATCH;
+ for(const status of ['roasting','preparing','shipped','completed'])assert.equal((await allowed(request({id:ORDER_ID,order_status:status}))).status,409);
+ assert.equal((await allowed(request(null))).status,400);
 });
