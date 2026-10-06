@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import type { Product } from "@/types";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-type Props = { id: string; name: string; stock: number; active: boolean; todaysRoast: boolean; compact?: boolean };
+type Props = { id: string; name: string; stock: number; active: boolean; status: Product["status"]; todaysRoast: boolean; compact?: boolean };
 
-export function ProductQuickActions({ id, name, stock, active, todaysRoast, compact }: Props) {
+export function ProductQuickActions({ id, name, stock, active, status, todaysRoast, compact }: Props) {
   const router = useRouter();
   const [saving, setSaving] = useState("");
   const [message, setMessage] = useState("");
@@ -25,7 +26,7 @@ export function ProductQuickActions({ id, name, stock, active, todaysRoast, comp
       <div className="admin-stock-control"><span>Stock: {stock}</span><Link href={`/admin/products/${id}`}>Manage size inventory</Link></div>
       <div className="admin-quick-buttons">
         <button type="button" aria-pressed={active} disabled={saving !== ""} onClick={() => void update({ status: active ? "hidden" : "active" }, "active")}>{active ? "Active" : "Inactive"}</button>
-        <button type="button" aria-pressed={todaysRoast} disabled={saving !== "" || todaysRoast || !active || stock < 1} onClick={() => void update({ todays_roast: true }, "roast")}>{todaysRoast ? "Today’s roast" : "Make today’s roast"}</button>
+        <button type="button" aria-pressed={todaysRoast} disabled={saving !== "" || todaysRoast || status !== "active" || stock < 1} onClick={() => void update({ todays_roast: true }, "roast")}>{todaysRoast ? "Today’s roast" : "Make today’s roast"}</button>
       </div>
       <span className="admin-save-feedback" aria-live="polite">{saving ? "Saving…" : message}</span>
     </div>
