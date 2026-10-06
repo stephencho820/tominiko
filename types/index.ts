@@ -65,4 +65,5 @@ export type Weight = "150g" | "400g";
 export type ProductVariant = { id: string; size: Weight; price: number; salePrice?: number | null; sku?: string; stock: number; available: boolean };
 export type CartItem = { product: Product; variantId?: string; weight: Weight; grind: Grind; quantity: number; unitPrice: number };
 export type OrderItem = { id: string; order_id: string; product_name: string; weight: string; grind: string; quantity: number; unit_price: number; subtotal: number };
-export type Order = { id: string; order_number: string; customer_name: string; email: string; phone?: string; fulfillment_type: "delivery" | "pickup"; total: number; payment_status: string; order_status: string; created_at: string; order_items?: OrderItem[] };
+export type DeliveryMethod = "shipping" | "local_delivery" | "pickup";
+export type Order = { id: string; order_number: string; customer_name: string; email: string; phone?: string; fulfillment_type: "delivery" | "pickup"; delivery_method: DeliveryMethod; final_amount?: number | null; total: number; payment_status: string; order_status: string; created_at: string; order_items?: OrderItem[] };
