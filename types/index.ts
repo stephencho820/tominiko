@@ -55,7 +55,7 @@ export type Product = {
   review_count?: number;
 };
 
-export type ReviewImage = { id: string; review_id: string; image_url: string; sort_order: number; created_at: string };
+export type ReviewImage = { id: string; review_id: string; image_url: string; storage_path: string; sort_order: number; width: number | null; height: number | null; file_size: number | null; created_at: string };
 export type Review = { id: string; product_id: string; user_id: string | null; order_id: string | null; rating: number; title: string | null; content: string; reviewer_name: string; is_verified_purchase: boolean; status: "published" | "hidden"; created_at: string; updated_at: string; review_images: ReviewImage[]; products?: { name: string; slug: string } | null };
 export type ReviewStats = { average: number; count: number; distribution: Record<number, number> };
 
