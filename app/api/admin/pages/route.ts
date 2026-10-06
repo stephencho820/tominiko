@@ -7,7 +7,7 @@ const fonts = new Set(["serif", "sans", "display"]);
 function parseSettings(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const body = value as { slug?: unknown; texts?: unknown; images?: unknown; heroMedia?: unknown; promotions?: unknown; tastingRoom?: unknown };
-  if (typeof body.slug !== "string" || !(body.slug in pageDefinitions) || !body.texts || typeof body.texts !== "object" || !body.images || typeof body.images !== "object") return null;
+  if (typeof body.slug !== "string" || !Object.hasOwn(pageDefinitions, body.slug) || !body.texts || typeof body.texts !== "object" || !body.images || typeof body.images !== "object") return null;
   const slug = body.slug as PageSlug;
   const definition = pageDefinitions[slug];
   const rawTexts = body.texts as Record<string, unknown>;
@@ -32,13 +32,13 @@ function parseSettings(value: unknown) {
   let tasting_room: PageSettings["tastingRoom"];
   if (slug === "tasting-room") {
     const room = body.tastingRoom as Record<string, unknown> | undefined;
-    if (!room || typeof room.heroImage !== "string" || typeof room.mobileHeroImage !== "string" || typeof room.address !== "string" || typeof room.phone !== "string" || typeof room.phoneNote !== "string" || typeof room.openingHours !== "string" || !Array.isArray(room.galleryImages)) return null;
+    if (!room || typeof room.heroImage !== "string" || typeof room.mobileHeroImage !== "string" || typeof room.address !== "string" || typeof room.phone !== "string" || typeof room.phoneNote !== "string" || typeof room.openingHours !== "string" || !Array.isArray(room.galleryImages) || room.galleryImages.length > 50) return null;
     if (room.heroImage.length > 2_000 || room.mobileHeroImage.length > 2_000 || room.address.length > 5_000 || room.phone.length > 100 || room.phoneNote.length > 1_000 || room.openingHours.length > 5_000) return null;
-    const galleryImages = room.galleryImages.map((item) => {
+    const galleryImages = room.galleryImages.map((item, order) => {
       if (!item || typeof item !== "object") return null;
       const image = item as Record<string, unknown>;
       if (typeof image.id !== "string" || typeof image.url !== "string" || typeof image.alt !== "string" || typeof image.order !== "number" || image.url.length > 2_000 || image.alt.length > 300) return null;
-      return { id: image.id, url: image.url, alt: image.alt, order: image.order };
+      return { id: image.id, url: image.url, alt: image.alt, order };
     });
     if (galleryImages.some((image) => !image) || galleryImages.length > 50) return null;
     tasting_room = { heroImage: room.heroImage, mobileHeroImage: room.mobileHeroImage, address: room.address, phone: room.phone, phoneNote: room.phoneNote, openingHours: room.openingHours, galleryImages: galleryImages as NonNullable<PageSettings["tastingRoom"]>["galleryImages"] };
@@ -64,11 +64,15 @@ function parseSettings(value: unknown) {
 }
 
 export async function PUT(request: Request) {
-  const supabase = await getAdminClient();
-  if (!supabase) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  let settings;
-  try { settings = parseSettings(await request.json()); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
-  if (!settings) return NextResponse.json({ error: "Invalid page content" }, { status: 400 });
-  const { error } = await supabase.from("page_settings").upsert({ ...settings, updated_at: new Date().toISOString() });
-  return error ? NextResponse.json({ error: error.message }, { status: 400 }) : NextResponse.json({ ok: true });
+  try {
+    const supabase = await getAdminClient();
+    if (!supabase) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    let settings;
+    try { settings = parseSettings(await request.json()); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
+    if (!settings) return NextResponse.json({ error: "Invalid page content" }, { status: 400 });
+    const { error } = await supabase.from("page_settings").upsert({ ...settings, updated_at: new Date().toISOString() });
+    return error ? NextResponse.json({ error: "페이지를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요." }, { status: 500 }) : NextResponse.json({ ok: true });
+  } catch {
+    return NextResponse.json({ error: "페이지를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요." }, { status: 500 });
+  }
 }
