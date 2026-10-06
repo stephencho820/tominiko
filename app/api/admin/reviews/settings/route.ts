@@ -1,0 +1,3 @@
+import { NextResponse } from "next/server";
+import { getAdminClient } from "@/lib/supabase/admin";
+export async function PATCH(request:Request){const client=await getAdminClient();if(!client)return NextResponse.json({error:"Forbidden"},{status:403});const body=await request.json();if(typeof body.allow_guest_reviews!=="boolean")return NextResponse.json({error:"Invalid setting"},{status:400});const {error}=await client.from("review_settings").update({allow_guest_reviews:body.allow_guest_reviews,updated_at:new Date().toISOString()}).eq("id",true);return NextResponse.json(error?{error:error.message}:{ok:true},{status:error?400:200});}

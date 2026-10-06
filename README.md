@@ -59,6 +59,43 @@ fallback when marked **Today's roast** or **Featured**.
 
 Required `.env.local` values:
 
+### Product review database setup
+
+`public.reviews` is a database object and cannot be created by deploying the
+Next.js application alone. For an existing Supabase project, link the CLI to
+the **same project ref used by `NEXT_PUBLIC_SUPABASE_URL`**, then apply pending
+migrations:
+
+```bash
+npx supabase login
+npx supabase link --project-ref YOUR_PROJECT_REF
+npx supabase migration list --linked
+npx supabase db push --linked
+```
+
+The idempotent repair migration
+[`supabase/migrations/202610060001_repair_product_reviews.sql`](supabase/migrations/202610060001_repair_product_reviews.sql)
+creates or repairs `public.reviews`, `public.review_images`, the
+`review-images` bucket, RLS policies, and cached aggregates. New projects that
+run `supabase/schema.sql` receive the same schema.
+
+Verify the linked database in Supabase SQL Editor after applying it:
+
+```sql
+select to_regclass('public.reviews') as reviews,
+       to_regclass('public.review_images') as review_images;
+select id, public, file_size_limit, allowed_mime_types
+from storage.buckets where id = 'review-images';
+```
+
+Both table values must be non-null. If either is null, a schema-cache reload is
+not a fix: the migration was not applied to that project. Compare the project
+ref in `https://PROJECT_REF.supabase.co` with the linked CLI project. The
+migration requests a PostgREST cache reload only after creating the tables.
+The same post-deployment check can be automated (using the server-only service
+key) with `npm run check:reviews`; it prints the project ref and exits non-zero
+when a review table, summary table, or Storage bucket is unavailable.
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=

@@ -2,6 +2,7 @@ import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 import { runSupabaseQuery } from "@/lib/supabase/query";
 import type { Product } from "@/types";
+import { attachReviewSummaries } from "@/services/reviews";
 
 export async function getProducts(options?: { activeOnly?: boolean; todaysRoast?: boolean; featured?: boolean; latestFirst?: boolean }) {
   if (!hasSupabaseEnv) return [] as Product[];
@@ -16,7 +17,7 @@ export async function getProducts(options?: { activeOnly?: boolean; todaysRoast?
     if (options?.featured) query = query.eq("featured", true);
     const { data, error } = await runSupabaseQuery(async (signal) => await query.abortSignal(signal));
     if (error) return [] as Product[];
-    return (data ?? []) as Product[];
+    return await attachReviewSummaries((data ?? []) as Product[]);
   } catch {
     return [] as Product[];
   }
@@ -28,7 +29,8 @@ export async function getProduct(slug: string, options?: { includeInactive?: boo
     const { data, error } = await runSupabaseQuery(async (signal) =>
       await (options?.includeInactive ? supabase.from("products").select("*").eq("slug", slug) : supabase.from("products").select("*").eq("slug", slug).eq("active", true)).abortSignal(signal).single(),
     );
-    return error ? null : data as Product | null;
+    if (error || !data) return null;
+    return (await attachReviewSummaries([data as Product]))[0];
   } catch {
     return null;
   }
