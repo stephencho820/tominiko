@@ -33,12 +33,12 @@ export default async function Admin() {
       <div className="admin-dashboard-grid">
         <section className="admin-panel admin-roast-panel">
           <div className="admin-section-heading"><div><p className="eyebrow">Today’s roast</p><h2>{roast?.name ?? "Not selected"}</h2></div><Link href="/admin/products">View products →</Link></div>
-          {roast ? <><p className="admin-muted">{roast.origin}{roast.process ? ` · ${roast.process}` : ""} · Roasted {roast.roasted_date ?? "date not set"}</p><ProductQuickActions id={roast.id} name={roast.name} stock={roast.stock_quantity} active={roast.active} todaysRoast={roast.todays_roast} compact /></> : <p className="admin-empty">Choose an active, stocked coffee below.</p>}
-          <div className="admin-roast-options" aria-label="Change today's roast">{products.filter((product) => product.active && product.stock_quantity > 0 && !product.todays_roast).slice(0, 4).map((product) => <div key={product.id}><span>{product.name}</span><ProductQuickActions id={product.id} name={product.name} stock={product.stock_quantity} active={product.active} todaysRoast={false} compact /></div>)}</div>
+          {roast ? <><p className="admin-muted">{roast.origin}{roast.process ? ` · ${roast.process}` : ""} · Roasted {roast.roasted_date ?? "date not set"}</p><ProductQuickActions id={roast.id} name={roast.name} status={roast.status} todaysRoast={roast.todays_roast} compact /></> : <p className="admin-empty">Choose an active, stocked coffee below.</p>}
+          <div className="admin-roast-options" aria-label="Change today's roast">{products.filter((product) => product.active && product.stock_quantity > 0 && !product.todays_roast).slice(0, 4).map((product) => <div key={product.id}><span>{product.name}</span><ProductQuickActions id={product.id} name={product.name} status={product.status} todaysRoast={false} compact /></div>)}</div>
         </section>
         <section className="admin-panel">
           <div className="admin-section-heading"><div><p className="eyebrow">Inventory attention</p><h2>{lowStock.length ? `${lowStock.length} coffees need attention` : "Stock looks good"}</h2></div><Link href="/admin/products">Inventory →</Link></div>
-          <div className="admin-attention-list">{lowStock.map((product) => <div key={product.id}><div><strong>{product.name}</strong><span className={product.stock_quantity === 0 ? "is-danger" : "is-warning"}>{product.stock_quantity === 0 ? "Sold out" : `${product.stock_quantity} left`}</span></div><ProductQuickActions id={product.id} name={product.name} stock={product.stock_quantity} active={product.active} todaysRoast={product.todays_roast} compact /></div>)}</div>
+          <div className="admin-attention-list">{lowStock.map((product) => <div key={product.id}><div><strong>{product.name}</strong><span className={product.stock_quantity === 0 ? "is-danger" : "is-warning"}>{product.stock_quantity === 0 ? "Sold out" : `${product.stock_quantity} left`}</span></div><ProductQuickActions id={product.id} name={product.name} status={product.status} todaysRoast={product.todays_roast} compact /></div>)}</div>
         </section>
       </div>
 

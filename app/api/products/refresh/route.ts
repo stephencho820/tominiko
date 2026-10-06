@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   }
   if (!hasSupabaseEnv) return NextResponse.json({ products: [] });
   const supabase = await createClient();
-  const { data, error } = await supabase.from("products").select("*").in("id", ids).eq("active", true);
+  const { data, error } = await supabase.from("products").select("*").in("id", ids).in("status", ["active", "sold-out"]);
   return error
     ? NextResponse.json({ error: "Could not refresh products" }, { status: 500 })
     : NextResponse.json({ products: data ?? [] }, { headers: { "Cache-Control": "no-store" } });

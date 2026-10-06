@@ -54,9 +54,9 @@ export type Product = {
 };
 
 export type ProductCategory = "comfortable" | "bright" | "decaf" | "blend" | "special";
-export type Grind = "Whole Bean" | "Espresso" | "Moka Pot" | "Pour Over" | "Coffee Maker" | "French Press" | "Filter" | "Other";
-export type Weight = string;
-export type ProductVariant = { id: string; size: string; grindType: Grind; price: number; salePrice?: number | null; sku?: string; stock: number; available: boolean };
+export type Grind = "Whole Bean" | "Filter" | "Espresso";
+export type Weight = "150g" | "400g";
+export type ProductVariant = { id: string; size: Weight; price: number; salePrice?: number | null; sku?: string; stock: number; available: boolean };
 export type CartItem = { product: Product; variantId?: string; weight: Weight; grind: Grind; quantity: number; unitPrice: number };
-export type OrderItem = { id: string; order_id: string; product_name: string; weight: string; grind: string; quantity: number; unit_price: number; subtotal: number };
+export type OrderItem = { id: string; order_id: string; variant_id?: string | null; product_name: string; weight: string; grind: string; quantity: number; unit_price: number; subtotal: number };
 export type Order = { id: string; order_number: string; customer_name: string; email: string; phone?: string; fulfillment_type: "delivery" | "pickup"; total: number; payment_status: string; order_status: string; created_at: string; order_items?: OrderItem[] };

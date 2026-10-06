@@ -2,16 +2,16 @@ import { NextResponse } from "next/server";
 import { hashAccessToken } from "@/lib/order-access";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
+import { canonicalGrind, canonicalSize } from "@/lib/product-contract";
 
-type OrderItemInput = { product?: { id?: unknown }; weight?: unknown; grind?: unknown; quantity?: unknown };
+type OrderItemInput = { product?: { id?: unknown }; variantId?: unknown; weight?: unknown; grind?: unknown; quantity?: unknown };
 type OrderInput = {
   customerName?: unknown; email?: unknown; phone?: unknown; fulfillmentType?: unknown;
-  postalCode?: unknown; address?: unknown; addressDetail?: unknown; deliveryMessage?: unknown;
+  zonecode?: unknown; roadAddress?: unknown; jibunAddress?: unknown; detailAddress?: unknown; buildingName?: unknown; bname?: unknown;
+  memoType?: unknown; memoText?: unknown;
   items?: unknown; idempotencyKey?: unknown; accessToken?: unknown;
 };
 
-const validWeights = new Set(["150g", "400g"]);
-const validGrinds = new Set(["Whole Bean", "Filter", "Espresso"]);
 const text = (value: unknown, maxLength = 500) => typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 const within = (value: unknown, maxLength: number) => typeof value !== "string" || value.trim().length <= maxLength;
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -26,23 +26,23 @@ export async function POST(request: Request) {
   const email = text(body.email, 254).toLowerCase();
   const idempotencyKey = text(body.idempotencyKey);
   const accessToken = text(body.accessToken);
-  const invalidItem = items.some((item) => !uuidPattern.test(text(item.product?.id)) || !validWeights.has(text(item.weight)) ||
-    !validGrinds.has(text(item.grind)) || !Number.isInteger(item.quantity) || Number(item.quantity) < 1 || Number(item.quantity) > 20);
+  const invalidItem = items.some((item) => !uuidPattern.test(text(item.product?.id)) || !text(item.variantId, 100) || !canonicalSize(item.weight) ||
+    !canonicalGrind(item.grind) || !Number.isInteger(item.quantity) || Number(item.quantity) < 1 || Number(item.quantity) > 20);
   const quantities = new Map<string, number>();
   for (const item of items) {
     const productId = text(item.product?.id);
     quantities.set(productId, (quantities.get(productId) ?? 0) + Number(item.quantity));
   }
 
-  if (!text(body.customerName, 100) || !/^\S+@\S+\.\S+$/.test(email) || !text(body.phone, 30) ||
-      !["delivery", "pickup"].includes(fulfillmentType) || !items.length || items.length > 20 || invalidItem ||
+  if (!text(body.customerName, 100) || (email && !/^\S+@\S+\.\S+$/.test(email)) || !/^01[016789]-?\d{3,4}-?\d{4}$/.test(text(body.phone, 30)) ||
+      !["shipping", "local_delivery", "pickup"].includes(fulfillmentType) || !items.length || items.length > 20 || invalidItem ||
       [...quantities.values()].some((quantity) => quantity > 20) || !uuidPattern.test(idempotencyKey) ||
       accessToken.length < 32 || accessToken.length > 256 || !within(body.customerName, 100) || !within(body.email, 254) ||
-      !within(body.phone, 30) || !within(body.postalCode, 20) || !within(body.address, 300) ||
-      !within(body.addressDetail, 300) || !within(body.deliveryMessage, 500)) {
+      !within(body.phone, 30) || !within(body.zonecode, 20) || !within(body.roadAddress, 300) || !within(body.jibunAddress, 300) ||
+      !within(body.detailAddress, 300) || !within(body.memoText, 500)) {
     return NextResponse.json({ error: "주문 정보를 다시 확인해 주세요." }, { status: 400 });
   }
-  if (fulfillmentType === "delivery" && (!text(body.postalCode) || !text(body.address))) {
+  if (fulfillmentType !== "pickup" && (!text(body.zonecode) || !text(body.roadAddress) || !text(body.detailAddress))) {
     return NextResponse.json({ error: "배송 주소를 입력해 주세요." }, { status: 400 });
   }
   if (!hasSupabaseEnv || !process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY) {
@@ -54,10 +54,11 @@ export async function POST(request: Request) {
     p_client_reference: idempotencyKey,
     p_guest_token_hash: hashAccessToken(accessToken),
     p_customer_name: text(body.customerName, 100), p_email: email, p_phone: text(body.phone, 30),
-    p_fulfillment_type: fulfillmentType, p_postal_code: text(body.postalCode, 20) || null,
-    p_address: text(body.address, 300) || null, p_address_detail: text(body.addressDetail, 300) || null,
-    p_delivery_message: text(body.deliveryMessage, 500) || null,
-    p_items: items.map((item) => ({ product_id: text(item.product?.id), weight: text(item.weight), grind: text(item.grind), quantity: Number(item.quantity) })),
+    p_delivery_method: fulfillmentType, p_zonecode: text(body.zonecode, 20) || null,
+    p_road_address: text(body.roadAddress, 300) || null, p_jibun_address: text(body.jibunAddress, 300) || null,
+    p_detail_address: text(body.detailAddress, 300) || null, p_building_name: text(body.buildingName, 200) || null,
+    p_bname: text(body.bname, 100) || null, p_memo_type: text(body.memoType, 100) || null, p_memo_text: text(body.memoText, 500) || null,
+    p_items: items.map((item) => ({ product_id: text(item.product?.id), variant_id: text(item.variantId, 100), weight: canonicalSize(item.weight), grind: canonicalGrind(item.grind), quantity: Number(item.quantity) })),
   });
 
   if (error || !data?.[0]) {

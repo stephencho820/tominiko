@@ -1,6 +1,5 @@
-import type { ProductVariant } from "@/types";
-
-const positiveInteger = (value: unknown) => Number.isInteger(value) && Number(value) > 0;
+import type { ProductVariant } from "../types";
+import { canonicalizeVariants, validateCanonicalVariants, variantStockTotal } from "./product-contract";
 
 /**
  * Variants are the admin's single source of truth. The two legacy price
@@ -8,18 +7,9 @@ const positiveInteger = (value: unknown) => Number.isInteger(value) && Number(va
  * so every consumer receives the same price after one admin edit.
  */
 export function synchronizeProductPricing(payload: Record<string, unknown>) {
-  if (!Array.isArray(payload.variants) || payload.variants.length === 0) {
-    throw new Error("Add at least one sellable option");
-  }
-
-  const variants = payload.variants as Partial<ProductVariant>[];
-  for (const variant of variants) {
-    if (!variant.id || !variant.size || !variant.grindType || !positiveInteger(variant.price) ||
-        !Number.isInteger(variant.stock) || Number(variant.stock) < 0 ||
-        (variant.salePrice != null && variant.salePrice !== 0 && !positiveInteger(variant.salePrice))) {
-      throw new Error("Every option needs an id, size, grind, positive price, and valid stock");
-    }
-  }
+  const invalid = validateCanonicalVariants(payload.variants);
+  if (invalid) throw new Error(invalid);
+  const variants = canonicalizeVariants(payload.variants as ProductVariant[]);
 
   const prices = new Map<string, { regular: number; sale: number }>();
   for (const variant of variants) {
@@ -39,5 +29,7 @@ export function synchronizeProductPricing(payload: Record<string, unknown>) {
   if (price400) { payload.price_400g_original = price400.regular; payload.price_400g = price400.sale; }
   payload.sale_price = null;
   payload.variants = variants.map((variant) => ({ ...variant, salePrice: variant.salePrice || null }));
+  // Compatibility only: checkout and fulfillment use each variant's stock.
+  payload.stock_quantity = variantStockTotal(payload.variants);
   return payload;
 }

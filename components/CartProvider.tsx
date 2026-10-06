@@ -1,8 +1,9 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { cartItemKey, maxCartQuantity, sanitizeCart } from "@/lib/cart";
+import { cartInventoryKey, cartItemKey, maxCartQuantity, sanitizeCart } from "@/lib/cart";
 import { normalizeProductSize, productVariants } from "@/lib/products";
+import { canonicalGrind } from "@/lib/product-contract";
 import type { CartItem } from "@/types";
 
 const CART_STORAGE_KEY = "casa-cart";
@@ -50,9 +51,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               const product = currentProducts.get(item.product.id);
               if (!product) return [];
               const variant = productVariants(product).find((value) => value.id === item.variantId)
-                ?? productVariants(product).find((value) => normalizeProductSize(value.size) === normalizeProductSize(item.weight) && value.grindType === item.grind);
+                ?? productVariants(product).find((value) => normalizeProductSize(value.size) === normalizeProductSize(item.weight));
               if (!variant?.available || variant.stock < 1) return [];
-              return [{ ...item, product, variantId: variant.id, weight: variant.size, grind: variant.grindType,
+              return [{ ...item, product, variantId: variant.id, weight: variant.size, grind: canonicalGrind(item.grind) ?? "Whole Bean",
                 unitPrice: variant.salePrice ?? variant.price, quantity: Math.min(item.quantity, variant.stock) }];
             });
           }
@@ -84,17 +85,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (!safeItem) return false;
     setItems((current) => {
       const existing = current.findIndex((currentItem) => cartItemKey(currentItem) === cartItemKey(safeItem));
-      if (existing === -1) return [...current, safeItem];
+      const reserved = current.reduce((sum, currentItem, index) => index === existing || cartInventoryKey(currentItem) !== cartInventoryKey(safeItem) ? sum : sum + currentItem.quantity, 0);
+      const available = Math.max(0, maxCartQuantity(safeItem) - reserved);
+      if (available < 1) return current;
+      if (existing === -1) return [...current, { ...safeItem, quantity: Math.min(safeItem.quantity, available) }];
       return current.map((currentItem, index) => index === existing
-        ? { ...currentItem, quantity: Math.min(maxCartQuantity(currentItem), currentItem.quantity + safeItem.quantity) }
+        ? { ...currentItem, quantity: Math.min(available, currentItem.quantity + safeItem.quantity) }
         : currentItem);
     });
     return true;
   }, []);
   const removeFromCart = useCallback((itemKey: string) => setItems((current) => current.filter((item) => cartItemKey(item) !== itemKey)), []);
-  const updateQuantity = useCallback((itemKey: string, quantity: number) => setItems((current) => current.map((item) => cartItemKey(item) === itemKey
-    ? { ...item, quantity: Math.min(maxCartQuantity(item), Math.max(1, Math.trunc(quantity))) }
-    : item)), []);
+  const updateQuantity = useCallback((itemKey: string, quantity: number) => setItems((current) => current.map((item) => {
+    if (cartItemKey(item) !== itemKey) return item;
+    const reserved = current.reduce((sum, other) => cartItemKey(other) === itemKey || cartInventoryKey(other) !== cartInventoryKey(item) ? sum : sum + other.quantity, 0);
+    return { ...item, quantity: Math.min(Math.max(0, maxCartQuantity(item) - reserved), Math.max(1, Math.trunc(quantity))) };
+  })), []);
   const remove = useCallback((index: number) => setItems((current) => current.filter((_, itemIndex) => itemIndex !== index)), []);
   const update = useCallback((index: number, quantity: number) => setItems((current) => current.map((item, itemIndex) => itemIndex === index
     ? { ...item, quantity: Math.min(maxCartQuantity(item), Math.max(1, Math.trunc(quantity))) }
@@ -103,9 +109,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const item = current[index];
     if (!item) return current;
     const variant = productVariants(item.product).find((value) => value.id === options.variantId)
-      ?? productVariants(item.product).find((value) => normalizeProductSize(value.size) === normalizeProductSize(options.weight ?? item.weight) && value.grindType === (options.grind ?? item.grind));
+      ?? productVariants(item.product).find((value) => normalizeProductSize(value.size) === normalizeProductSize(options.weight ?? item.weight));
     if (!variant?.available || variant.stock < 1) return current;
-    const updated = { ...item, variantId: variant.id, weight: variant.size, grind: variant.grindType, unitPrice: variant.salePrice ?? variant.price, quantity: Math.min(item.quantity, variant.stock) };
+    const updated = { ...item, variantId: variant.id, weight: variant.size, grind: canonicalGrind(options.grind ?? item.grind) ?? "Whole Bean", unitPrice: variant.salePrice ?? variant.price, quantity: Math.min(item.quantity, variant.stock) };
     const duplicate = current.findIndex((value, itemIndex) => itemIndex !== index && cartItemKey(value) === cartItemKey(updated));
     if (duplicate < 0) return current.map((value, itemIndex) => itemIndex === index ? updated : value);
     return current.flatMap((value, itemIndex) => itemIndex === index ? [] : [itemIndex === duplicate

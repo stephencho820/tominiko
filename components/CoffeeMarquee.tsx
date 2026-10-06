@@ -11,8 +11,7 @@ const won = new Intl.NumberFormat("ko-KR");
 
 function CoffeeCard({ product, size, duplicate = false }: { product: Product; size: string; duplicate?: boolean }) {
   const image = productImage(product);
-  const sizeVariants = productVariants(product).filter((item) => item.size === size);
-  const variant = sizeVariants.find((item) => item.grindType === "Whole Bean") ?? sizeVariants[0];
+  const variant = productVariants(product).find((item) => item.size === size);
   const pricing = productPricing(product, size, variant);
   const regularPrice = pricing.price;
   const salePrice = pricing.salePrice ?? pricing.price;
@@ -24,7 +23,7 @@ function CoffeeCard({ product, size, duplicate = false }: { product: Product; si
     event.preventDefault();
     event.stopPropagation();
     if (!variant) return;
-    const didAdd = addToCart({ product, variantId: variant.id, weight: variant.size, grind: variant.grindType, quantity: 1, unitPrice: variant.salePrice ?? variant.price });
+    const didAdd = addToCart({ product, variantId: variant.id, weight: variant.size, grind: "Whole Bean", quantity: 1, unitPrice: variant.salePrice ?? variant.price });
     if (!didAdd) return;
     setAdded(true);
     if (timer.current) clearTimeout(timer.current);

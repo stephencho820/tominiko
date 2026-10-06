@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { synchronizeProductPricing } from "@/lib/product-admin";
+import { validateCanonicalVariants } from "@/lib/product-contract";
 
 const allowed = new Set(["name", "korean_name", "subtitle", "slug", "short_description", "product_type", "category", "status", "origin", "region", "producer", "washing_station", "variety", "process", "altitude", "harvest", "grade", "roast_level", "tasting_notes", "description", "about", "why_we_chose_it", "roaster_note", "roasted_date", "price_150g", "price_150g_original", "price_400g_original", "price_400g", "sale_price", "stock_quantity", "active", "featured", "todays_roast", "discovery_tags", "display_order", "image_url", "gallery_images", "acidity", "sweetness", "body", "recommended_brewing_methods", "brewing_dose", "brewing_water", "brewing_temperature", "brewing_grind", "brewing_time", "use_default_recipe", "variants"]);
 
@@ -12,6 +13,8 @@ async function payloadFrom(request: Request) {
 }
 
 const productTypes = new Set(["single-origin", "blend", "decaf"]);
+const productStatuses = new Set(["draft", "active", "sold-out", "hidden"]);
+const productCategories = new Set(["comfortable", "bright", "decaf", "blend", "special"]);
 const discoveryTags = new Set(["todays-roast", "nutty-comforting", "bright-fruity", "decaf", "morning-boost", "something-special", "for-gifting", "easy-brewing", "고소하고 편안한", "화사하고 산뜻한", "디카페인", "블렌드", "특별한 날"]);
 
 function validate(payload: Record<string, unknown>) {
@@ -19,8 +22,12 @@ function validate(payload: Record<string, unknown>) {
     if (key in payload && (!Number.isInteger(payload[key]) || Number(payload[key]) < 0)) return `${key} must be a positive whole number`;
   }
   if ("product_type" in payload && !productTypes.has(String(payload.product_type))) return "invalid product_type";
+  if ("status" in payload && !productStatuses.has(String(payload.status))) return "invalid status";
+  if (payload.todays_roast === true && "status" in payload && payload.status !== "active") return "Today's Roast must be active";
+  if ("category" in payload && !productCategories.has(String(payload.category))) return "invalid category";
   for (const key of ["acidity", "sweetness", "body"]) if (key in payload && (Number(payload[key]) < 1 || Number(payload[key]) > 5)) return `${key} must be between 1 and 5`;
   if ("variants" in payload) {
+    const invalidVariants = validateCanonicalVariants(payload.variants); if (invalidVariants) return invalidVariants;
     try { synchronizeProductPricing(payload); } catch (error) { return error instanceof Error ? error.message : "invalid variants"; }
   }
   if ("discovery_tags" in payload && (!Array.isArray(payload.discovery_tags) || payload.discovery_tags.some((tag) => typeof tag !== "string" || !discoveryTags.has(tag)))) return "discovery_tags contains an invalid tag";
@@ -33,9 +40,14 @@ export async function POST(request: Request) {
   let payload: Record<string, unknown>;
   try { ({ payload } = await payloadFrom(request)); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   const invalid = validate(payload); if (invalid) return NextResponse.json({ error: invalid }, { status: 400 });
-  if (!payload.name || !payload.slug || !payload.origin) return NextResponse.json({ error: "Name, slug and origin are required" }, { status: 400 });
+  if (!payload.name || !payload.slug || !payload.origin || !payload.variants) return NextResponse.json({ error: "Name, slug, origin and variants are required" }, { status: 400 });
+  const selectToday = payload.todays_roast === true; payload.todays_roast = false;
+  payload.status = productStatuses.has(String(payload.status)) ? payload.status : "draft";
+  payload.active = payload.status === "active" || payload.status === "sold-out";
   const { data, error } = await supabase.from("products").insert(payload).select().single();
-  return error ? NextResponse.json({ error: error.message }, { status: 400 }) : NextResponse.json(data);
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (selectToday) { const { error: roastError } = await supabase.rpc("set_todays_roast", { p_product_id: data.id }); if (roastError) return NextResponse.json({ error: roastError.message }, { status: 400 }); }
+  return NextResponse.json(data);
 }
 
 export async function PATCH(request: Request) {
@@ -45,8 +57,13 @@ export async function PATCH(request: Request) {
   try { ({ id, payload } = await payloadFrom(request)); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   if (typeof id !== "string") return NextResponse.json({ error: "Invalid product" }, { status: 400 });
   const invalid = validate(payload); if (invalid) return NextResponse.json({ error: invalid }, { status: 400 });
+  const selectToday = payload.todays_roast === true; const clearToday = payload.todays_roast === false; delete payload.todays_roast; delete payload.active;
+  if (clearToday) payload.todays_roast = false;
+  if ("status" in payload) payload.active = payload.status === "active" || payload.status === "sold-out";
   const { data, error } = await supabase.from("products").update(payload).eq("id", id).select().single();
-  return error ? NextResponse.json({ error: error.message }, { status: 400 }) : NextResponse.json(data);
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (selectToday) { const { error: roastError } = await supabase.rpc("set_todays_roast", { p_product_id: id }); if (roastError) return NextResponse.json({ error: roastError.message }, { status: 400 }); }
+  return NextResponse.json(data);
 }
 
 export async function DELETE(request: Request) {
