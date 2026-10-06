@@ -1,9 +1,8 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { normalizeGrind } from "@/lib/product-contract";
-import { cartItemKey, maxCartQuantity, sanitizeCart } from "@/lib/cart";
-import { normalizeProductSize, productVariants } from "@/lib/products";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { addCartItem, cartItemKey, maxCartQuantity, refreshCartProducts, sanitizeCart, updateCartOptions } from "@/lib/cart";
+import { usePathname } from "next/navigation";
 import type { CartItem } from "@/types";
 
 const CART_STORAGE_KEY = "casa-cart";
@@ -24,52 +23,70 @@ type CartContext = {
   update: (index: number, quantity: number) => void;
   clear: () => void;
   total: number;
+  cartReady: boolean;
+  refreshError: string;
+  refreshCart: () => Promise<CartItem[]>;
 };
 
 const Context = createContext<CartContext | null>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const itemsRef = useRef<CartItem[]>([]);
   const [hasHydrated, setHasHydrated] = useState(false);
+  const [refreshError, setRefreshError] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+  const pathname = usePathname();
+  const refreshRequest = useRef(0);
+  const setCartItems = useCallback((update: CartItem[] | ((current: CartItem[]) => CartItem[])) => {
+    const next = typeof update === "function" ? update(itemsRef.current) : update;
+    itemsRef.current = next;
+    setItems(next);
+  }, []);
+
+  const refreshCart = useCallback(async () => {
+    const snapshot = itemsRef.current;
+    const request = ++refreshRequest.current;
+    setRefreshing(true);
+    try {
+      let refreshed = snapshot;
+      if (snapshot.length) {
+        const response = await fetch("/api/products/refresh", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: [...new Set(snapshot.map((item) => item.product.id))] }),
+        });
+        if (!response.ok) throw new Error("상품 가격과 재고를 확인하지 못했습니다. 다시 시도해 주세요.");
+        const { products } = await response.json() as { products: CartItem["product"][] };
+        refreshed = refreshCartProducts(snapshot, products);
+      }
+      // A late refresh must never restore a removed line or a paid/cleared cart.
+      if (itemsRef.current !== snapshot || request !== refreshRequest.current) throw new Error("장바구니가 변경되었습니다. 다시 확인해 주세요.");
+      setCartItems(refreshed);
+      setRefreshError("");
+      return refreshed;
+    } catch (error) {
+      if (request === refreshRequest.current) setRefreshError(error instanceof Error ? error.message : "상품 정보를 확인하지 못했습니다.");
+      throw error;
+    } finally {
+      if (request === refreshRequest.current) setRefreshing(false);
+    }
+  }, [setCartItems]);
 
   useEffect(() => {
-    let cancelled = false;
-    async function hydrate() {
-      let storedItems: CartItem[] = [];
-      try {
+    try {
       const stored = window.localStorage.getItem(CART_STORAGE_KEY);
-        if (stored) storedItems = sanitizeCart(JSON.parse(stored));
-        if (storedItems.length) {
-          const response = await fetch("/api/products/refresh", {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ids: [...new Set(storedItems.map((item) => item.product.id))] }),
-          });
-          if (response.ok) {
-            const { products } = await response.json() as { products: CartItem["product"][] };
-            const currentProducts = new Map(products.map((product) => [product.id, product]));
-            storedItems = storedItems.flatMap((item) => {
-              const product = currentProducts.get(item.product.id);
-              if (!product) return [];
-              const variant = productVariants(product).find((value) => value.id === item.variantId)
-                ?? productVariants(product).find((value) => normalizeProductSize(value.size) === normalizeProductSize(item.weight));
-              if (!variant?.available || variant.stock < 1) return [];
-              return [{ ...item, product, variantId: variant.id, weight: variant.size, grind: item.grind,
-                unitPrice: variant.salePrice ?? variant.price, quantity: Math.min(item.quantity, variant.stock) }];
-            });
-          }
-        }
-        if (!cancelled) setItems(sanitizeCart(storedItems));
-      } catch {
-      // Storage can be unavailable in private browsing, embedded previews, or
-      // when the browser blocks site data. Do not touch it again in the error
-      // path: even reading `window.localStorage` can itself throw.
-      } finally {
-        if (!cancelled) setHasHydrated(true);
-      }
-    }
-    void hydrate();
-    return () => { cancelled = true; };
-  }, []);
+      if (stored) setCartItems(sanitizeCart(JSON.parse(stored)));
+    } catch { /* Site storage may be unavailable. */ }
+    setHasHydrated(true);
+  }, [setCartItems]);
+
+  useEffect(() => {
+    if (!hasHydrated) return;
+    const refresh = () => { void refreshCart().catch(() => undefined); };
+    refresh();
+    window.addEventListener("focus", refresh);
+    return () => { ++refreshRequest.current; window.removeEventListener("focus", refresh); };
+  }, [hasHydrated, pathname, refreshCart]);
 
   useEffect(() => {
     if (!hasHydrated) return;
@@ -81,41 +98,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [hasHydrated, items]);
 
   const add = useCallback((item: CartItem) => {
-    const safeItem = sanitizeCart([item])[0];
-    if (!safeItem || maxCartQuantity(safeItem, items) <= (items.find((v) => cartItemKey(v) === cartItemKey(safeItem))?.quantity ?? 0)) return false;
-    setItems((previous) => sanitizeCart((() => {
-      const current = previous;
-      const existing = current.findIndex((currentItem) => cartItemKey(currentItem) === cartItemKey(safeItem));
-      if (existing === -1) return [...current, safeItem];
-      return current.map((currentItem, index) => index === existing
-        ? { ...currentItem, quantity: Math.min(maxCartQuantity(currentItem, current), currentItem.quantity + safeItem.quantity) }
-        : currentItem);
-    })()));
+    const next = addCartItem(itemsRef.current, item);
+    if (next === itemsRef.current) return false;
+    setCartItems(next);
     return true;
-  }, [items]);
-  const removeFromCart = useCallback((itemKey: string) => setItems((current) => current.filter((item) => cartItemKey(item) !== itemKey)), []);
-  const updateQuantity = useCallback((itemKey: string, quantity: number) => setItems((current) => sanitizeCart(current.map((item) => cartItemKey(item) === itemKey
+  }, [setCartItems]);
+  const removeFromCart = useCallback((itemKey: string) => setCartItems((current) => current.filter((item) => cartItemKey(item) !== itemKey)), [setCartItems]);
+  const updateQuantity = useCallback((itemKey: string, quantity: number) => setCartItems((current) => sanitizeCart(current.map((item) => cartItemKey(item) === itemKey
     ? { ...item, quantity: Math.min(maxCartQuantity(item, current), Math.max(1, Math.trunc(quantity))) }
-    : item))), []);
-  const remove = useCallback((index: number) => setItems((current) => current.filter((_, itemIndex) => itemIndex !== index)), []);
-  const update = useCallback((index: number, quantity: number) => setItems((current) => sanitizeCart(current.map((item, itemIndex) => itemIndex === index
+    : item))), [setCartItems]);
+  const remove = useCallback((index: number) => setCartItems((current) => current.filter((_, itemIndex) => itemIndex !== index)), [setCartItems]);
+  const update = useCallback((index: number, quantity: number) => setCartItems((current) => sanitizeCart(current.map((item, itemIndex) => itemIndex === index
     ? { ...item, quantity: Math.min(maxCartQuantity(item, current), Math.max(1, Math.trunc(quantity))) }
-    : item))), []);
-  const updateOptions = useCallback((index: number, options: Partial<Pick<CartItem, "variantId" | "weight" | "grind">>) => setItems((previous) => sanitizeCart((() => {
-    const current = previous;
-    const item = current[index];
-    if (!item) return current;
-    const variant = productVariants(item.product).find((value) => value.id === options.variantId)
-      ?? productVariants(item.product).find((value) => normalizeProductSize(value.size) === normalizeProductSize(options.weight ?? item.weight));
-    if (!variant?.available || variant.stock < 1) return current;
-    const updated = { ...item, variantId: variant.id, weight: variant.size, grind: normalizeGrind(options.grind ?? item.grind) ?? item.grind, unitPrice: variant.salePrice ?? variant.price, quantity: Math.min(item.quantity, maxCartQuantity({ ...item, variantId: variant.id, weight: variant.size, grind: normalizeGrind(options.grind ?? item.grind) ?? item.grind }, current.filter((_, i) => i !== index))) };
-    const duplicate = current.findIndex((value, itemIndex) => itemIndex !== index && cartItemKey(value) === cartItemKey(updated));
-    if (duplicate < 0) return current.map((value, itemIndex) => itemIndex === index ? updated : value);
-    return current.flatMap((value, itemIndex) => itemIndex === index ? [] : [itemIndex === duplicate
-      ? { ...value, quantity: Math.min(maxCartQuantity(value, current), value.quantity + updated.quantity) }
-      : value]);
-  })())), []);
-  const clear = useCallback(() => setItems([]), []);
+    : item))), [setCartItems]);
+  const updateOptions = useCallback((index: number, options: Partial<Pick<CartItem, "variantId" | "weight" | "grind">>) => {
+    setCartItems((current) => updateCartOptions(current, index, options));
+  }, [setCartItems]);
+  const clear = useCallback(() => setCartItems([]), [setCartItems]);
 
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const cartSubtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
@@ -123,7 +122,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     items, cartItems: items,
     add, addToCart: add, remove, removeFromCart, update, updateQuantity, updateOptions, clear, clearCart: clear,
     cartCount, cartSubtotal, total: cartSubtotal,
-  }), [add, cartCount, cartSubtotal, clear, items, remove, removeFromCart, update, updateOptions, updateQuantity]);
+    cartReady: hasHydrated && !refreshing && !refreshError, refreshError, refreshCart,
+  }), [hasHydrated, refreshing, refreshError, refreshCart, add, cartCount, cartSubtotal, clear, items, remove, removeFromCart, update, updateOptions, updateQuantity]);
 
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

@@ -59,12 +59,11 @@ export function productPrice(product: Product) {
   return prices.length ? Math.min(...prices) : finitePrice(product.sale_price ?? product.price_150g);
 }
 
-export function defaultProductVariant(product: Product, preferredSize?: string, _preferredGrind?: string) {
-  const available = productVariants(product).filter((variant) => variant.available && variant.stock > 0);
-  const preferred = available.find((variant) => variant.size.toLowerCase() === preferredSize?.toLowerCase());
-  if (preferred) return preferred;
-  return available.reduce<ProductVariant | undefined>((cheapest, variant) => {
-    if (!cheapest) return variant;
-    return (variant.salePrice ?? variant.price) < (cheapest.salePrice ?? cheapest.price) ? variant : cheapest;
-  }, undefined);
+export function defaultProductVariant(product: Product, preferredSize = "150g", _preferredGrind?: string) {
+  const variants = productVariants(product);
+  const available = variants.filter((variant) => variant.available && variant.stock > 0);
+  return available.find((variant) => variant.size === normalizeProductSize(preferredSize))
+    ?? available[0]
+    ?? variants.find((variant) => variant.size === normalizeProductSize(preferredSize))
+    ?? variants[0];
 }

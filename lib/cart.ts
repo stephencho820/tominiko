@@ -27,8 +27,8 @@ export function cartItemRegularPrice(item: Pick<CartItem, "product" | "variantId
 
 export function maxCartQuantity(item: Pick<CartItem, "product" | "variantId" | "weight" | "grind">, items: CartItem[] = []) {
   const variant = productVariants(item.product).find((value) => value.id === item.variantId || (normalizeProductSize(value.size) === normalizeProductSize(item.weight)));
-  const used = items.filter((v) => v.product.id === item.product.id && v.variantId === variant?.id && cartItemKey(v) !== cartItemKey(item)).reduce((sum, v) => sum + v.quantity, 0);
-  return Math.min(20, Math.max(0, (Number(variant?.stock) || 0) - used));
+  const used = items.filter((v) => v.product.id === item.product.id && normalizeProductSize(v.weight) === variant?.size && cartItemKey(v) !== cartItemKey(item)).reduce((sum, v) => sum + v.quantity, 0);
+  return Math.max(0, Math.min(20, Number(variant?.stock) || 0) - used);
 }
 
 /** A stable identity for a product option. This deliberately includes both the
@@ -65,4 +65,43 @@ export function sanitizeCart(value: unknown): CartItem[] {
     }
   }
   return accepted;
+}
+
+/** Refresh every line from the same server snapshot before reapplying shared-size limits. */
+export function refreshCartProducts(items: CartItem[], products: Product[]): CartItem[] {
+  const currentProducts = new Map(products.map((product) => [product.id, product]));
+  return sanitizeCart(items.flatMap((item) => {
+    const product = currentProducts.get(item.product.id);
+    if (!product || !["active", "sold-out"].includes(product.status ?? "")) return [];
+    const variant = productVariants(product).find((value) => value.id === item.variantId && value.size === item.weight)
+      ?? productVariants(product).find((value) => value.size === item.weight);
+    if (!variant?.available) return [];
+    return [{ ...item, product, variantId: variant.id, weight: variant.size }];
+  }));
+}
+
+export function addCartItem(items: CartItem[], item: CartItem): CartItem[] {
+  const safeItem = sanitizeCart([item])[0];
+  if (!safeItem) return items;
+  const existing = items.find((value) => cartItemKey(value) === cartItemKey(safeItem));
+  if (safeItem.quantity + (existing?.quantity ?? 0) > maxCartQuantity(safeItem, items)) return items;
+  return sanitizeCart(existing
+    ? items.map((value) => value === existing ? { ...safeItem, quantity: value.quantity + safeItem.quantity } : value)
+    : [...items, safeItem]);
+}
+
+export function updateCartOptions(items: CartItem[], index: number, options: Partial<Pick<CartItem, "variantId" | "weight" | "grind">>): CartItem[] {
+  const item = items[index];
+  if (!item) return items;
+  const variant = productVariants(item.product).find((value) => value.id === options.variantId)
+    ?? productVariants(item.product).find((value) => value.size === normalizeProductSize(options.weight ?? item.weight));
+  const grind = normalizeGrind(options.grind ?? item.grind);
+  if (!variant?.available || !grind) return items;
+  const others = items.filter((_, i) => i !== index);
+  const used = others.filter((value) => value.product.id === item.product.id && value.weight === variant.size)
+    .reduce((sum, value) => sum + value.quantity, 0);
+  const quantity = Math.min(item.quantity, 20 - used, variant.stock - used);
+  if (quantity < 1) return items;
+  const updated = { ...item, variantId: variant.id, weight: variant.size, grind, quantity, unitPrice: variant.salePrice ?? variant.price };
+  return sanitizeCart(items.map((value, i) => i === index ? updated : value));
 }
