@@ -16,10 +16,13 @@ export function OrderStatusSelect({ id, initial, deliveryMethod, paymentStatus, 
 
   const update = async (value: string) => {
     const previous = status; setStatus(value); setError(""); setIsSaving(true);
-    const response = await fetch("/api/admin/orders", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, order_status: value }) });
-    if (!response.ok) { setStatus(previous); setError((await response.json()).error ?? "Update failed"); }
-    else router.refresh();
-    setIsSaving(false);
+    try {
+      const response = await fetch("/api/admin/orders", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, order_status: value }) });
+      if (!response.ok) { setStatus(previous); setError((await response.json()).error ?? "Update failed"); }
+      else router.refresh();
+    } catch {
+      setStatus(previous); setError("주문 상태를 변경하지 못했습니다. 다시 시도해 주세요.");
+    } finally { setIsSaving(false); }
   };
 
   if (mode === "select") return (

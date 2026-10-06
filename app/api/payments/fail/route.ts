@@ -5,6 +5,7 @@ import { tokenMatches } from "@/lib/order-access";
 export async function POST(request: Request) {
   let input: { orderId?: unknown; code?: unknown; message?: unknown; accessToken?: unknown };
   try { input = await request.json(); } catch { return NextResponse.json({ ok: false }, { status: 400 }); }
+  if (!input || typeof input !== "object" || Array.isArray(input)) return NextResponse.json({ ok: false }, { status: 400 });
   const orderId = typeof input.orderId === "string" ? input.orderId : "";
   const accessToken = typeof input.accessToken === "string" ? input.accessToken : "";
   const supabase = createServiceClient();

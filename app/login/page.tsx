@@ -17,11 +17,15 @@ export default function Login() {
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const signInWithProvider = async (provider: "google" | "kakao") => {
-		const supabase = createClient();
-		await supabase.auth.signInWithOAuth({
-			provider,
-			options: { redirectTo: `${window.location.origin}/auth/callback` },
-		});
+		setError("");
+		try {
+			const supabase = createClient();
+			const { error: authError } = await supabase.auth.signInWithOAuth({
+				provider,
+				options: { redirectTo: `${window.location.origin}/auth/callback` },
+			});
+			if (authError) setError("로그인을 시작하지 못했습니다. 다시 시도해 주세요.");
+		} catch { setError("로그인을 시작하지 못했습니다. 다시 시도해 주세요."); }
 	};
 
 	const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -35,29 +39,30 @@ export default function Login() {
 		}
 
 		setIsSubmitting(true);
-		const supabase = createClient();
-		const result = mode === "sign-in"
-			? await supabase.auth.signInWithPassword({ email, password })
-			: await supabase.auth.signUp({
-					email,
-					password,
-					options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-				});
+		try {
+			const supabase = createClient();
+			const result = mode === "sign-in"
+				? await supabase.auth.signInWithPassword({ email, password })
+				: await supabase.auth.signUp({
+						email,
+						password,
+						options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+					});
 
-		if (result.error) {
-			setError(result.error.message);
-			setIsSubmitting(false);
-			return;
-		}
+			if (result.error) {
+				setError(result.error.message);
+				return;
+			}
 
-		if (mode === "sign-up" && !result.data.session) {
-			setMessage("가입이 완료되었습니다. 이메일의 확인 링크를 눌러 로그인을 완료해 주세요.");
-			setIsSubmitting(false);
-			return;
-		}
+			if (mode === "sign-up" && !result.data.session) {
+				setMessage("가입이 완료되었습니다. 이메일의 확인 링크를 눌러 로그인을 완료해 주세요.");
+				return;
+			}
 
-		router.push("/account");
-		router.refresh();
+			router.push("/account");
+			router.refresh();
+		} catch { setError("로그인 요청을 완료하지 못했습니다. 다시 시도해 주세요."); }
+		finally { setIsSubmitting(false); }
 	};
 
 	const isSignUp = mode === "sign-up";

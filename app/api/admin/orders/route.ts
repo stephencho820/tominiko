@@ -10,6 +10,7 @@ export async function PATCH(request: Request) {
 
   let body: { id?: unknown; order_status?: unknown };
   try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
+  if (!body || typeof body !== "object" || Array.isArray(body)) return NextResponse.json({ error: "Invalid order update" }, { status: 400 });
   const { id, order_status: orderStatus } = body;
   if (typeof id !== "string" || typeof orderStatus !== "string" || !statuses.has(orderStatus)) {
     return NextResponse.json({ error: "Invalid order update" }, { status: 400 });
@@ -24,5 +25,5 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Payment must be completed before fulfillment" }, { status: 409 });
   }
   const { error } = await supabase.from("orders").update({ order_status: orderStatus }).eq("id", id);
-  return error ? NextResponse.json({ error: error.message }, { status: 400 }) : NextResponse.json({ ok: true });
+  return error ? NextResponse.json({ error: "변경 사항을 저장하지 못했습니다. 다시 시도해 주세요." }, { status: 400 }) : NextResponse.json({ ok: true });
 }
