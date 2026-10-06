@@ -6,6 +6,16 @@ import { getAdminClient } from "@/lib/supabase/admin";
 const publicError = "리뷰 등록 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
 const clean = (value: FormDataEntryValue | null, max: number) => typeof value === "string" ? value.trim().slice(0, max) : "";
 const fail = (message = publicError, status = 400) => NextResponse.json({ error: message }, { status });
+function databaseFailure(stage: string, error: unknown) {
+  const reference = crypto.randomUUID().slice(0, 8);
+  console.error(`[review:${reference}] ${stage}`, error);
+  const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
+  const message = typeof error === "object" && error && "message" in error ? String(error.message) : "";
+  if (code === "PGRST205" || message.includes("schema cache")) {
+    return NextResponse.json({ error: `리뷰 시스템 설정이 완료되지 않았습니다. 관리자에게 문의해주세요. (${reference})`, code: "REVIEW_SCHEMA_MISSING" }, { status: 503 });
+  }
+  return NextResponse.json({ error: `${publicError} (${reference})`, code: "REVIEW_WRITE_FAILED" }, { status: 500 });
+}
 
 type ImageMetadata = { width: number; height: number; fileSize: number };
 function imageMetadata(values: FormDataEntryValue[], files: File[]) {
@@ -28,9 +38,11 @@ export async function POST(request: Request) {
 
   const client = await createClient(); const { data: { user } } = await client.auth.getUser();
   const service = createServiceClient();
-  const { data: setting, error: settingError } = await service.from("review_settings").select("allow_guest_reviews").eq("id", true).single();
-  if (settingError) { console.error("Review schema is not ready", settingError); return fail(); }
-  if (!user && !setting.allow_guest_reviews) return fail("로그인 후 리뷰를 작성할 수 있습니다.", 401);
+  if (!user) {
+    const { data: setting, error: settingError } = await service.from("review_settings").select("allow_guest_reviews").eq("id", true).single();
+    if (settingError) return databaseFailure("guest setting lookup failed", settingError);
+    if (!setting.allow_guest_reviews) return fail("로그인 후 리뷰를 작성할 수 있습니다.", 401);
+  }
   let reviewerName = clean(form.get("reviewer_name"), 80);
   if (user) { const { data: profile } = await service.from("profiles").select("name").eq("id", user.id).maybeSingle(); reviewerName = profile?.name || user.user_metadata?.name || user.email?.split("@")[0] || reviewerName; }
   if (!reviewerName) return fail("이름 또는 닉네임을 입력해주세요.");
@@ -40,7 +52,7 @@ export async function POST(request: Request) {
   let verified = false, orderId: string | null = null;
   if (user) { const { data: purchase } = await service.from("order_items").select("order_id,orders!inner(user_id,payment_status)").eq("product_id", productId).eq("orders.user_id", user.id).eq("orders.payment_status", "paid").limit(1).maybeSingle(); verified = Boolean(purchase); orderId = purchase?.order_id ?? null; }
   const { data: review, error: reviewError } = await service.from("reviews").insert({ product_id: productId, user_id: user?.id ?? null, order_id: orderId, rating, title: title || null, content, reviewer_name: reviewerName, is_verified_purchase: verified }).select().single();
-  if (reviewError) { console.error("Review insert failed", reviewError); return fail(); }
+  if (reviewError) return databaseFailure("review insert failed", reviewError);
 
   const paths: string[] = [];
   try {
@@ -58,7 +70,7 @@ export async function POST(request: Request) {
     console.error("Review image persistence failed", error);
     if (paths.length) await service.storage.from("review-images").remove(paths);
     await service.from("reviews").delete().eq("id", review.id);
-    return fail();
+    return databaseFailure("review image persistence failed", error);
   }
   return NextResponse.json({ ok: true, id: review.id });
 }
