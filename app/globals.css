@@ -1752,3 +1752,91 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 @media(max-width:700px){.reviews-section{padding:55px 18px}.reviews-heading{grid-template-columns:1fr;gap:28px}.photo-reviews button,.review-images button{width:92px}.review-form{margin:38px -2px;padding:20px 14px}.review-upload{align-items:flex-start;flex-direction:column}.review-upload input{max-width:100%}.review-card{padding:25px 0}.review-lightbox{padding:15px}.admin-review-summary{align-items:flex-start;flex-direction:column;gap:7px}.admin-review-summary em{margin-left:0}}
 .review-progress{margin:0;color:#76583e;font:700 10px "Avenir Next",sans-serif;letter-spacing:.04em}.review-previews small{position:absolute;left:3px;bottom:3px;padding:2px 4px;background:rgba(34,27,20,.72);color:white;font:8px "Avenir Next",sans-serif}
 .admin-review-warning{margin:24px 0;padding:18px;border:1px solid #a96f5b;background:#fff4ef;color:#693c2f}.admin-review-warning p{margin:7px 0 0;font-size:12px}.admin-review-warning code{font-size:11px}
+
+
+/* PDP purchase-first clarity */
+.product-tasting-lead {
+  max-width: 620px;
+  margin: 22px 0 0;
+  color: var(--brown);
+  font-size: clamp(20px, 2.1vw, 30px);
+  line-height: 1.35;
+}
+.product-hero-meta {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+}
+.product-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.product-tag-list span {
+  display: inline-flex;
+  min-height: 27px;
+  align-items: center;
+  border: 1px solid var(--line);
+  padding: 0 9px;
+  color: var(--muted);
+  font: 700 8px/1 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: .06em;
+}
+.product-freshness {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  color: var(--muted);
+  font: 700 9px/1.4 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: .08em;
+}
+.product-freshness a {
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 2px;
+}
+.taste-profile-hero {
+  grid-column: auto;
+  max-width: 480px;
+  margin-top: 22px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.option-group legend small {
+  margin-left: 6px;
+  color: var(--muted);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: .03em;
+}
+.option-grid-grind button {
+  display: grid;
+  min-height: 58px;
+  place-items: center;
+  align-content: center;
+  gap: 3px;
+}
+.option-grid-grind button small {
+  font-size: 8px;
+  font-weight: 400;
+  letter-spacing: 0;
+  opacity: .68;
+}
+.option-grid button:disabled {
+  cursor: not-allowed;
+  opacity: .38;
+}
+.purchase-stock-note {
+  margin: 10px 0 0;
+  color: #8a493b;
+  font: 700 9px/1.5 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: .03em;
+}
+@media (max-width: 700px) {
+  .product-tasting-lead { margin-top: 16px; font-size: 20px; }
+  .product-hero-meta { margin-top: 17px; }
+  .taste-profile-hero { margin-top: 17px; }
+  .option-grid-grind { grid-template-columns: 1fr; }
+  .option-grid-grind button { min-height: 48px; grid-template-columns: 1fr auto; place-items: center stretch; padding-inline: 13px; text-align: left; }
+  .option-grid-grind button small { text-align: right; }
+}
