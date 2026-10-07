@@ -5,7 +5,7 @@ import { Minus, Plus, X } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
 import { productImage, productVariants, STANDARD_GRINDS } from "@/lib/products";
 import { cartItemKey, cartItemRegularPrice, maxCartQuantity } from "@/lib/cart";
-import { DEFAULT_DELIVERY_SETTINGS, freeShippingProgress, type DeliverySettings } from "@/lib/shipping";
+import { calculateCheckoutTotal, DEFAULT_DELIVERY_SETTINGS, freeShippingProgress, type DeliverySettings } from "@/lib/shipping";
 import { useEffect, useState } from "react";
 
 const money = (value: number) => `₩${value.toLocaleString("ko-KR")}`;
@@ -17,6 +17,8 @@ export default function CartPage() {
   const [deliverySettings, setDeliverySettings] = useState<DeliverySettings>(DEFAULT_DELIVERY_SETTINGS);
   useEffect(() => { fetch("/api/checkout").then((response) => { if (!response.ok) throw new Error("배송 설정을 확인하지 못했습니다."); return response.json(); }).then((data) => { setDeliverySettings(data.settings); setSettingsReady(true); }).catch((error) => setSettingsError(error.message)); }, []);
   const shippingProgress = freeShippingProgress(total, deliverySettings);
+  const shippingEstimate = calculateCheckoutTotal(total, 0, "shipping", deliverySettings);
+  const grindLabel = (value: string) => value === "Whole Bean" ? "Whole Bean · 원두 그대로" : value === "Filter" ? "Filter · 핸드드립" : "Espresso · 에스프레소";
 
   return (
     <main className="purchase-page cart-page">
@@ -48,7 +50,7 @@ export default function CartPage() {
                   </div>
                   <div className="cart-options">
                     <label><span><span className="lang-ko">옵션</span><span className="lang-en">Variant</span></span><select value={item.variantId} onChange={(event) => updateOptions(index, { variantId: event.target.value })}>{productVariants(item.product).map((variant) => <option disabled={!variant.available || variant.stock < 1} key={variant.id} value={variant.id}>{variant.size}{variant.stock < 1 ? " · Sold out" : ""}</option>)}</select></label>
-                    <label>Grind<select value={item.grind} onChange={(event) => updateOptions(index, { grind: event.target.value as typeof item.grind })}>{STANDARD_GRINDS.map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
+                    <label>Grind<select value={item.grind} onChange={(event) => updateOptions(index, { grind: event.target.value as typeof item.grind })}>{STANDARD_GRINDS.map((value) => <option key={value} value={value}>{grindLabel(value)}</option>)}</select></label>
                   </div>
                   <div className="cart-item-footer">
                     <div className="quantity-control" aria-label="Quantity selector">
@@ -65,8 +67,10 @@ export default function CartPage() {
           <aside className="cart-totals">
             <p className="section-label"><span className="lang-ko">주문 금액</span><span className="lang-en">Order total</span></p>
             <div className="total-line"><span><span className="lang-ko">상품 금액</span><span className="lang-en">Subtotal</span></span><span>{money(total)}</span></div>
+            <div className="total-line"><span>예상 배송비</span><span>{shippingEstimate.shippingFee ? money(shippingEstimate.shippingFee) : "무료"}</span></div>
             <div className="shipping-progress cart-progress"><div><span>{shippingProgress.qualified ? "✓ 무료배송 혜택을 받으셨어요." : `${money(shippingProgress.remaining)} 더 담으면 무료배송`}</span><small>{Math.round(shippingProgress.percent)}%</small></div><i><span style={{ width: `${shippingProgress.percent}%` }} /></i></div>
-            <div className="total-line total-emphasis"><span>Total</span><strong>{money(total)}</strong></div>
+            <div className="total-line total-emphasis"><span>택배 기준 예상 결제금액</span><strong>{money(shippingEstimate.finalAmount)}</strong></div>
+            <p className="cart-total-note">체크아웃에서 매장 픽업 또는 가능한 경우 로컬배송을 선택하면 배송비가 다시 계산됩니다.</p>
             {cartReady && settingsReady ? <Link href="/checkout" className="button-primary purchase-button"><span className="lang-ko">주문 정보 입력</span><span className="lang-en">Continue to checkout</span><span>→</span></Link> : <button disabled className="button-primary purchase-button">상품 및 배송 정보 확인 필요</button>}
             <Link href="/shop" className="continue-link"><span className="lang-ko">쇼핑 계속하기</span><span className="lang-en">Continue shopping</span></Link>
           </aside>
