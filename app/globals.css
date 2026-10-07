@@ -1840,3 +1840,160 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
   .option-grid-grind button { min-height: 48px; grid-template-columns: 1fr auto; place-items: center stretch; padding-inline: 13px; text-align: left; }
   .option-grid-grind button small { text-align: right; }
 }
+
+
+/* Philosophy + Tasting Room journey clarity */
+.brand-scene__identity {
+  min-height: 168px;
+  grid-template-rows: auto 46px auto auto;
+  gap: 9px;
+}
+.brand-scene__role {
+  color: var(--brown);
+  font: 700 8px/1 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: .18em;
+}
+.brand-scene__identity .brand-scene__description {
+  max-width: 250px;
+  margin: 2px 0 0;
+  color: var(--muted);
+  font: 400 12px/1.6 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0;
+  word-break: keep-all;
+}
+.brand-scene__identity .brand-scene__link {
+  margin: 2px 0 0;
+  color: var(--ink);
+  font: 700 8px/1.4 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: .16em;
+}
+.philosophy-next {
+  display: grid;
+  grid-template-columns: minmax(0,.8fr) minmax(320px,.7fr);
+  gap: clamp(38px,8vw,120px);
+  max-width: 1440px;
+  margin: clamp(56px,7vw,96px) auto 0;
+  padding-top: clamp(34px,4vw,56px);
+  border-top: 1px solid rgba(247,239,226,.18);
+}
+.zero-philosophy .philosophy-next h2 {
+  max-width: 650px;
+  margin: 18px 0 0;
+  color: #f4eadc;
+  font-size: clamp(28px,3.4vw,48px);
+  line-height: 1.15;
+}
+.philosophy-next > div:last-child {
+  align-self: end;
+}
+.philosophy-next > div:last-child > p {
+  max-width: 520px;
+  margin: 0;
+  color: rgba(247,239,226,.68);
+  font-size: 15px;
+  line-height: 1.8;
+  word-break: keep-all;
+}
+.philosophy-next > div:last-child > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 28px;
+  margin-top: 26px;
+}
+.philosophy-next a {
+  border-bottom: 1px solid rgba(247,239,226,.42);
+  padding-bottom: 4px;
+  color: #f4eadc;
+  font: 700 9px/1.4 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: .12em;
+}
+.room-intro {
+  display: grid;
+  grid-template-columns: minmax(0,1.1fr) minmax(300px,.7fr);
+  gap: clamp(40px,8vw,120px);
+  padding: clamp(68px,9vw,124px) clamp(22px,6vw,88px);
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+.room-intro h1 {
+  max-width: 800px;
+  margin: 18px 0 0;
+  font-size: clamp(34px,5vw,70px);
+  font-weight: 400;
+  letter-spacing: -.045em;
+  line-height: 1.06;
+  word-break: keep-all;
+}
+.room-intro > div:last-child {
+  align-self: end;
+}
+.room-intro > div:last-child > p {
+  max-width: 520px;
+  margin: 0;
+  color: var(--muted);
+  font: 400 15px/1.85 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  word-break: keep-all;
+}
+.room-intro-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 28px;
+  margin-top: 24px;
+}
+.room-intro-actions a,
+.room-detail-action {
+  width: max-content;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 3px;
+  color: var(--ink);
+  font: 700 9px/1.5 "Avenir Next", "Helvetica Neue", Arial, sans-serif !important;
+  letter-spacing: .1em;
+}
+.room-visit {
+  scroll-margin-top: 72px;
+}
+.room-visit-details .room-detail-action {
+  display: block;
+  margin-top: 12px;
+  border-color: var(--muted);
+  color: var(--muted);
+  font-size: 9px;
+}
+@media (max-width: 768px) {
+  .brand-scene__identity {
+    min-height: 154px;
+    grid-template-rows: auto 44px auto auto;
+  }
+  .brand-scene__identity .brand-scene__description {
+    max-width: 290px;
+    font-size: 12px;
+  }
+  .philosophy-next {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    margin-top: 48px;
+    padding-top: 34px;
+  }
+  .philosophy-next > div:last-child > div {
+    display: grid;
+    gap: 14px;
+  }
+  .philosophy-next a {
+    width: max-content;
+  }
+  .room-intro {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 58px 18px 64px;
+  }
+  .room-intro h1 {
+    font-size: clamp(34px,10vw,48px);
+  }
+  .room-intro > div:last-child {
+    align-self: start;
+  }
+  .room-intro-actions {
+    display: grid;
+    gap: 14px;
+  }
+}
