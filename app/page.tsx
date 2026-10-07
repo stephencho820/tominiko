@@ -6,7 +6,7 @@ import { EditorialBanner } from "@/components/EditorialBanner";
 
 export default async function Home() {
   const [products, content] = await Promise.all([
-    getProducts({ activeOnly: true }),
+    getProducts({ activeOnly: true, todaysRoast: true }),
     getPageSettings("home"),
   ]);
 
