@@ -4,5 +4,22 @@ import { getAdminClient } from "@/lib/supabase/admin";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   if (!(await getAdminClient())) redirect("/login");
-  return <div className="admin-shell"><header className="admin-header"><Link href="/admin" className="admin-brand"><span>Casa di Stefano</span><small>Roastery operations</small></Link><nav aria-label="Admin navigation"><Link href="/admin">Today</Link><Link href="/admin/orders">Orders</Link><Link href="/admin/products">Products</Link><Link href="/admin/reviews">Reviews</Link><Link href="/admin/pages">Pages</Link><Link href="/admin/delivery">Delivery</Link><Link href="/">Store ↗</Link></nav></header>{children}</div>;
+  return <div className="admin-shell">
+    <header className="admin-header">
+      <Link href="/admin" className="admin-brand">
+        <span>Casa di Stefano</span>
+        <small>ADMIN</small>
+      </Link>
+      <nav aria-label="Admin navigation">
+        <Link href="/admin">대시보드</Link>
+        <Link href="/admin/orders">주문</Link>
+        <Link href="/admin/products">상품</Link>
+        <Link href="/admin/reviews">리뷰</Link>
+        <Link href="/admin/pages">페이지</Link>
+        <Link href="/admin/delivery">배송</Link>
+      </nav>
+      <Link href="/" className="admin-store-link">사이트 보기 ↗</Link>
+    </header>
+    {children}
+  </div>;
 }
