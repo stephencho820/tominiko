@@ -2957,3 +2957,86 @@ body:has(.admin-shell) {
     margin-top: 42px;
   }
 }
+
+
+/* Account auth completion */
+.account-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 28px;
+}
+.account-signout {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+.account-signout button {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  padding: 0 16px;
+  background: transparent;
+  color: var(--ink);
+  font-family: "Avenir Next","Helvetica Neue",Arial,sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+.account-signout button:hover:not(:disabled) {
+  border-color: var(--ink);
+}
+.account-signout button:disabled {
+  cursor: wait;
+  opacity: .55;
+}
+.account-signout p {
+  margin: 0;
+  color: #9a493a;
+  font-family: "Avenir Next","Helvetica Neue",Arial,sans-serif;
+  font-size: 10px;
+}
+.auth-error-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: clamp(72px,10vw,130px) 24px;
+  text-align: center;
+}
+.auth-error-page h1 {
+  margin: 20px 0 0;
+  font-size: clamp(36px,6vw,64px);
+  font-weight: 400;
+  letter-spacing: -.04em;
+  line-height: 1.02;
+}
+.auth-error-page > p:not(.section-label) {
+  max-width: 560px;
+  margin: 22px auto 0;
+  color: var(--muted);
+  font-family: "Avenir Next","Helvetica Neue",Arial,sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.auth-error-page > div {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px 24px;
+  margin-top: 32px;
+}
+.auth-error-page a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  border-bottom: 1px solid var(--ink);
+  font-family: "Avenir Next","Helvetica Neue",Arial,sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+}
+@media (max-width: 620px) {
+  .account-heading {
+    display: grid;
+  }
+  .account-signout {
+    justify-items: start;
+  }
+}
