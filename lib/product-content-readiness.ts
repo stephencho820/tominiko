@@ -7,6 +7,7 @@ type ContentSource = {
   origin?: unknown;
   region?: unknown;
   variety?: unknown;
+  grade?: unknown;
   process?: unknown;
   roasted_date?: unknown;
   short_description?: unknown;
@@ -48,7 +49,7 @@ export function productContentReadiness(source: ContentSource) {
     { key: "image", label: "대표 이미지", complete: hasText(source.image_url), required: true },
     { key: "taste", label: "테이스팅 노트", complete: hasText(source.tasting_notes), required: true },
     { key: "tags", label: "Shop Tag", complete: hasList(source.discovery_tags), required: true },
-    { key: "facts", label: "산지 핵심 정보", complete: [source.origin, source.region, source.variety, source.process].every(hasText), required: true },
+    { key: "facts", label: "기본 원두 정보", complete: [source.origin, source.grade, source.process].every(hasText), required: true },
     { key: "roast-date", label: "로스팅 날짜", complete: hasText(source.roasted_date), required: true },
     { key: "description", label: "한 줄 소개", complete: hasText(source.short_description) || hasText(source.description), required: true },
     { key: "about", label: "About This Coffee", complete: hasText(source.about), required: false },
