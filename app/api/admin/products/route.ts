@@ -54,6 +54,13 @@ export async function PATCH(request: Request) {
     const { data: current, error: lookupError } = await supabase.from("products").select("status").eq("id", id).single();
     if (lookupError || !current) return NextResponse.json({ error: "Invalid product" }, { status: 400 });
     if (current.status !== "active") payload.todays_roast = false;
+    else {
+      // The database allows exactly one Today's Coffee. Clear the previous
+      // selection first so switching from the dashboard does not hit the
+      // partial unique index on products.todays_roast.
+      const { error: clearError } = await supabase.from("products").update({ todays_roast: false }).eq("todays_roast", true).neq("id", id);
+      if (clearError) return NextResponse.json({ error: "오늘의 커피를 변경하지 못했습니다. 다시 시도해 주세요." }, { status: 400 });
+    }
   }
   const { data, error } = await supabase.from("products").update(payload).eq("id", id).select().single();
   return error ? NextResponse.json({ error: "변경 사항을 저장하지 못했습니다. 다시 시도해 주세요." }, { status: 400 }) : NextResponse.json(data);
