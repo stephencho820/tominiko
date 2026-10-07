@@ -3040,3 +3040,34 @@ body:has(.admin-shell) {
     justify-items: start;
   }
 }
+
+
+.admin-header-actions {
+  display: flex;
+  justify-self: end;
+  align-items: center;
+  gap: 14px;
+}
+.account-signout-compact {
+  display: block;
+}
+.account-signout-compact button {
+  min-height: 34px;
+  border: 0;
+  border-left: 1px solid #d8d1c6;
+  padding: 0 0 0 14px;
+  background: transparent;
+  font-size: 9px;
+}
+.account-signout-compact p {
+  display: none;
+}
+@media (max-width: 620px) {
+  .admin-header-actions {
+    margin-left: auto;
+  }
+  .account-signout-compact button {
+    min-height: 30px;
+    padding-left: 10px;
+  }
+}
