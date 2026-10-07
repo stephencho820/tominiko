@@ -27,12 +27,12 @@ function RoasterSmoke() {
   </span>;
 }
 
-function HeroBrandItem({ href, className, label, image, logo, fallback, alt, scale, microcopy, overlay }: {
+function HeroBrandItem({ href, className, label, image, logo, fallback, alt, scale, role, microcopy, description, overlay }: {
   href: string; className: string; label: string; image: (typeof illustrations)[keyof typeof illustrations]; logo?: string;
-  fallback: string; alt: string; scale: number; microcopy: string; overlay?: ReactNode;
+  fallback: string; alt: string; scale: number; role: string; microcopy: string; description: string; overlay?: ReactNode;
 }) {
   const motionClass = className === "brand-scene--tominiko" ? " tominiko-motion" : "";
-  const contents = <article className="philosophy-card"><div className="brand-scene__art philosophy-visual"><div className={`philosophy-illustration${motionClass}`}><Image src={image.src} width={image.width} height={image.height} sizes="(max-width: 768px) 75vw, 340px" alt={image.alt} priority />{overlay}</div></div><div className="brand-scene__identity philosophy-copy"><BrandLogo src={logo} fallback={fallback} alt={alt} scale={scale} /><p>{microcopy} <b aria-hidden="true">{href.startsWith("#") ? "↓" : "↗"}</b></p></div></article>;
+  const contents = <article className="philosophy-card"><div className="brand-scene__art philosophy-visual"><div className={`philosophy-illustration${motionClass}`}><Image src={image.src} width={image.width} height={image.height} sizes="(max-width: 768px) 75vw, 340px" alt={image.alt} priority />{overlay}</div></div><div className="brand-scene__identity philosophy-copy"><span className="brand-scene__role">{role}</span><BrandLogo src={logo} fallback={fallback} alt={alt} scale={scale} /><p className="brand-scene__description">{description}</p><p className="brand-scene__link">{microcopy} <b aria-hidden="true">{href.startsWith("#") ? "↓" : "↗"}</b></p></div></article>;
   return href.startsWith("#")
     ? <a href={href} className={`brand-scene ${className}`} aria-label={label}>{contents}</a>
     : <Link href={href} className={`brand-scene ${className}`} aria-label={label}>{contents}</Link>;
@@ -44,13 +44,13 @@ export function OurStoryHero({ settings }: { settings: PageSettings }) {
   return <section className="brand-stage" aria-labelledby="philosophy-heading">
     <header className="brand-stage__heading">
       <p className="section-label">PHILOSOPHY</p>
-      <h1 id="philosophy-heading">하나의 집,<br />세 가지 이야기.</h1>
-      <p>커피를 볶고, 맛보고, 당신의 하루에 건넵니다.</p>
+      <h1 id="philosophy-heading">하나의 집,<br />세 가지 역할.</h1>
+      <p>Casa di Stefano에서 맛보고, Zero Degrees에서 볶고, Tominiko라는 이름으로 일상에 건넵니다.</p>
     </header>
     <div className="brand-stage__scenes">
-      <HeroBrandItem href="/shop" className="brand-scene--tominiko" label="Shop Tominiko coffee" image={illustrations.tominiko} logo={settings.images.tominiko_logo} fallback="TOMINIKO" alt={alt("tominiko_logo_alt", "Tominiko")} scale={scale("tominiko_logo_scale")} microcopy="SHOP COFFEE" />
-      <HeroBrandItem href="#zero-degrees" className="brand-scene--zero" label="Explore Zero Degrees roasting philosophy" image={illustrations.zero} overlay={<RoasterSmoke />} logo={settings.images.zero_logo} fallback="ZERO DEGREES" alt={alt("zero_logo_alt", "Zero Degrees")} scale={scale("zero_logo_scale")} microcopy="ROASTING PHILOSOPHY" />
-      <HeroBrandItem href="/tasting-room" className="brand-scene--casa" label="Visit Casa di Stefano Tasting Room" image={illustrations.casa} overlay={<TastingRoomOverlay />} logo={settings.images.casa_logo} fallback="CASA DI STEFANO" alt={alt("casa_logo_alt", "Casa di Stefano")} scale={scale("casa_logo_scale")} microcopy="TASTING ROOM" />
+      <HeroBrandItem href="/tasting-room" className="brand-scene--casa" label="Visit Casa di Stefano Tasting Room" image={illustrations.casa} overlay={<TastingRoomOverlay />} logo={settings.images.casa_logo} fallback="CASA DI STEFANO" alt={alt("casa_logo_alt", "Casa di Stefano")} scale={scale("casa_logo_scale")} role="THE HOUSE" description="커피를 직접 맛보고 머무는 공간" microcopy="VISIT TASTING ROOM" />
+      <HeroBrandItem href="#zero-degrees" className="brand-scene--zero" label="Explore Zero Degrees roasting philosophy" image={illustrations.zero} overlay={<RoasterSmoke />} logo={settings.images.zero_logo} fallback="ZERO DEGREES" alt={alt("zero_logo_alt", "Zero Degrees")} scale={scale("zero_logo_scale")} role="THE ROASTER" description="생두의 개성을 가리지 않는 로스팅" microcopy="ROASTING PHILOSOPHY" />
+      <HeroBrandItem href="/shop" className="brand-scene--tominiko" label="Shop Tominiko coffee" image={illustrations.tominiko} logo={settings.images.tominiko_logo} fallback="TOMINIKO" alt={alt("tominiko_logo_alt", "Tominiko")} scale={scale("tominiko_logo_scale")} role="THE COFFEE" description="Zero Degrees가 볶아 일상으로 건네는 커피" microcopy="SHOP COFFEE" />
     </div>
   </section>;
 }
