@@ -2299,3 +2299,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
     min-width: 0;
   }
 }
+
+.admin-content-live-warning {
+  color: #8a493b;
+  font-weight: 700;
+}
