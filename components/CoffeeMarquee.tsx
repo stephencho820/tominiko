@@ -107,14 +107,13 @@ export function CoffeeMarquee({ products }: { products: Product[] }) {
     };
   }, [products.length]);
 
-  if (!products.length) return <section id="coffee-marquee" className="coffee-marquee coffee-marquee-empty"><p className="section-label">TODAY&apos;S ROASTED BEANS</p><Link href="/shop">모든 원두 보기 →</Link></section>;
-  const productsBySize = products.flatMap((product) => {
-    const sizes = [...new Set(productVariants(product).map((variant) => variant.size))];
-    return sizes.map((size) => ({ product, size }));
-  });
-  const segmentProducts = Array.from({ length: Math.max(1, Math.ceil(6 / productsBySize.length)) }, () => productsBySize).flat();
-  return <section id="coffee-marquee" className="coffee-marquee" aria-labelledby="coffee-marquee-title">
-    <header><p className="section-label" id="coffee-marquee-title">TODAY&apos;S ROASTED BEANS</p><Link href="/shop"><span className="lang-ko">모든 원두 보기</span><span className="lang-en">View all beans</span> →</Link></header>
+  if (!products.length) return <section id="coffee-list" className="coffee-marquee coffee-marquee-empty"><p className="section-label">COFFEE LIST</p><Link href="/shop">모든 원두 보기 →</Link></section>;
+  const products150g = products
+    .filter((product) => productVariants(product).some((variant) => variant.size === "150g"))
+    .map((product) => ({ product, size: "150g" }));
+  const segmentProducts = Array.from({ length: Math.max(1, Math.ceil(6 / products150g.length)) }, () => products150g).flat();
+  return <section id="coffee-list" className="coffee-marquee" aria-labelledby="coffee-list-title">
+    <header><p className="section-label" id="coffee-list-title">COFFEE LIST · 150G</p><Link href="/shop"><span className="lang-ko">모든 원두 보기</span><span className="lang-en">View all beans</span> →</Link></header>
     <div className="coffee-marquee-viewport" ref={rail}
       onWheel={() => { pauseUntil.current = performance.now() + 1500; }}
       onPointerDown={(event) => { dragging.current = true; draggedDistance.current = 0; lastX.current = event.clientX; pauseUntil.current = Number.POSITIVE_INFINITY; event.currentTarget.setPointerCapture(event.pointerId); }}
