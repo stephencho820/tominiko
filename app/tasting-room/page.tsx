@@ -16,7 +16,7 @@ export default async function TastingRoomPage() {
   return <main className="tasting-room-page">
     <section className="room-visit-hero"><picture><source media="(max-width: 700px)" srcSet={room.mobileHeroImage || defaultMobileHero} /><SafeHeroImage src={heroImage} fallback={defaultHero} alt="Casa di Stefano Tasting Room" /></picture><Link href="/our-story" className="room-story-link">PHILOSOPHY <span>↗</span></Link></section>
     <section className="room-intro" aria-labelledby="room-intro-title">
-      <div><p className="section-label">CASA DI STEFANO</p><h1 id="room-intro-title">Zero Degrees가 볶은<br />Tominiko 커피를 직접 맛보는 곳.</h1></div>
+      <div><p className="section-label">CASA DI STEFANO</p><h1 id="room-intro-title">향긋한 커피를<br />직접 만나보세요.</h1></div>
       <div><p>커피를 고르기 전에 맛보고 싶을 때, 로스팅 이야기가 궁금할 때, 천천히 머물고 싶을 때 찾아오세요.</p><div className="room-intro-actions"><a href="#visit">방문 정보 ↓</a><Link href="/shop">커피 먼저 보기 ↗</Link></div></div>
     </section>
     <section className="room-visit" id="visit" aria-labelledby="visit-title"><p className="section-label" id="visit-title">VISIT</p><div className="room-visit-layout">

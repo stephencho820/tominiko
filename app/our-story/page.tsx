@@ -40,8 +40,7 @@ export default async function OurStoryPage() {
         </article>)}
       </div>
       <div className="philosophy-next">
-        <div><p className="section-label">FROM ROASTER TO CUP</p><h2>볶는 방식이 궁금했다면,<br />이제 한 잔으로 확인해보세요.</h2></div>
-        <div><p>Zero Degrees가 볶은 커피는 Tominiko에서 만나고, Casa di Stefano에서 직접 맛볼 수 있습니다.</p><div><Link href="/shop">SHOP COFFEE →</Link><Link href="/tasting-room">VISIT TASTING ROOM →</Link></div></div>
+        <div><p className="section-label">FROM ROASTER TO CUP</p><h2>향긋한 커피를 직접 만나보세요.</h2><div className="philosophy-next-actions"><Link href="/shop">SHOP COFFEE →</Link><Link href="/tasting-room">VISIT TASTING ROOM →</Link></div></div>
       </div>
     </section>
   </main>;
