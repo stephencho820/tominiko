@@ -19,7 +19,20 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
   if (!product) notFound();
   const reviewData = await getProductReviews(product.id);
   const notes = tastingNotes(product); const images = [productImage(product), ...(product.gallery_images ?? [])].filter((value, index, list) => list.indexOf(value) === index);
-  const related = all.filter((item) => item.id !== product.id).sort((a,b) => Number(b.category === product.category)-Number(a.category === product.category)).slice(0,3);
+  const productTags = new Set(product.discovery_tags ?? []);
+  const related = all
+    .filter((item) => item.id !== product.id)
+    .sort((a, b) => {
+      const overlapA = (a.discovery_tags ?? []).filter((tag) => productTags.has(tag)).length;
+      const overlapB = (b.discovery_tags ?? []).filter((tag) => productTags.has(tag)).length;
+      if (overlapA !== overlapB) return overlapB - overlapA;
+      if (a.product_type !== b.product_type) {
+        if (a.product_type === product.product_type) return -1;
+        if (b.product_type === product.product_type) return 1;
+      }
+      return a.display_order - b.display_order;
+    })
+    .slice(0, 3);
   const brew = product.use_default_recipe ? { brewing_dose:"20g", brewing_water:"300g", brewing_temperature:"92°C", brewing_grind:"Medium", brewing_time:"2:30–3:00" } : product;
   return <main className="product-detail product-detail-new">
     {preview && <div className="preview-banner">ADMIN PREVIEW · <Link href={`/admin/products/${product.id}`}>Back to editor</Link></div>}
