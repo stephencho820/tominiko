@@ -67,6 +67,10 @@ export function CoffeeMarquee({ products }: { products: Product[] }) {
     const measure = () => { groupWidth = group.getBoundingClientRect().width; };
     const resizeObserver = new ResizeObserver(measure);
     resizeObserver.observe(group);
+    if (reducedMotion.matches) {
+      measure();
+      return () => resizeObserver.disconnect();
+    }
 
     const move = (time: number) => {
       if (!previousTime) previousTime = time;

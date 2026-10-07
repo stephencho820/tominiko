@@ -28,6 +28,20 @@ export function Header() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
+
   return (
     <header className={`site-header relative z-20 border-b border-[var(--line)] bg-[var(--ivory)] px-5 md:px-8 ${scrolled ? "is-scrolled" : ""}`}>
       <div className="mx-auto flex h-[72px] max-w-[1320px] items-center justify-between gap-6 md:grid md:grid-cols-[1fr_auto_1fr]">
@@ -87,7 +101,7 @@ export function Header() {
       </div>
 
       {open && (
-        <nav className="absolute left-0 top-full flex w-full flex-col gap-5 border-b border-[var(--line)] bg-[var(--ivory)] px-6 py-6 shadow-lg md:hidden">
+        <nav className="mobile-nav-panel absolute left-0 top-full flex w-full flex-col gap-2 border-b border-[var(--line)] bg-[var(--ivory)] px-6 py-5 shadow-lg md:hidden">
           {primaryLinks.map(([label, href]) => (
             <Link
               key={href}
