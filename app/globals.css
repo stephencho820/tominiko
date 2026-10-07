@@ -1997,3 +1997,61 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
     gap: 14px;
   }
 }
+
+
+/* Cart + checkout decision clarity */
+.cart-total-note {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font: 400 10px/1.6 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+}
+.delivery-methods-first {
+  margin-top: 0;
+  margin-bottom: 30px;
+}
+.pickup-note {
+  margin: 0 0 30px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  background: rgba(221,211,195,.18);
+}
+.pickup-note strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+}
+.pickup-note p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font: 400 11px/1.6 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+}
+.pickup-note a {
+  display: inline-block;
+  margin-top: 13px;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 2px;
+  font: 700 9px/1.4 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: .08em;
+}
+.checkout-assurance {
+  display: grid;
+  gap: 5px;
+  margin-top: 15px;
+  color: var(--muted);
+  font: 600 9px/1.5 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: .02em;
+}
+.summary-costs dd {
+  text-align: right;
+}
+@media (max-width: 560px) {
+  .delivery-methods-first {
+    margin-bottom: 24px;
+  }
+  .pickup-note {
+    margin-bottom: 24px;
+  }
+  .checkout-assurance {
+    padding-bottom: 2px;
+  }
+}
