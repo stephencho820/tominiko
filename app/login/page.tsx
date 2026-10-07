@@ -15,17 +15,26 @@ export default function Login() {
 	const [message, setMessage] = useState("");
 	const [error, setError] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [oauthProvider, setOauthProvider] = useState<"google" | "kakao" | null>(null);
 
 	const signInWithProvider = async (provider: "google" | "kakao") => {
+		if (oauthProvider) return;
 		setError("");
+		setOauthProvider(provider);
 		try {
 			const supabase = createClient();
 			const { error: authError } = await supabase.auth.signInWithOAuth({
 				provider,
 				options: { redirectTo: `${window.location.origin}/auth/callback` },
 			});
-			if (authError) setError("로그인을 시작하지 못했습니다. 다시 시도해 주세요.");
-		} catch { setError("로그인을 시작하지 못했습니다. 다시 시도해 주세요."); }
+			if (authError) {
+				setError("소셜 로그인을 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+				setOauthProvider(null);
+			}
+		} catch {
+			setError("소셜 로그인을 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+			setOauthProvider(null);
+		}
 	};
 
 	const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -103,8 +112,8 @@ export default function Login() {
 
 			<div className="my-9 flex items-center gap-4 text-[var(--muted)]"><span className="h-px flex-1 bg-[var(--line)]" /><span className="eyebrow">or</span><span className="h-px flex-1 bg-[var(--line)]" /></div>
 			<div className="grid gap-3">
-				<button onClick={() => signInWithProvider("google")} className="border border-[#211d18] p-4 sans text-xs font-bold tracking-[.12em]">CONTINUE WITH GOOGLE</button>
-				<button onClick={() => signInWithProvider("kakao")} className="bg-[#fee500] p-4 sans text-xs font-bold tracking-[.12em]">CONTINUE WITH KAKAO</button>
+				<button type="button" disabled={oauthProvider !== null} onClick={() => signInWithProvider("google")} className="border border-[#211d18] p-4 sans text-xs font-bold tracking-[.12em] disabled:cursor-wait disabled:opacity-60">{oauthProvider === "google" ? "GOOGLE로 이동 중…" : "CONTINUE WITH GOOGLE"}</button>
+				<button type="button" disabled={oauthProvider !== null} onClick={() => signInWithProvider("kakao")} className="bg-[#fee500] p-4 sans text-xs font-bold tracking-[.12em] disabled:cursor-wait disabled:opacity-60">{oauthProvider === "kakao" ? "KAKAO로 이동 중…" : "CONTINUE WITH KAKAO"}</button>
 			</div>
 			<p className="mt-8 sans text-xs text-[#684c38]">Guest checkout is available without an account.</p>
 		</main>

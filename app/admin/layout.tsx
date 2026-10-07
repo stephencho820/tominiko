@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { AccountSignOutButton } from "@/components/AccountSignOutButton";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   if (!(await getAdminClient())) redirect("/login");
@@ -18,7 +19,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <Link href="/admin/pages">페이지</Link>
         <Link href="/admin/delivery">배송</Link>
       </nav>
-      <Link href="/" className="admin-store-link">사이트 보기 ↗</Link>
+      <div className="admin-header-actions">
+        <Link href="/" className="admin-store-link">사이트 보기 ↗</Link>
+        <AccountSignOutButton compact />
+      </div>
     </header>
     {children}
   </div>;
