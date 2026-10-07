@@ -2055,3 +2055,140 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
     padding-bottom: 2px;
   }
 }
+
+
+/* Mobile interaction polish */
+.mobile-nav-panel .nav-link,
+.mobile-nav-panel .nav-meta {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  font-size: 12px;
+}
+.mobile-nav-panel > .border-t {
+  padding-top: 8px;
+}
+@media (max-width: 760px) {
+  .site-header > div {
+    min-height: 72px;
+  }
+
+  /* Keep the Shop toolbar below the 72px sticky header. */
+  .catalog-toolbar {
+    top: 72px;
+    padding: 10px 0;
+  }
+  .category-tabs {
+    padding-bottom: 2px;
+  }
+  .category-tabs button {
+    min-height: 44px;
+    padding-inline: 13px;
+    font-size: 10px;
+  }
+  .catalog-controls {
+    min-height: 44px;
+  }
+  .catalog-controls select {
+    min-height: 44px;
+    font-size: 11px;
+  }
+  .view-controls button {
+    width: 44px;
+    height: 44px;
+  }
+  .catalog-count {
+    font-size: 9px;
+  }
+  .catalog-buy button,
+  .marquee-add {
+    min-height: 44px;
+  }
+
+  /* Cart controls should be comfortable touch targets. */
+  .cart-remove {
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+  }
+  .cart-options select {
+    min-height: 46px;
+    font-size: 14px;
+  }
+  .quantity-control {
+    min-height: 44px;
+    height: 44px;
+  }
+
+  /* Checkout controls and bottom CTA respect phone safe areas. */
+  .outline-small,
+  .address-search {
+    min-height: 44px;
+  }
+  .saved-addresses > button,
+  .delivery-methods > button {
+    min-height: 64px;
+  }
+  .checkout-layout {
+    padding-bottom: calc(108px + env(safe-area-inset-bottom));
+  }
+  .checkout-summary .purchase-button {
+    bottom: max(10px, env(safe-area-inset-bottom));
+    min-height: 54px;
+  }
+  .checkout-note {
+    padding-bottom: 8px;
+  }
+
+  /* Links used as primary next actions need a reliable touch area. */
+  .room-intro-actions a,
+  .room-detail-action,
+  .philosophy-next a,
+  .discovery-detail-link {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+  }
+}
+
+@media (max-width: 560px) {
+  .shop-page-new {
+    padding-inline: 16px;
+    padding-bottom: 80px;
+  }
+  .catalog-toolbar {
+    margin-inline: -16px;
+    padding-inline: 16px;
+  }
+  .purchase-heading {
+    gap: 14px;
+  }
+  .purchase-count,
+  .edit-bag {
+    white-space: nowrap;
+  }
+  .cart-totals,
+  .checkout-summary {
+    padding-bottom: 30px;
+  }
+}
+
+@media (hover: none) {
+  .catalog-card:hover img,
+  .marquee-coffee-card:hover img,
+  .brand-scene:hover .brand-scene__art,
+  .home-cta:hover,
+  .home-cta-light:hover,
+  .home-cta-dark:hover {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main {
+    animation: none !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
