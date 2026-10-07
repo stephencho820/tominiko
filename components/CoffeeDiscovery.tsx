@@ -38,9 +38,8 @@ export function CoffeeDiscovery({ products }: { products: Product[] }) {
   }
 
   return <section className="coffee-discovery" id="discover" aria-labelledby="discovery-title">
-    <div className="discovery-heading">
-      <div><p className="section-label">Find your coffee</p><h2 id="discovery-title"><span className="lang-ko">오늘 어떤 커피가<br />끌리세요?</span><span className="lang-en">What sounds good<br />today?</span></h2></div>
-      <p><span className="lang-ko">지금 마음에 가까운 취향을 골라보세요.<br />오늘 준비된 커피 중 잘 어울리는 한 잔을 골라드릴게요.</span><span className="lang-en">Choose what feels closest today. We’ll find a cup that suits you from the coffees we have ready.</span></p>
+    <div className="discovery-heading discovery-heading-compact">
+      <div><p className="section-label">CURATION</p><h2 id="discovery-title">Find your coffee</h2></div>
     </div>
     <div className="discovery-options" role="list" aria-label="Coffee preferences">
       {DISCOVERY_TAGS.map((tag, index) => <button key={tag.value} type="button" className={selected === tag.value ? "is-selected" : ""} aria-pressed={selected === tag.value} onClick={() => choose(tag.value)} style={{ "--option-index": index } as React.CSSProperties}>
