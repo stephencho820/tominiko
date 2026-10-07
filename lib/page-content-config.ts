@@ -10,8 +10,10 @@ export const pageDefinitions = {
     principle_3_number: ["Principle 3 number", "03"], principle_3_title: ["Principle 3 title", "FRESH ROAST"], principle_3_description: ["Principle 3 description", "필요한 만큼 준비하고 신선하게 제공합니다."],
   }, images: { casa_logo: ["Casa di Stefano logo", ""], zero_logo: ["Zero Degrees logo", ""], tominiko_logo: ["Tominiko logo", ""] } },
   "tasting-room": { label: "Tasting Room", path: "/tasting-room", texts: {}, images: {} },
-  "zero-degrees": { label: "Zero Degrees", path: "/zero-degrees", texts: { title: ["Hero title", "COFFEE\nROASTERS"], tagline: ["Hero tagline", "Nothing added.\nNothing hidden."], why_ko: ["Why Zero title (Korean)", "생두가 이미 가진 것을\n가리지 않는 로스팅."], why_en: ["Why Zero title (English)", "A roast that does not\nhide what the bean already has."], why_body_ko: ["Why Zero text (Korean)", "불필요한 것을 더하지 않고, 어떤 개성도 가리지 않으며, 모든 결정을 감에만 맡기지 않는다는 약속입니다."], why_body_en: ["Why Zero text (English)", "It is a promise to add nothing unnecessary, mask no character, and leave no decision to guesswork alone."], craft_title: ["Craft title", "Not automation.\nNot intuition alone."], craft_body: ["Craft text", "Data helps us understand what happened.\nExperience helps us decide what happens next."] }, images: { craft: ["Roaster / craft image", ""] } },
-  shop: { label: "Shop", path: "/shop", texts: { title_ko: ["Page title (Korean)", "오늘 준비된 커피"], title_en: ["Page title (English)", "Coffee for today"], subtitle_ko: ["Subtitle (Korean)", "작은 배치로 정성스럽게 로스팅한 커피."], subtitle_en: ["Subtitle (English)", "Coffee, roasted in small batches."], collection_ko: ["Collection title (Korean)", "다른 커피"], collection_en: ["Collection title (English)", "Other coffees"] }, images: {} },
+  shop: { label: "Shop", path: "/shop", texts: {
+    intro_ko: ["Shop intro (Korean)", "취향에 맞는 원두를 만나보세요."],
+    intro_en: ["Shop intro (English)", "Find the coffee that fits your taste."],
+  }, images: {} },
 } as const;
 
 export type PageSlug = keyof typeof pageDefinitions;
