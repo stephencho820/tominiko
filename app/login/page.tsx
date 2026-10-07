@@ -25,7 +25,7 @@ export default function Login() {
 			const supabase = createClient();
 			const { error: authError } = await supabase.auth.signInWithOAuth({
 				provider,
-				options: { redirectTo: `${window.location.origin}/auth/callback?next=/account` },
+				options: { redirectTo: `${window.location.origin}/auth/callback` },
 			});
 			if (authError) {
 				setError("소셜 로그인을 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.");
@@ -55,7 +55,7 @@ export default function Login() {
 				: await supabase.auth.signUp({
 						email,
 						password,
-						options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=/account` },
+						options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
 					});
 
 			if (result.error) {
