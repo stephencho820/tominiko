@@ -2304,3 +2304,28 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
   color: #8a493b;
   font-weight: 700;
 }
+
+
+/* Simple default coffee info; specialty lot details stay optional */
+.admin-lot-details {
+  margin-top: 18px;
+  background: #fbfaf7;
+}
+.admin-lot-details summary {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+.admin-lot-details summary::after {
+  content: "+";
+  color: #75695e;
+  font-size: 16px;
+}
+.admin-lot-details[open] summary::after {
+  content: "–";
+}
+.admin-lot-details .admin-form-grid {
+  margin-top: 18px;
+}
