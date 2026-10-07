@@ -1,11 +1,10 @@
 import type { ProductVariant } from "@/types";
 
 export function validateProductForm(form: Record<string, unknown>): string | null {
-  for (const [key, label] of [["name", "상품명"], ["slug", "Slug"], ["origin", "국가 / 원산지"], ["product_type", "상품 유형"], ["category", "카테고리"], ["status", "상태"]]) {
+  for (const [key, label] of [["name", "상품명"], ["slug", "Slug"], ["origin", "국가 / 원산지"], ["product_type", "상품 유형"], ["status", "상태"]]) {
     if (typeof form[key] !== "string" || !String(form[key]).trim()) return `${label}을(를) 입력해 주세요.`;
   }
   if (!["single-origin", "blend", "decaf"].includes(String(form.product_type))) return "올바른 상품 유형을 선택해 주세요.";
-  if (!["comfortable", "bright", "decaf", "blend", "special"].includes(String(form.category))) return "올바른 카테고리를 선택해 주세요.";
   if (!["draft", "active", "sold-out", "hidden"].includes(String(form.status))) return "올바른 상태를 선택해 주세요.";
   const variants = form.variants as ProductVariant[];
   if (!Array.isArray(variants) || variants.length !== 2 || new Set(variants.map(v => v.size)).size !== 2 || variants.some(v => !["150g", "400g"].includes(v.size))) return "150g / 400g 재고 옵션이 각각 하나씩 필요합니다.";
