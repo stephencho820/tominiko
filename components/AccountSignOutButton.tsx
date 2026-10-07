@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-export function AccountSignOutButton() {
+export function AccountSignOutButton({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState("");
@@ -29,7 +29,7 @@ export function AccountSignOutButton() {
     }
   }
 
-  return <div className="account-signout">
+  return <div className={`account-signout ${compact ? "account-signout-compact" : ""}`}>
     <button type="button" onClick={signOut} disabled={signingOut}>
       {signingOut ? "로그아웃 중…" : "로그아웃"}
     </button>
