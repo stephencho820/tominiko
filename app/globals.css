@@ -2329,3 +2329,46 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 .admin-lot-details .admin-form-grid {
   margin-top: 18px;
 }
+
+
+/* Final prelaunch copy polish */
+.discovery-heading-compact {
+  display: block;
+  max-width: 1180px;
+}
+.discovery-heading-compact h2 {
+  max-width: 520px;
+  margin-top: 10px;
+  font-size: clamp(30px, 3.2vw, 46px);
+  line-height: 1.05;
+}
+.philosophy-next {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 980px;
+}
+.zero-philosophy .philosophy-next h2 {
+  max-width: 620px;
+  font-size: clamp(24px, 2.7vw, 38px);
+}
+.philosophy-next-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 28px;
+  margin-top: 24px;
+}
+.room-intro h1 {
+  max-width: 620px;
+  font-size: clamp(32px, 4.2vw, 56px);
+}
+@media (max-width: 700px) {
+  .discovery-heading-compact h2 {
+    font-size: 32px;
+  }
+  .philosophy-next-actions {
+    display: grid;
+    gap: 12px;
+  }
+  .room-intro h1 {
+    font-size: 36px;
+  }
+}
