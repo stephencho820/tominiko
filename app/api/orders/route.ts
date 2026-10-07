@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { hashAccessToken } from "@/lib/order-access";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 
 type OrderItemInput = { product?: { id?: unknown }; variantId?: unknown; weight?: unknown; grind?: unknown; quantity?: unknown };
 type OrderInput = {
@@ -50,10 +51,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "결제 환경이 아직 설정되지 않았습니다." }, { status: 503 });
   }
 
-  const supabase = await createClient();
+  const sessionClient = await createClient();
+  const { data: authData } = await sessionClient.auth.getUser();
+  const supabase = createServiceClient();
+  const guestTokenHash = hashAccessToken(accessToken);
   const { data, error } = await supabase.rpc("create_pending_order", {
     p_client_reference: idempotencyKey,
-    p_guest_token_hash: hashAccessToken(accessToken),
+    p_guest_token_hash: guestTokenHash,
     p_customer_name: text(body.customerName, 100), p_email: email, p_phone: text(body.phone, 30),
     p_delivery_method: fulfillmentType, p_zonecode: text(body.zonecode, 20) || null,
     p_road_address: text(body.roadAddress, 300) || null, p_jibun_address: text(body.jibunAddress, 300) || null,
@@ -67,6 +71,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: unavailable ? "품절되었거나 구매할 수 없는 상품이 있습니다." : "주문을 만들지 못했습니다. 잠시 후 다시 시도해 주세요." }, { status: unavailable ? 409 : 400 });
   }
   const order = data[0];
+  // Associate an authenticated checkout with the signed-in account. The guest
+  // token remains the payment-recovery credential for both guest and user checkouts.
+  if (authData.user?.id) {
+    const { error: ownerError } = await supabase
+      .from("orders")
+      .update({ user_id: authData.user.id })
+      .eq("id", order.order_id)
+      .eq("guest_access_token_hash", guestTokenHash)
+      .is("user_id", null);
+    if (ownerError) {
+      return NextResponse.json({ error: "주문 계정을 연결하지 못했습니다. 다시 시도해 주세요." }, { status: 503 });
+    }
+  }
   // An idempotent replay needs the original token. A different token cannot read the order.
   if (order.token_matches === false) return NextResponse.json({ error: "이미 처리된 주문 요청입니다. 결제 화면을 새로 열어 주세요." }, { status: 409 });
 
