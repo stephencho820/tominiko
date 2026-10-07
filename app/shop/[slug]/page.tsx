@@ -18,7 +18,10 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
   const [product, all] = await Promise.all([getProduct(slug, { includeInactive: preview }), getProducts({ activeOnly: true })]);
   if (!product) notFound();
   const reviewData = await getProductReviews(product.id);
-  const notes = tastingNotes(product); const images = [productImage(product), ...(product.gallery_images ?? [])].filter((value, index, list) => list.indexOf(value) === index);
+  const notes = tastingNotes(product);
+  const images = [productImage(product), ...(product.gallery_images ?? [])].filter((value, index, list) => list.indexOf(value) === index);
+  const displayTags = (product.discovery_tags ?? []).filter(Boolean);
+  const roastedDate = product.roasted_date ? new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(`${product.roasted_date}T00:00:00+09:00`)) : null;
   const productTags = new Set(product.discovery_tags ?? []);
   const related = all
     .filter((item) => item.id !== product.id)
@@ -36,10 +39,27 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
   const brew = product.use_default_recipe ? { brewing_dose:"20g", brewing_water:"300g", brewing_temperature:"92°C", brewing_grind:"Medium", brewing_time:"2:30–3:00" } : product;
   return <main className="product-detail product-detail-new">
     {preview && <div className="preview-banner">ADMIN PREVIEW · <Link href={`/admin/products/${product.id}`}>Back to editor</Link></div>}
-    <section className="product-hero"><div className="product-gallery">{images.map((image, index) => <img src={image} alt={`${product.name}${index ? ` ${index+1}`:""}`} key={image} />)}</div><div className="product-intro"><p className="section-label">{product.origin}{product.region ? ` · ${product.region}`:""}</p><h1>{product.korean_name || product.name}</h1>{product.korean_name && <p className="product-english-name">{product.name}</p>}{product.subtitle && <p className="product-subtitle">{product.subtitle}</p>}<ProductPurchase product={product}/></div></section>
+    <section className="product-hero">
+      <div className="product-gallery">{images.map((image, index) => <img src={image} alt={`${product.name}${index ? ` ${index+1}`:""}`} key={image} />)}</div>
+      <div className="product-intro">
+        <p className="section-label">{product.origin}{product.region ? ` · ${product.region}`:""}</p>
+        <h1>{product.korean_name || product.name}</h1>
+        {product.korean_name && <p className="product-english-name">{product.name}</p>}
+        {product.subtitle && <p className="product-subtitle">{product.subtitle}</p>}
+        {notes.length > 0 && <p className="product-tasting-lead">{notes.join(" · ")}</p>}
+        <div className="product-hero-meta">
+          {displayTags.length > 0 && <div className="product-tag-list">{displayTags.map((tag) => <span key={tag}>{tag}</span>)}</div>}
+          <div className="product-freshness">
+            {roastedDate && <span>ROASTED {roastedDate}</span>}
+            {Boolean(product.review_count) && <a href="#reviews">★ {product.review_average?.toFixed(1)} · 리뷰 {product.review_count}개</a>}
+          </div>
+        </div>
+        {(product.acidity || product.sweetness || product.body) && <div className="taste-profile taste-profile-hero"><Profile label="ACIDITY" value={product.acidity}/><Profile label="SWEETNESS" value={product.sweetness}/><Profile label="BODY" value={product.body}/></div>}
+        <ProductPurchase product={product}/>
+      </div>
+    </section>
     <div className="pdp-sections">
-      {(notes.length > 0 || product.acidity || product.sweetness || product.body) && <section><p className="section-label">TASTES LIKE</p>{notes.length > 0 && <h2>{notes.join(" · ")}</h2>}<div className="taste-profile"><Profile label="ACIDITY" value={product.acidity}/><Profile label="SWEETNESS" value={product.sweetness}/><Profile label="BODY" value={product.body}/></div></section>}
-      <section><p className="section-label">THE COFFEE</p><Facts rows={[["Country",product.origin],["Region",product.region],["Farm / Producer",product.producer],["Washing station",product.washing_station],["Variety",product.variety],["Process",product.process],["Altitude",product.altitude],["Harvest",product.harvest],["Grade",product.grade]]}/></section>
+      <section><p className="section-label">THE COFFEE</p><Facts rows={[["Country",product.origin],["Region",product.region],["Farm / Producer",product.producer],["Washing station",product.washing_station],["Variety",product.variety],["Process",product.process],["Altitude",product.altitude],["Harvest",product.harvest],["Grade",product.grade],["Roasted",roastedDate]]}/></section>
       {(product.about || product.why_we_chose_it || product.description) && <section><p className="section-label">OUR NOTE</p><h2>About this coffee</h2><p>{product.about || product.description}</p>{product.why_we_chose_it && <><h3>Why we chose it</h3><p>{product.why_we_chose_it}</p></>}</section>}
       {product.roaster_note && <section><p className="section-label">ROASTER&apos;S NOTE</p><p>{product.roaster_note}</p></section>}
       {(product.use_default_recipe || product.brewing_dose || product.brewing_water || product.brewing_temperature || product.brewing_grind || product.brewing_time) && <section><p className="section-label">BREWING GUIDE</p><Facts rows={[["Coffee",brew.brewing_dose],["Water",brew.brewing_water],["Temperature",brew.brewing_temperature],["Grind",brew.brewing_grind],["Brew time",brew.brewing_time]]}/></section>}
