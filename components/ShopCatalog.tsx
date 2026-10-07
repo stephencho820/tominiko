@@ -9,11 +9,6 @@ import { isShopTag, SHOP_TAGS, type ShopTag } from "@/lib/shop-tags";
 import type { Product, Grind } from "@/types";
 
 type View = "grid" | "list" | "large";
-const categories: { value: "all" | ShopTag; label: string }[] = [
-  { value: "all", label: "All" },
-  ...SHOP_TAGS.map((tag) => ({ value: tag, label: tag })),
-];
-
 function CatalogCard({ product, view }: { product: Product; view: View }) {
   const { addToCart } = useCart();
   const variants = useMemo(() => productVariants(product), [product]);
@@ -82,6 +77,19 @@ export function ShopCatalog({ products }: { products: Product[] }) {
     else url.searchParams.set("tag", value);
     window.history.pushState({}, "", `${url.pathname}${url.search}${url.hash}`);
   };
+  const availableCategories = useMemo(() => {
+    const counts = new Map<ShopTag, number>();
+    for (const tag of SHOP_TAGS) counts.set(tag, 0);
+    for (const product of products) {
+      for (const tag of product.discovery_tags ?? []) {
+        if (isShopTag(tag)) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+      }
+    }
+    return [
+      { value: "all" as const, label: "All", count: products.length },
+      ...SHOP_TAGS.filter((tag) => (counts.get(tag) ?? 0) > 0 || category === tag).map((tag) => ({ value: tag, label: tag, count: counts.get(tag) ?? 0 })),
+    ];
+  }, [category, products]);
   const shown = useMemo(() => products.filter((product) => category === "all" || (product.discovery_tags ?? []).includes(category)).sort((a, b) => {
     if (sort === "new") return String(b.created_at).localeCompare(String(a.created_at));
     if (sort === "low") return productPrice(a) - productPrice(b);
@@ -90,8 +98,8 @@ export function ShopCatalog({ products }: { products: Product[] }) {
   }), [category, products, sort]);
   return <section className="shop-catalog" aria-label="Coffee catalog">
     <div className="catalog-toolbar">
-      <div className="category-tabs">{categories.map((item) => <button type="button" key={item.value} aria-pressed={category === item.value} onClick={() => selectCategory(item.value)}>{item.label}</button>)}</div>
-      <div className="catalog-controls"><select aria-label="상품 정렬" value={sort} onChange={(event) => setSort(event.target.value)}><option value="featured">추천순</option><option value="new">신상품순</option><option value="low">가격 낮은순</option><option value="high">가격 높은순</option></select>
+      <div className="category-tabs">{availableCategories.map((item) => <button type="button" key={item.value} aria-pressed={category === item.value} onClick={() => selectCategory(item.value)}>{item.label}<small>{item.count}</small></button>)}</div>
+      <div className="catalog-controls"><span className="catalog-count">{shown.length} COFFEE{shown.length === 1 ? "" : "S"}</span><select aria-label="상품 정렬" value={sort} onChange={(event) => setSort(event.target.value)}><option value="featured">추천순</option><option value="new">신상품순</option><option value="low">가격 낮은순</option><option value="high">가격 높은순</option></select>
         <div className="view-controls" aria-label="보기 방식">{([["grid", Grid2X2], ["list", List], ["large", Rows3]] as const).map(([value, Icon]) => <button title={value} aria-label={`${value} view`} aria-pressed={view === value} type="button" key={value} onClick={() => setView(value)}><Icon size={17} /></button>)}</div>
       </div>
     </div>
