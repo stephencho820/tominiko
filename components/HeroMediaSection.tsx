@@ -13,7 +13,7 @@ export function HeroMediaSection({ media }: { media: HeroMedia }) {
     <section className="home-visual-hero" aria-label="Casa di Stefano">
       {showMedia ? <>{renderMedia(media.url, media.type, "home-hero-media-desktop")}{renderMedia(mobileUrl, mobileType, "home-hero-media-mobile")}</> : <div className="home-hero-fallback" />}
       {media.overlay && <div className="home-hero-shade" />}
-      <a className="home-hero-cta" href="#coffee-marquee">
+      <a className="home-hero-cta" href="#discover">
         <span className="lang-ko">내 원두 찾기</span><span className="lang-en">Find my beans</span><span aria-hidden="true">↓</span>
       </a>
     </section>
