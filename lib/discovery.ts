@@ -1,22 +1,18 @@
+import type { ShopTag } from "@/lib/shop-tags";
+
 export const DISCOVERY_TAGS = [
   { value: "todays-roast", ko: "오늘의 커피", en: "Today's Roast", reasonKo: "오늘 로스터리가 가장 자신 있게 권하는 한 잔이에요.", reasonEn: "The cup our roastery recommends today." },
-  { value: "nutty-comforting", ko: "고소하고 편안한", en: "Nutty & Comforting", reasonKo: "고소한 단맛과 편안한 균형을 원할 때 잘 맞아요.", reasonEn: "For an easy cup with nutty sweetness and balance." },
-  { value: "bright-fruity", ko: "화사하고 산뜻한", en: "Bright & Fruity", reasonKo: "과일처럼 맑고 생기 있는 향미를 즐기기 좋아요.", reasonEn: "A lively choice with clear, fruit-led flavours." },
-  { value: "decaf", ko: "디카페인", en: "Decaf", reasonKo: "카페인 부담은 덜고 커피의 풍미는 그대로 즐겨요.", reasonEn: "Full coffee character, with less caffeine." },
-  { value: "morning-boost", ko: "아침을 깨우는", en: "Morning Boost", reasonKo: "하루의 시작을 또렷하게 열어주는 커피예요.", reasonEn: "A clear, confident start to the day." },
-  { value: "something-special", ko: "특별한 날", en: "Something Special", reasonKo: "천천히 음미하고 싶은 날을 위한 특별한 커피예요.", reasonEn: "A distinctive cup worth slowing down for." },
-  { value: "for-gifting", ko: "선물하기 좋은", en: "For Gifting", reasonKo: "누구에게 건네도 기분 좋은 인상과 균형을 담았어요.", reasonEn: "A beautifully balanced coffee made to share." },
-  { value: "easy-brewing", ko: "간편하게 즐기는", en: "Easy Brewing", reasonKo: "도구와 레시피에 구애받지 않고 맛있게 즐기기 좋아요.", reasonEn: "Forgiving and delicious across everyday brewers." },
+  { value: "고소하고 편안한", ko: "고소하고 편안한", en: "Nutty & Comforting", reasonKo: "고소한 단맛과 편안한 균형을 원할 때 잘 맞아요.", reasonEn: "For an easy cup with nutty sweetness and balance." },
+  { value: "화사하고 산뜻한", ko: "화사하고 산뜻한", en: "Bright & Fruity", reasonKo: "과일처럼 맑고 생기 있는 향미를 즐기기 좋아요.", reasonEn: "A lively choice with clear, fruit-led flavours." },
+  { value: "디카페인", ko: "디카페인", en: "Decaf", reasonKo: "카페인 부담은 덜고 커피의 풍미는 그대로 즐겨요.", reasonEn: "Full coffee character, with less caffeine." },
+  { value: "블렌드", ko: "블렌드", en: "Blend", reasonKo: "여러 산지의 장점을 균형 있게 담은 편안한 커피예요.", reasonEn: "A balanced cup built from the strengths of several origins." },
+  { value: "특별한 날", ko: "특별한 날", en: "Something Special", reasonKo: "천천히 음미하고 싶은 날을 위한 특별한 커피예요.", reasonEn: "A distinctive cup worth slowing down for." },
 ] as const;
 
-export type DiscoveryTag = (typeof DISCOVERY_TAGS)[number]["value"];
+export type DiscoveryTag = "todays-roast" | ShopTag;
 
-/**
- * Product matching is intentionally metadata-driven: origin is display data,
- * never a rule. Treat the database value as untrusted at runtime because older
- * rows may predate the text-array migration or contain JSON-shaped metadata.
- */
 export function hasDiscoveryTag(productTags: unknown, tag: DiscoveryTag) {
+  if (tag === "todays-roast") return false;
   return Array.isArray(productTags)
     && productTags.every((value): value is string => typeof value === "string")
     && productTags.includes(tag);
