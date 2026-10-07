@@ -2192,3 +2192,110 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
     scroll-behavior: auto;
   }
 }
+
+
+/* Admin product content readiness */
+.admin-product-content-note {
+  margin: 10px 0 0;
+  color: #75695e;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.admin-product-content-note strong {
+  margin-right: 6px;
+  color: #8d4737;
+}
+.admin-badge-content-missing {
+  background: #f2ddd6;
+  color: #7f3f31;
+}
+.admin-badge-content-ready {
+  background: #dde7d8;
+  color: #3f5e39;
+}
+.admin-content-readiness {
+  padding: 20px;
+  border: 1px solid #d5c6b8;
+  border-left: 4px solid #9d5b46;
+  background: #fff9f5;
+}
+.admin-content-readiness.is-launch-ready {
+  border-left-color: #58734d;
+  background: #f7faf4;
+}
+.admin-content-readiness-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 20px;
+}
+.admin-content-readiness-head h2 {
+  margin: 5px 0 0;
+  font-size: 28px;
+  font-weight: 500;
+}
+.admin-content-readiness-head > span {
+  padding: 6px 8px;
+  background: #efe5dc;
+  color: #6f5d50;
+  font-size: 9px;
+  font-weight: 700;
+}
+.admin-content-readiness.is-launch-ready .admin-content-readiness-head > span {
+  background: #e2eadf;
+  color: #46603f;
+}
+.admin-content-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 18px;
+}
+.admin-content-checks > span {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #ddcec1;
+  padding: 0 9px;
+  background: #fff;
+  color: #765f52;
+  font-size: 9px;
+}
+.admin-content-checks > span.is-complete {
+  border-color: #c8d5c1;
+  background: #f5f8f2;
+  color: #4b6444;
+}
+.admin-content-checks i {
+  font-style: normal;
+}
+.admin-content-checks small {
+  color: #a06150;
+  font-size: 7px;
+  font-weight: 700;
+}
+.admin-content-readiness > p:last-child {
+  margin: 16px 0 0;
+  color: #75695e;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.admin-content-readiness > p strong {
+  color: #3d342d;
+}
+@media (max-width: 760px) {
+  .admin-content-readiness-head {
+    display: grid;
+  }
+  .admin-content-readiness-head > span {
+    width: max-content;
+  }
+  .admin-content-checks {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .admin-content-checks > span {
+    min-width: 0;
+  }
+}
