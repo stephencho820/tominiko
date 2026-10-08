@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import { getProducts } from "@/services/products";
 import { getPageSettings } from "@/lib/page-content";
 import { HeroMediaSection } from "@/components/HeroMediaSection";
 import { CoffeeMarquee } from "@/components/CoffeeMarquee";
 import { EditorialBanner } from "@/components/EditorialBanner";
 import { HomeCoffeeDiscovery } from "@/components/HomeCoffeeDiscovery";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 export default async function Home() {
   const [products, content] = await Promise.all([
