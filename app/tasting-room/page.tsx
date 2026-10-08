@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { TastingRoomGallery } from "@/components/TastingRoomGallery";
 import { SafeHeroImage } from "@/components/SafeHeroImage";
 import { getPageSettings } from "@/lib/page-content";
+
+export const metadata: Metadata = {
+  title: "Tasting Room",
+  description: "수원 Casa di Stefano Tasting Room에서 Zero Degrees가 로스팅한 Tominiko 커피를 직접 만나보세요.",
+  alternates: { canonical: "/tasting-room" },
+};
 
 const defaultHero = "/images/tasting-room-banner.svg";
 const defaultMobileHero = "/images/tasting-room-banner-mobile.svg";
