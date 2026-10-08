@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import { ShopCatalog } from "@/components/ShopCatalog";
 import { getProducts } from "@/services/products";
 import { getPageSettings } from "@/lib/page-content";
+
+export const metadata: Metadata = {
+  title: "Shop Coffee",
+  description: "Tominiko의 블렌드, 싱글 오리진, 디카페인 커피를 만나보세요. Zero Degrees가 수원에서 로스팅합니다.",
+  alternates: { canonical: "/shop" },
+};
 
 export default async function Shop() {
   const [products, content] = await Promise.all([

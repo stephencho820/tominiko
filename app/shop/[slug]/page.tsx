@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ProductPurchase } from "@/components/ProductPurchase";
@@ -13,6 +14,25 @@ function Facts({ rows }: { rows: [string, string | null | undefined][] }) {
   return <dl className="product-facts-list">{visible.map(([label, value]) => <div className="product-fact" key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>;
 }
 function Profile({ label, value }: { label: string; value?: number | null }) { if (!value) return null; return <div className="taste-meter"><span>{label}</span><span aria-label={`${value} out of 5`}>{"●".repeat(value)}<i>{"●".repeat(5-value)}</i></span></div>; }
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const slug = (await params).slug;
+  const product = await getProduct(slug);
+  if (!product) return { title: "Coffee" };
+  const image = productImage(product);
+  const description = product.short_description || product.description || [product.tasting_notes, product.origin, product.process].filter(Boolean).join(" · ");
+  return {
+    title: product.korean_name || product.name,
+    description,
+    alternates: { canonical: `/shop/${product.slug}` },
+    openGraph: {
+      type: "website",
+      title: product.korean_name || product.name,
+      description,
+      images: image ? [{ url: image, alt: product.name }] : undefined,
+    },
+  };
+}
 export default async function ProductPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ preview?: string }> }) {
   const slug = (await params).slug; const preview = (await searchParams).preview === "1";
   const [product, all] = await Promise.all([getProduct(slug, { includeInactive: preview }), getProducts({ activeOnly: true })]);
