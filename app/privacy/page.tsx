@@ -70,7 +70,12 @@ export default function PrivacyPage() {
       <p>인증과 데이터 접근권한을 분리하고, 필요한 데이터에만 접근할 수 있도록 권한을 제한하며, 서비스 제공에 필요한 범위 내에서 보안 조치를 적용합니다.</p>
     </LegalSection>
 
-    <LegalSection title="8. 개인정보 보호 문의">
+    <LegalSection title="8. 국외 처리 · 서버 지역 준비사항">
+      <p>현재 프리오픈용 Supabase 프로젝트의 주 데이터베이스 리전은 ap-south-1(Mumbai, India)입니다. 따라서 현재 구조를 그대로 정식 운영할 경우 일부 회원·주문 데이터가 국외 인프라에서 처리·보관될 수 있습니다.</p>
+      <p className="legal-notice">정식 판매 개시 전 서울 리전 이전을 우선 검토하고 있습니다. 해외 리전을 유지하는 경우에는 실제 계약관계, 이전 국가·항목·목적·방법·보유기간 등 필요한 국외이전 고지사항을 최종 확정해 본 방침에 반영합니다.</p>
+    </LegalSection>
+
+    <LegalSection title="9. 개인정보 보호 문의">
       <dl className="legal-facts">
         <div><dt>운영자</dt><dd>{BUSINESS_INFO.displayName}</dd></div>
         <div><dt>전화</dt><dd>{BUSINESS_INFO.phone}</dd></div>
@@ -78,7 +83,7 @@ export default function PrivacyPage() {
       <p className="legal-notice">개인정보 보호책임자 및 전자우편 주소는 사업자등록과 정식 오픈 준비가 완료되는 즉시 실제 정보로 업데이트합니다.</p>
     </LegalSection>
 
-    <LegalSection title="9. 방침 변경">
+    <LegalSection title="10. 방침 변경">
       <p>본 방침이 변경되는 경우 변경 내용과 시행일을 사이트를 통해 안내합니다.</p>
     </LegalSection>
   </LegalPage>;
