@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { OurStoryHero } from "@/components/OurStoryHero";
 import { PageText } from "@/components/PageText";
 import { getPageSettings } from "@/lib/page-content";
+
+export const metadata: Metadata = {
+  title: "Philosophy",
+  description: "Casa di Stefano, Zero Degrees, Tominiko가 한 잔의 커피를 만드는 방식.",
+  alternates: { canonical: "/our-story" },
+};
 
 function RoasterVisual() {
   return <figure className="zero-philosophy__visual" aria-label="Zero Degrees small batch coffee roaster illustration">
