@@ -27,7 +27,7 @@ export default async function TastingRoomPage() {
       <div><p>커피를 고르기 전에 맛보고 싶을 때, 로스팅 이야기가 궁금할 때, 천천히 머물고 싶을 때 찾아오세요.</p><div className="room-intro-actions"><a href="#visit">방문 정보 ↓</a><Link href="/shop">커피 먼저 보기 ↗</Link></div></div>
     </section>
     <section className="room-visit" id="visit" aria-labelledby="visit-title"><p className="section-label" id="visit-title">VISIT</p><div className="room-visit-layout">
-      <figure className="room-map"><img src="/images/tasting-room/map.svg" alt="Casa di Stefano Tasting Room location map" /></figure>
+      <figure className="room-map"><img src="/images/tasting-room/map-casa-user.svg" alt="Casa di Stefano Tasting Room location map in Suwon" /></figure>
       <div className="room-visit-details">
         <div><h2>ADDRESS</h2>{room.address ? <><p className="room-preline">{room.address}</p>{naverMapHref && <a className="room-detail-action" href={naverMapHref} target="_blank" rel="noreferrer">NAVER MAP 길찾기 ↗</a>}</> : <p className="room-empty">Details coming soon.</p>}</div>
         <div><h2>PHONE</h2>{room.phone ? <><a href={phoneHref ? `tel:${phoneHref}` : undefined}>{room.phone}</a>{phoneHref && <a className="room-detail-action" href={`tel:${phoneHref}`}>전화 문의 →</a>}</> : <p className="room-empty">Details coming soon.</p>}{room.phoneNote && <p className="room-phone-note">{room.phoneNote}</p>}</div>

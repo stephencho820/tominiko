@@ -39,7 +39,7 @@ export function CoffeeDiscovery({ products }: { products: Product[] }) {
 
   return <section className="coffee-discovery" id="discover" aria-labelledby="discovery-title">
     <div className="discovery-heading discovery-heading-compact">
-      <div><p className="section-label">CURATION</p><h2 id="discovery-title">Find your coffee</h2></div>
+      <p id="discovery-title" className="section-label discovery-title-label">Find your coffee</p>
     </div>
     <div className="discovery-options" role="list" aria-label="Coffee preferences">
       {DISCOVERY_TAGS.map((tag, index) => <button key={tag.value} type="button" className={selected === tag.value ? "is-selected" : ""} aria-pressed={selected === tag.value} onClick={() => choose(tag.value)} style={{ "--option-index": index } as React.CSSProperties}>

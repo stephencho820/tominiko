@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -16,9 +16,25 @@ export default function Login() {
 	const [error, setError] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [oauthProvider, setOauthProvider] = useState<"google" | "kakao" | null>(null);
+	const [socialProviders, setSocialProviders] = useState({ google: false, kakao: false, loaded: false });
+
+	useEffect(() => {
+		let cancelled = false;
+		fetch("/api/auth/providers", { cache: "no-store" })
+			.then((response) => response.json())
+			.then((data: { google?: boolean; kakao?: boolean }) => {
+				if (!cancelled) setSocialProviders({ google: Boolean(data.google), kakao: Boolean(data.kakao), loaded: true });
+			})
+			.catch(() => { if (!cancelled) setSocialProviders({ google: false, kakao: false, loaded: true }); });
+		return () => { cancelled = true; };
+	}, []);
 
 	const signInWithProvider = async (provider: "google" | "kakao") => {
 		if (oauthProvider) return;
+		if (!socialProviders[provider]) {
+			setError(`${provider === "google" ? "Google" : "Kakao"} 로그인은 아직 연결 설정이 완료되지 않았습니다.`);
+			return;
+		}
 		setError("");
 		setOauthProvider(provider);
 		try {
@@ -112,8 +128,8 @@ export default function Login() {
 
 			<div className="my-9 flex items-center gap-4 text-[var(--muted)]"><span className="h-px flex-1 bg-[var(--line)]" /><span className="eyebrow">or</span><span className="h-px flex-1 bg-[var(--line)]" /></div>
 			<div className="grid gap-3">
-				<button type="button" disabled={oauthProvider !== null} onClick={() => signInWithProvider("google")} className="border border-[#211d18] p-4 sans text-xs font-bold tracking-[.12em] disabled:cursor-wait disabled:opacity-60">{oauthProvider === "google" ? "GOOGLE로 이동 중…" : "CONTINUE WITH GOOGLE"}</button>
-				<button type="button" disabled={oauthProvider !== null} onClick={() => signInWithProvider("kakao")} className="bg-[#fee500] p-4 sans text-xs font-bold tracking-[.12em] disabled:cursor-wait disabled:opacity-60">{oauthProvider === "kakao" ? "KAKAO로 이동 중…" : "CONTINUE WITH KAKAO"}</button>
+				<button type="button" disabled={oauthProvider !== null || !socialProviders.loaded || !socialProviders.google} onClick={() => signInWithProvider("google")} className="border border-[#211d18] p-4 sans text-xs font-bold tracking-[.12em] disabled:cursor-not-allowed disabled:opacity-50">{oauthProvider === "google" ? "GOOGLE로 이동 중…" : socialProviders.loaded && !socialProviders.google ? "GOOGLE LOGIN · 준비 중" : "CONTINUE WITH GOOGLE"}</button>
+				<button type="button" disabled={oauthProvider !== null || !socialProviders.loaded || !socialProviders.kakao} onClick={() => signInWithProvider("kakao")} className="bg-[#fee500] p-4 sans text-xs font-bold tracking-[.12em] disabled:cursor-not-allowed disabled:opacity-50">{oauthProvider === "kakao" ? "KAKAO로 이동 중…" : socialProviders.loaded && !socialProviders.kakao ? "KAKAO LOGIN · 준비 중" : "CONTINUE WITH KAKAO"}</button>
 			</div>
 			<p className="mt-8 sans text-xs text-[#684c38]">Guest checkout is available without an account.</p>
 		</main>
