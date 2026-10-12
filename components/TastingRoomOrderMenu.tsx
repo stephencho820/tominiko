@@ -24,7 +24,7 @@ export function TastingRoomOrderMenu({menu,beans}:{menu:TastingMenuItem[];beans:
    try{
     const idempotencyKey=crypto.randomUUID(),accessToken=newToken();
     sessionStorage.setItem("tasting-order-access-token",accessToken);
-    const res=await fetch("/api/tasting-room/orders",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerName:name,phone,email,tableLabel:table,idempotencyKey,accessToken,items:lines.map(l=>({kind:l.kind,id:l.id,variantId:l.variantId,option:l.kind==="menu"?l.option:"",quantity:l.quantity}))})});
+    const res=await fetch("/api/tasting-room/orders",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerName:name,phone,email,tableLabel:table,idempotencyKey,accessToken,items:lines.map(l=>({kind:l.kind,id:l.id,variantId:l.variantId,option:l.kind==="menu"?(l.option==="STANDARD"?"":l.option):"",quantity:l.quantity}))})});
     const order=await res.json(); if(!res.ok)throw new Error(order.error||"주문을 만들지 못했습니다.");
     if(!window.TossPayments){await new Promise<void>((resolve,reject)=>{const s=document.createElement("script");s.src="https://js.tosspayments.com/v2/standard";s.onload=()=>resolve();s.onerror=reject;document.head.appendChild(s)})}
     if(!window.TossPayments)throw new Error("결제 모듈을 시작하지 못했습니다.");
