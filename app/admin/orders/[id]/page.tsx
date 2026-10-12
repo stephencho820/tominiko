@@ -11,8 +11,8 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ i
   const supabase = await createClient(); const id = (await params).id;
   // Select only operational fields; never send payment keys or access token hashes to the UI.
   const [{ data: order }, { data: items }] = await Promise.all([
-    supabase.from("orders").select("id,order_number,created_at,customer_name,email,phone,delivery_method,recipient_name,recipient_phone,shipping_zonecode,shipping_road_address,shipping_jibun_address,shipping_detail_address,shipping_building_name,shipping_memo_type,shipping_memo_text,postal_code,address,address_detail,delivery_message,product_subtotal,discount_amount,shipping_fee,final_amount,subtotal,total,payment_status,payment_method,payment_approved_at,payment_failure_code,payment_failure_message,order_status").eq("id", id).single(),
-    supabase.from("order_items").select("id,product_name,weight,grind,quantity,subtotal").eq("order_id", id),
+    supabase.from("orders").select("id,order_number,created_at,customer_name,email,phone,delivery_method,order_source,table_label,recipient_name,recipient_phone,shipping_zonecode,shipping_road_address,shipping_jibun_address,shipping_detail_address,shipping_building_name,shipping_memo_type,shipping_memo_text,postal_code,address,address_detail,delivery_message,product_subtotal,discount_amount,shipping_fee,final_amount,subtotal,total,payment_status,payment_method,payment_approved_at,payment_failure_code,payment_failure_message,order_status").eq("id", id).single(),
+    supabase.from("order_items").select("id,product_name,weight,grind,selected_option,item_kind,quantity,subtotal").eq("order_id", id),
   ]);
   if (!order) notFound();
   const recipient = order.recipient_name || order.customer_name;
@@ -29,7 +29,7 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ i
       <section className="admin-panel"><p className="eyebrow">Customer & fulfillment</p><h2>{order.customer_name}</h2><p>{order.email}<br />{order.phone}</p><hr />
         <p className="eyebrow">{deliveryMethodLabels[order.delivery_method as keyof typeof deliveryMethodLabels]}</p>
         <p>수령인: {recipient}<br />연락처: {phone}</p>
-        {order.delivery_method === "pickup" ? <p>매장 픽업</p> : <>
+        {order.delivery_method === "pickup" ? <p>{order.order_source === "tasting_room" ? `Tasting Room 주문${order.table_label ? ` · ${order.table_label}` : ""}` : "매장 픽업"}</p> : <>
           <p>{[zonecode, road, detail, order.shipping_building_name].filter(Boolean).join(" ")}</p>
           {order.shipping_jibun_address && <p>지번 주소: {order.shipping_jibun_address}</p>}
         </>}
@@ -44,7 +44,7 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ i
         </>}
       </section>
       <section className="admin-panel"><div className="admin-section-heading"><div><p className="eyebrow">Items</p><h2>Prepare order</h2></div></div>
-        <div className="admin-detail-items">{(items ?? []).map((item) => <div key={item.id}><span><strong>{item.product_name}</strong><small>{item.weight} · {item.grind} · Qty {item.quantity}</small></span><span>{money(item.subtotal)}</span></div>)}</div>
+        <div className="admin-detail-items">{(items ?? []).map((item) => <div key={item.id}><span><strong>{item.product_name}</strong><small>{item.selected_option || `${item.weight} · ${item.grind}`} · Qty {item.quantity}</small></span><span>{money(item.subtotal)}</span></div>)}</div>
         <div className="admin-total"><span>상품금액</span><strong>{money(order.product_subtotal ?? order.subtotal)}</strong></div>
         <div className="admin-total"><span>할인</span><strong>{money(order.discount_amount ?? 0)}</strong></div>
         <div className="admin-total"><span>배송비</span><strong>{money(order.shipping_fee ?? 0)}</strong></div>
