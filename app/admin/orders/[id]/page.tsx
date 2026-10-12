@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ConfirmBankTransfer } from "@/components/ConfirmBankTransfer";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { OrderStatusSelect } from "@/components/OrderStatusSelect";
@@ -36,7 +37,8 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ i
         {order.shipping_memo_type && <p>배송 메모: {order.shipping_memo_type}</p>}
         {memo && <p className="admin-note">“{memo}”</p>}
         <hr /><p className="eyebrow">결제 정보</p><p>{order.payment_status}</p>
-        {order.payment_method && <p>결제 수단: {order.payment_method}</p>}
+        {order.payment_method && <p>결제 수단: {order.payment_method === "BANK_TRANSFER" ? "계좌이체" : order.payment_method}</p>}
+        {order.payment_method === "BANK_TRANSFER" && order.payment_status === "pending" && <ConfirmBankTransfer id={order.id} />}
         {order.payment_approved_at && <p>승인 일시: {formatOrderTime(order.payment_approved_at)}</p>}
         {order.payment_status !== "paid" && (order.payment_failure_code || order.payment_failure_message) && <>
           {order.payment_failure_code && <p>실패 코드: {order.payment_failure_code}</p>}
