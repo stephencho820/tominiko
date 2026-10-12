@@ -22,6 +22,11 @@ export async function getProducts(options?: { activeOnly?: boolean; todaysRoast?
     return [] as Product[];
   }
 }
+export async function getTastingRoomProducts() {
+  const products = await getProducts({ activeOnly: true });
+  return products.filter((product) => (product.sales_channels ?? ["online"]).includes("tasting_room"));
+}
+
 export async function getProduct(slug: string, options?: { includeInactive?: boolean }) {
   if (!hasSupabaseEnv) return null;
   try {

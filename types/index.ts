@@ -53,6 +53,7 @@ export type Product = {
   variants?: ProductVariant[];
   review_average?: number;
   review_count?: number;
+  sales_channels?: ("online" | "tasting_room")[];
 };
 
 export type ReviewImage = { id: string; review_id: string; image_url: string; storage_path: string; sort_order: number; width: number | null; height: number | null; file_size: number | null; created_at: string };

@@ -9,6 +9,7 @@ const primaryLinks = [
   ["SHOP", "/shop"],
   ["PHILOSOPHY", "/our-story"],
   ["TASTING ROOM", "/tasting-room"],
+  ["MENU", "/tasting-room/menu"],
 ];
 
 export function Header() {
