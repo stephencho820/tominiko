@@ -6,12 +6,12 @@ import { nextOrderStatus, orderStatusLabel, orderStatusesForMethod } from "@/lib
 
 import type { DeliveryMethod } from "@/types";
 
-export function OrderStatusSelect({ id, initial, deliveryMethod, paymentStatus, mode = "quick" }: { id: string; initial: string; deliveryMethod: DeliveryMethod; paymentStatus: string; mode?: "quick" | "select" }) {
+export function OrderStatusSelect({ id, initial, deliveryMethod, paymentStatus, mode = "quick", tastingRoom = false }: { id: string; initial: string; deliveryMethod: DeliveryMethod; paymentStatus: string; mode?: "quick" | "select"; tastingRoom?: boolean }) {
   const router = useRouter();
   const [status, setStatus] = useState(initial);
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const next = nextOrderStatus({ order_status: status, delivery_method: deliveryMethod });
+  const tastingFlow = ["new","confirmed","preparing","ready_for_pickup","completed"]; const tastingIndex=tastingFlow.indexOf(status); const next = tastingRoom ? (tastingIndex < 0 ? null : tastingFlow[tastingIndex+1] ?? null) : nextOrderStatus({ order_status: status, delivery_method: deliveryMethod });
   const paymentBlocked = paymentStatus !== "paid" && next && !["confirmed", "cancelled"].includes(next);
 
   const update = async (value: string) => {
@@ -28,7 +28,7 @@ export function OrderStatusSelect({ id, initial, deliveryMethod, paymentStatus, 
   if (mode === "select") return (
     <div className="admin-status-control">
       <select value={status} disabled={isSaving} onChange={(event) => void update(event.target.value)} aria-label="Order status">
-        {orderStatusesForMethod(deliveryMethod).map((item) => <option disabled={paymentStatus !== "paid" && !["new", "confirmed", "cancelled"].includes(item)} value={item} key={item}>{orderStatusLabel(item, deliveryMethod)}</option>)}
+        {(tastingRoom ? tastingFlow : orderStatusesForMethod(deliveryMethod)).map((item) => <option disabled={paymentStatus !== "paid" && !["new", "confirmed", "cancelled"].includes(item)} value={item} key={item}>{orderStatusLabel(item, deliveryMethod)}</option>)}
       </select>
       {error && <p role="alert">{error}</p>}
     </div>
