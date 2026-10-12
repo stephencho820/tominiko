@@ -10,7 +10,7 @@ type OrderInput = {
   customerName?: unknown; email?: unknown; phone?: unknown; fulfillmentType?: unknown;
   zonecode?: unknown; roadAddress?: unknown; jibunAddress?: unknown; detailAddress?: unknown; buildingName?: unknown; bname?: unknown;
   memoType?: unknown; memoText?: unknown;
-  items?: unknown; idempotencyKey?: unknown; accessToken?: unknown;
+  items?: unknown; idempotencyKey?: unknown; accessToken?: unknown; paymentMethod?: unknown;
 };
 
 const text = (value: unknown, maxLength = 500) => typeof value === "string" ? value.trim().slice(0, maxLength) : "";
@@ -22,6 +22,7 @@ export async function POST(request: Request) {
   try { body = await request.json() as OrderInput; }
   catch { return NextResponse.json({ error: "요청 형식이 올바르지 않습니다." }, { status: 400 }); }
 
+  const manual = body.paymentMethod === "BANK_TRANSFER";
   const items = Array.isArray(body.items) ? body.items as OrderItemInput[] : [];
   const fulfillmentType = text(body.fulfillmentType);
   const email = text(body.email, 254).toLowerCase();
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
   if (fulfillmentType !== "pickup" && (!text(body.zonecode) || !text(body.roadAddress) || !text(body.detailAddress))) {
     return NextResponse.json({ error: "배송 주소를 입력해 주세요." }, { status: 400 });
   }
-  if (!hasSupabaseEnv || !process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY) {
+  if (!hasSupabaseEnv || !process.env.SUPABASE_SERVICE_ROLE_KEY || (!manual && !process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY)) {
     return NextResponse.json({ error: "결제 환경이 아직 설정되지 않았습니다." }, { status: 503 });
   }
 
@@ -87,6 +88,12 @@ export async function POST(request: Request) {
   // An idempotent replay needs the original token. A different token cannot read the order.
   if (order.token_matches === false) return NextResponse.json({ error: "이미 처리된 주문 요청입니다. 결제 화면을 새로 열어 주세요." }, { status: 409 });
 
+  if(manual){
+    const {data:bank}=await supabase.from("manual_transfer_settings").select("id").eq("id",true).maybeSingle();
+    if(!bank)return NextResponse.json({error:"계좌이체가 아직 준비되지 않았습니다."},{status:503});
+    const {data:marked,error:markError}=await supabase.from("orders").update({payment_method:"BANK_TRANSFER"}).eq("id",order.order_id).eq("guest_access_token_hash",guestTokenHash).eq("payment_status","pending").is("payment_method",null).select("id");
+    if(markError||!marked?.length){const {data:existing}=await supabase.from("orders").select("payment_method").eq("id",order.order_id).maybeSingle();if(existing?.payment_method!=="BANK_TRANSFER")return NextResponse.json({error:"계좌이체 주문을 등록하지 못했습니다."},{status:409});}
+  }
   return NextResponse.json({
     orderId: order.order_id, orderNumber: order.order_number, amount: order.total,
     orderName: order.order_name, accessToken, clientKey: process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY,
