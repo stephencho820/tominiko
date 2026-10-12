@@ -16,9 +16,9 @@ create table if not exists public.tasting_menu_items (
 );
 alter table public.tasting_menu_items enable row level security;
 drop policy if exists "tasting menu is public" on public.tasting_menu_items;
-create policy "tasting menu is public" on public.tasting_menu_items for select using (active = true or public.is_admin());
+create policy "tasting menu is public" on public.tasting_menu_items for select using (active = true or private.is_admin());
 drop policy if exists "admins manage tasting menu" on public.tasting_menu_items;
-create policy "admins manage tasting menu" on public.tasting_menu_items for all using (public.is_admin()) with check (public.is_admin());
+create policy "admins manage tasting menu" on public.tasting_menu_items for all using (private.is_admin()) with check (private.is_admin());
 
 alter table public.orders add column if not exists order_source text not null default 'online'
   check (order_source in ('online','tasting_room'));
