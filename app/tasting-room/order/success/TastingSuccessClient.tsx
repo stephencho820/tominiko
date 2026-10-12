@@ -1,0 +1,12 @@
+"use client";
+import Link from "next/link";
+import { useEffect,useRef,useState } from "react";
+import { useSearchParams } from "next/navigation";
+type Order={order_number:string;total:number;payment_status:string;table_label:string|null;order_items:{product_name:string;selected_option:string|null;quantity:number;subtotal:number}[]};
+export function TastingSuccessClient(){
+ const p=useSearchParams(),started=useRef(false),[order,setOrder]=useState<Order|null>(null),[error,setError]=useState("");
+ useEffect(()=>{if(started.current)return;started.current=true;let token="";try{token=sessionStorage.getItem("tasting-order-access-token")||""}catch{}const paymentKey=p.get("paymentKey"),orderId=p.get("orderId"),amount=Number(p.get("amount"));if(!paymentKey||!orderId||!Number.isInteger(amount)||!token){setError("결제 확인 정보가 없습니다.");return}fetch("/api/payments/tasting-confirm",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({paymentKey,orderId,amount,accessToken:token})}).then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.error);return d}).then(d=>{setOrder(d.order);try{sessionStorage.removeItem("tasting-order-access-token")}catch{}}).catch(e=>setError(e instanceof Error?e.message:"결제를 확인하지 못했습니다."))},[p]);
+ if(error)return <main className="tasting-order-result"><p className="section-label">PAYMENT CHECK</p><h1>결제를 확인해 주세요.</h1><p>{error}</p><Link href="/tasting-room/menu">MENU로 돌아가기 →</Link></main>;
+ if(!order)return <main className="tasting-order-result"><p className="section-label">PAYMENT</p><h1>결제를 확인하고 있습니다…</h1></main>;
+ return <main className="tasting-order-result"><p className="section-label">ORDER RECEIVED</p><h1>{order.order_number}</h1>{order.table_label&&<div className="tasting-table-number">TABLE / PICK-UP<strong>{order.table_label}</strong></div>}<p>주문이 접수되었습니다. 준비가 완료될 때까지 이 화면을 보관해 주세요.</p><section>{order.order_items.map((i,n)=><div key={n}><span>{i.product_name}<small>{i.selected_option||""} × {i.quantity}</small></span><b>₩{i.subtotal.toLocaleString()}</b></div>)}</section><div className="tasting-result-total"><span>PAID</span><strong>₩{order.total.toLocaleString()}</strong></div><Link className="button-primary tasting-result-link" href="/tasting-room/menu">메뉴로 돌아가기</Link></main>
+}
