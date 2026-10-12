@@ -3324,3 +3324,23 @@ body:has(.admin-shell) {
     grid-template-columns: 105px 1fr;
   }
 }
+
+
+/* Home curation label + supplied Tasting Room map */
+.discovery-heading-compact {
+  display: block;
+}
+.discovery-title-label {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+.room-map img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
