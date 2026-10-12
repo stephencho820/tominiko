@@ -17,6 +17,8 @@ type CartContext = {
   updateOptions: (index: number, options: Partial<Pick<CartItem, "variantId" | "weight" | "grind">>) => void;
   clearCart: () => void;
   cartCount: number;
+  cartNotice: string;
+  dismissCartNotice: () => void;
   cartSubtotal: number;
   // Backwards-compatible names used by the checkout flow.
   remove: (index: number) => void;
@@ -32,6 +34,8 @@ const Context = createContext<CartContext | null>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [cartNotice, setCartNotice] = useState("");
+  const dismissCartNotice = useCallback(() => setCartNotice(""), []);
   const itemsRef = useRef<CartItem[]>([]);
   const [hasHydrated, setHasHydrated] = useState(false);
   const [refreshError, setRefreshError] = useState("");
@@ -101,6 +105,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const next = addCartItem(itemsRef.current, item);
     if (next === itemsRef.current) return false;
     setCartItems(next);
+    setCartNotice(`${item.product.name} · ${item.quantity}개 담았습니다`);
     return true;
   }, [setCartItems]);
   const removeFromCart = useCallback((itemKey: string) => setCartItems((current) => current.filter((item) => cartItemKey(item) !== itemKey)), [setCartItems]);
@@ -121,9 +126,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<CartContext>(() => ({
     items, cartItems: items,
     add, addToCart: add, remove, removeFromCart, update, updateQuantity, updateOptions, clear, clearCart: clear,
-    cartCount, cartSubtotal, total: cartSubtotal,
+    cartCount, cartSubtotal, cartNotice, dismissCartNotice, total: cartSubtotal,
     cartReady: hasHydrated && !refreshing && !refreshError, refreshError, refreshCart,
-  }), [hasHydrated, refreshing, refreshError, refreshCart, add, cartCount, cartSubtotal, clear, items, remove, removeFromCart, update, updateOptions, updateQuantity]);
+  }), [hasHydrated, refreshing, refreshError, refreshCart, add, cartCount, cartSubtotal, cartNotice, dismissCartNotice, clear, items, remove, removeFromCart, update, updateOptions, updateQuantity]);
 
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
