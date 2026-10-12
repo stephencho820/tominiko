@@ -15,7 +15,14 @@ const primaryLinks = [
 export function Header() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const { cartCount: itemCount } = useCart();
+  const { cartCount: itemCount, cartNotice, dismissCartNotice } = useCart();
+  const [tastingCount, setTastingCount] = useState(0);
+  useEffect(() => {
+    const update = (event: Event) => setTastingCount((event as CustomEvent<number>).detail || 0);
+    window.addEventListener("tasting-cart-count", update);
+    return () => window.removeEventListener("tasting-cart-count", update);
+  }, []);
+  useEffect(() => { if (!cartNotice) return; const id = window.setTimeout(dismissCartNotice, 2200); return () => window.clearTimeout(id); }, [cartNotice, dismissCartNotice]);
 
   useEffect(() => {
     const story = document.querySelector<HTMLElement>(".home-story");
@@ -68,6 +75,7 @@ export function Header() {
           <Link href="/account" className="nav-meta transition-colors hover:text-[var(--accent)]">
             Account
           </Link>
+          {tastingCount > 0 && <Link href="/tasting-room/menu#drinks" className="nav-meta" aria-label={`Tasting Room 주문 ${tastingCount}개`}>MENU ORDER · {tastingCount}</Link>}
           <Link href="/cart" className="nav-meta flex items-center gap-2 transition-colors hover:text-[var(--accent)]">
             <span>Cart</span>
             <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--ink)] px-1 text-[9px] font-semibold text-[var(--paper)]" aria-label={`${itemCount} items in cart`}>
@@ -77,6 +85,7 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-1 md:hidden">
+          {tastingCount > 0 && <Link href="/tasting-room/menu#drinks" className="nav-meta text-[10px]" aria-label={`Tasting Room 주문 ${tastingCount}개`}>ORDER {tastingCount}</Link>}
           <Link
             href="/cart"
             className="relative grid h-11 w-11 place-items-center rounded"
@@ -101,6 +110,7 @@ export function Header() {
         </div>
       </div>
 
+      {cartNotice && <div className="site-cart-toast" role="status"><span>✓ {cartNotice}</span><Link href="/cart" onClick={dismissCartNotice}>장바구니 보기 →</Link></div>}
       {open && (
         <nav className="mobile-nav-panel absolute left-0 top-full flex w-full flex-col gap-2 border-b border-[var(--line)] bg-[var(--ivory)] px-6 py-5 shadow-lg md:hidden">
           {primaryLinks.map(([label, href]) => (

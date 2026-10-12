@@ -34,6 +34,7 @@ export default function PaymentCheckout() {
   const [bootstrap, setBootstrap] = useState<Bootstrap>({ settings: DEFAULT_DELIVERY_SETTINGS, zones: [], user: null, addresses: [] });
   const [form, setForm] = useState(initial); const [method, setMethod] = useState<DeliveryMethod>("shipping");
   const [errors, setErrors] = useState<Record<string, string>>({}); const [notice, setNotice] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"CARD" | "TRANSFER">("CARD");
   const [postcodeReady, setPostcodeReady] = useState(false);
   const [addressOpen, setAddressOpen] = useState(false); const [showNewAddress, setShowNewAddress] = useState(true);
   const [saveAddress, setSaveAddress] = useState(false); const [defaultAddress, setDefaultAddress] = useState(false); const [submitting, setSubmitting] = useState(false); const [policyAccepted, setPolicyAccepted] = useState(false);
@@ -79,7 +80,7 @@ export default function PaymentCheckout() {
       if (!key || !token || sessionStorage.getItem("tominiko-checkout-cart") !== fingerprint) { key = crypto.randomUUID(); token = newToken(); sessionStorage.setItem("tominiko-checkout-reference", key); sessionStorage.setItem("tominiko-order-access-token", token); sessionStorage.setItem("tominiko-checkout-cart", fingerprint); }
       const response = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...orderForm, fulfillmentType: method, items: latestItems, idempotencyKey: key, accessToken: token }) }); const order = await response.json(); if (!response.ok) throw new Error(order.error);
       sessionStorage.setItem("tominiko-payment-order-id", order.orderId); await loadToss(); if (!window.TossPayments) throw new Error("결제 모듈을 시작하지 못했습니다.");
-      await window.TossPayments(order.clientKey).payment({ customerKey: window.TossPayments.ANONYMOUS }).requestPayment({ method: "CARD", amount: { currency: "KRW", value: order.amount }, orderId: order.orderId, orderName: order.orderName, successUrl: `${location.origin}/checkout/success`, failUrl: `${location.origin}/checkout/fail`, customerEmail: form.email || undefined, customerName: form.customerName, customerMobilePhone: form.phone.replace(/\D/g, ""), card: { useEscrow: false, flowMode: "DEFAULT", useCardPoint: false, useAppCardOnly: false } });
+      await window.TossPayments(order.clientKey).payment({ customerKey: window.TossPayments.ANONYMOUS }).requestPayment({ method: paymentMethod, amount: { currency: "KRW", value: order.amount }, orderId: order.orderId, orderName: order.orderName, successUrl: `${location.origin}/checkout/success`, failUrl: `${location.origin}/checkout/fail`, customerEmail: form.email || undefined, customerName: form.customerName, customerMobilePhone: form.phone.replace(/\D/g, ""), ...(paymentMethod === "CARD" ? { card: { useEscrow: false, flowMode: "DEFAULT", useCardPoint: false, useAppCardOnly: false } } : {}) });
     } catch (error) { setErrors({ submit: error instanceof Error ? error.message : "결제를 시작하지 못했습니다." }); setSubmitting(false); submittingRef.current = false; }
   }
   const field = (key: "customerName"|"phone"|"email", label: string, type="text") => <label className={`checkout-field ${errors[key] ? "has-error" : ""}`}><span>{label}{key === "email" && <small>OPTIONAL</small>}</span><input type={type} value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} />{errors[key] && <em>{errors[key]}</em>}</label>;
@@ -105,7 +106,7 @@ export default function PaymentCheckout() {
   </label>
   <p><Link href="/privacy" target="_blank">개인정보처리방침 보기 ↗</Link></p>
   {errors.policy && <em>{errors.policy}</em>}
-</div><button disabled={submitting || !cartReady || !bootstrapReady} className="button-primary purchase-button">{submitting ? "결제 준비 중…" : `${money(totals.finalAmount)} 결제하기`}</button><div className="checkout-assurance"><span>✓ 결제 직전 가격·재고 재확인</span><span>✓ 주문 금액은 서버에서 최종 검증</span></div><p className="checkout-note">결제 버튼을 누르면 Toss Payments 카드 결제로 이동합니다.</p></aside>
+</div><fieldset className="checkout-payment-method"><legend>결제 방법</legend><label><input type="radio" name="shop-payment" checked={paymentMethod==="CARD"} onChange={()=>setPaymentMethod("CARD")}/> 카드 결제</label><label><input type="radio" name="shop-payment" checked={paymentMethod==="TRANSFER"} onChange={()=>setPaymentMethod("TRANSFER")}/> 계좌이체</label></fieldset><button disabled={submitting || !cartReady || !bootstrapReady} className="button-primary purchase-button">{submitting ? "결제 준비 중…" : `${money(totals.finalAmount)} 결제하기`}</button><div className="checkout-assurance"><span>✓ 결제 직전 가격·재고 재확인</span><span>✓ 주문 금액은 서버에서 최종 검증</span></div><p className="checkout-note">결제 버튼을 누르면 선택한 토스페이먼츠 결제수단으로 이동합니다.</p></aside>
     </form>{addressOpen && <div className="postcode-modal" role="dialog" aria-modal="true" aria-label="주소 찾기"><div><header><strong>주소 찾기</strong><button type="button" onClick={() => setAddressOpen(false)}>닫기</button></header><div ref={postcodeRef} className="postcode-frame" /></div></div>}
   </main>;
 }
