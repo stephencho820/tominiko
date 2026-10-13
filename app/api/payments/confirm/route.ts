@@ -18,8 +18,9 @@ export async function POST(request: Request) {
 
   const supabase = createServiceClient();
   const { data: order } = await supabase.from("orders")
-    .select("id,order_number,total,payment_status,payment_key,guest_access_token_hash,delivery_method,shipping_zonecode,shipping_road_address,shipping_jibun_address,shipping_bname,discount_amount,order_items(product_id,variant_id,weight,quantity)")
+    .select("id,order_number,total,payment_status,payment_method,payment_key,guest_access_token_hash,delivery_method,shipping_zonecode,shipping_road_address,shipping_jibun_address,shipping_bname,discount_amount,order_items(product_id,variant_id,weight,quantity)")
     .eq("id", orderId).maybeSingle();
+  if (order?.payment_method === "BANK_TRANSFER") return safeError(409);
   if (!order || !tokenMatches(accessToken, order.guest_access_token_hash) || order.total !== input.amount) return safeError(403);
 
   // A paid replay must remain readable after stock, status or policy changes.
