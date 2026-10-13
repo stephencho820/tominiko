@@ -3409,3 +3409,32 @@ body:has(> .site-header) { padding-top: 72px; }
 .tasting-order-result .tasting-pickup-card h1{margin:16px 0 12px;}
 .tasting-result-actions{display:flex;flex-direction:column;gap:14px;text-align:center;}
 .tasting-result-actions a:not(.button-primary){font-size:12px;text-decoration:underline;text-underline-offset:4px;}
+
+
+/* Tasting Room bank transfer: compact, readable mobile confirmation */
+.bank-transfer-page{width:min(100% - 40px,640px);margin:0 auto;padding:clamp(32px,6vw,70px) 0 72px;color:var(--ink)}
+.bank-transfer-panel{background:#fffdf9;border:1px solid #e5ded4;padding:clamp(24px,5vw,46px);box-shadow:0 12px 40px rgba(42,34,24,.035)}
+.bank-transfer-eyebrow{font:700 10px/1.5 "Avenir Next",sans-serif;letter-spacing:.18em;color:#786e62}
+.bank-transfer-step{display:inline-flex;align-items:center;gap:8px;margin-top:30px;color:#82683d;font:700 11px/1.4 "Avenir Next",sans-serif;letter-spacing:.02em}
+.bank-transfer-step-dot{width:7px;height:7px;border-radius:50%;background:#b98a43}
+.bank-transfer-panel h1{font-size:clamp(27px,5vw,38px);font-weight:400;line-height:1.25;letter-spacing:-.035em;margin:13px 0 10px}
+.bank-transfer-intro{font-size:14px;line-height:1.75;color:#756d63}
+.bank-transfer-order-id{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:28px;padding:18px 0;border-top:1px solid #e9e3d9;border-bottom:1px solid #e9e3d9}
+.bank-transfer-order-id span,.bank-transfer-account-label{font:700 10px/1.4 "Avenir Next",sans-serif;letter-spacing:.11em;color:#756d63}
+.bank-transfer-order-id strong{font:600 clamp(16px,4vw,21px)/1.35 "Avenir Next",sans-serif;letter-spacing:.015em;text-align:right}
+.bank-transfer-account{margin-top:24px;padding:22px;background:#f3efe8;border-radius:2px}
+.bank-transfer-bank{margin:14px 0 12px;font-size:18px;font-weight:600;line-height:1.4}
+.bank-transfer-bank span{font-size:13px;font-weight:400;color:#736a60}
+.bank-transfer-account-line{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.bank-transfer-account-line strong{font:650 clamp(17px,4.2vw,23px)/1.4 "Avenir Next",sans-serif;letter-spacing:-.025em;overflow-wrap:anywhere;min-width:0}
+.bank-transfer-account-line button{flex:none;min-width:62px;min-height:40px;padding:0 12px;border:1px solid #c5b9a9;background:#fffdf9;font:700 12px "Avenir Next",sans-serif}
+.bank-transfer-amount{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:26px 0 19px;border-bottom:1px solid #e9e3d9}
+.bank-transfer-amount span{font-size:13px;color:#6d645b}
+.bank-transfer-amount strong{font:600 clamp(25px,6vw,34px)/1.2 "Avenir Next",sans-serif;letter-spacing:-.04em;white-space:nowrap}
+.bank-transfer-notice{margin:20px 0 24px;font-size:12px;line-height:1.85;color:#746b60}
+.bank-transfer-copy-error{font-size:12px;color:#a04434;margin-bottom:12px}
+.bank-transfer-primary{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:56px;background:#26211d;color:#fff;font:700 13px "Avenir Next",sans-serif;text-decoration:none;transition:background .2s}
+.bank-transfer-primary:hover{background:#4b4035}
+.bank-transfer-footnote{text-align:center;margin-top:17px;color:#8a8075;font-size:11px;line-height:1.7}
+.bank-transfer-links{display:flex;justify-content:space-between;gap:18px;margin-top:28px;font:700 10px/1.5 "Avenir Next",sans-serif;letter-spacing:.08em}
+@media(max-width:600px){.bank-transfer-page{width:calc(100% - 32px);padding:26px 0 55px}.bank-transfer-panel{padding:24px 20px}.bank-transfer-step{margin-top:24px}.bank-transfer-order-id{align-items:flex-start;flex-direction:column;gap:7px}.bank-transfer-order-id strong{text-align:left}.bank-transfer-account{padding:18px 14px}.bank-transfer-account-line strong{font-size:17px}.bank-transfer-account-line button{min-width:55px;padding:0 9px}.bank-transfer-links{font-size:9px}}
