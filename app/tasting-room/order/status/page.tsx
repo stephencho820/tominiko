@@ -21,7 +21,7 @@ export default function PickupStatusPage(){
   void refresh();timer=setInterval(()=>void refresh(),10000);
   return()=>{active=false;clearInterval(timer)};
  },[]);
- return <main className="tasting-order-result"><p className="section-label">COUNTER PICK-UP</p><h1>{order?.order_number||"YOUR ORDER"}</h1>
+ return <main className="tasting-order-result"><p className="section-label">CASA DI STEFANO · TASTING ROOM</p><div className="tasting-pickup-card"><p className="section-label">COUNTER PICK-UP · ORDER STATUS</p><h1 className="tasting-pickup-number">{order?.order_number||"YOUR ORDER"}</h1><p>주문번호가 불리면 카운터에서 픽업해 주세요.</p></div>
  {order?<><h2>{order.payment_status!=="paid"?(order.payment_method==="BANK_TRANSFER"?"입금 확인 대기":"결제 확인 대기"):statusLabel[order.order_status]||"주문 확인 중"}</h2><p>{order.payment_status==="paid"&&order.order_status==="ready_for_pickup"?"커피가 준비되었습니다. 주문번호를 보여주고 카운터에서 픽업해 주세요.":order.payment_status!=="paid"?"결제 확인 후 제조가 시작됩니다.":"주문번호가 불리면 카운터에서 픽업해 주세요."}</p><section>{order.order_items.map((item,i)=><div key={i}><span>{item.product_name}<small>{item.selected_option||""} × {item.quantity}</small></span><b>₩{item.subtotal.toLocaleString("ko-KR")}</b></div>)}</section><div className="tasting-result-total"><span>TOTAL</span><strong>₩{order.total.toLocaleString("ko-KR")}</strong></div></>:<p role="status">{message}</p>}
  <Link className="button-primary tasting-result-link" href="/tasting-room/menu">메뉴로 돌아가기</Link></main>;
 }
