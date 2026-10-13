@@ -15,7 +15,7 @@ export function TastingRoomOrderMenu({menu,beans}:{menu:TastingMenuItem[];beans:
  const [lines,setLines]=useState<Line[]>([]),[added,setAdded]=useState(""),[open,setOpen]=useState(false),[checkout,setCheckout]=useState(false),[name,setName]=useState(""),[phone,setPhone]=useState(""),[email,setEmail]=useState(""),[table,setTable]=useState(qrTable),[busy,setBusy]=useState(false),[error,setError]=useState("");
  const total=useMemo(()=>lines.reduce((s,l)=>s+l.price*l.quantity,0),[lines]);
  const count=lines.reduce((s,l)=>s+l.quantity,0);
- useEffect(() => { window.dispatchEvent(new CustomEvent("tasting-cart-count",{detail:count})); return () => window.dispatchEvent(new CustomEvent("tasting-cart-count",{detail:0})); },[count]);
+ useEffect(() => { window.dispatchEvent(new CustomEvent("tasting-cart-count",{detail:count})); return () => { window.dispatchEvent(new CustomEvent("tasting-cart-count",{detail:0})); }; },[count]);
  const [paymentMethod,setPaymentMethod]=useState<"CARD"|"BANK_TRANSFER">("CARD");
  const [manualOrder,setManualOrder]=useState<{id:string;token:string}|null>(null);
  const add=(line:Omit<Line,"quantity">)=>{setLines(v=>{const found=v.find(x=>x.key===line.key);return found?v.map(x=>x.key===line.key?{...x,quantity:x.quantity+1}:x):[...v,{...line,quantity:1}]});setAdded(`${line.name} · ${line.option}`);window.setTimeout(()=>setAdded(""),2200)};
