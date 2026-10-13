@@ -57,6 +57,6 @@ export function BankTransferInstructions({ orderId, token }: { orderId:string; t
       <Link className="bank-transfer-primary" href="/tasting-room/order/status">주문 상태 확인 <span aria-hidden="true">→</span></Link>
       <p className="bank-transfer-footnote">주문번호를 보관해 주세요. 픽업 준비가 완료되면 카운터에서 안내해 드립니다.</p>
     </section>
-    <nav className="bank-transfer-links" aria-label="다른 페이지"><Link href="/tasting-room">← TASTING ROOM</Link><Link href="/shop">ONLINE SHOP →</Link></nav>
+    <nav className="bank-transfer-links" aria-label="다른 페이지"><Link href="/tasting-room/order/history">MY ORDERS →</Link><Link href="/tasting-room">← TASTING ROOM</Link><Link href="/shop">ONLINE SHOP →</Link></nav>
   </main>;
 }
