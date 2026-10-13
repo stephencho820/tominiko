@@ -3392,3 +3392,5 @@ body:has(> .site-header) { padding-top: 72px; }
 .tasting-menu-hero h1{font-size:clamp(36px,6vw,64px);line-height:1.05;letter-spacing:-.04em;margin:12px 0 14px;}
 .tasting-menu-hero nav{padding:14px 0;margin-top:18px;}
 .tasting-pickup-note{font-size:12px;line-height:1.6;color:var(--muted);margin:-16px 0 24px;}
+
+.member-points-panel{margin-top:44px;padding:32px;display:flex;justify-content:space-between;gap:24px;background:#f2ece3;border:1px solid #e1d6c8}.member-points-panel h2{font-size:38px;margin:12px 0}.member-points-panel p{font-size:13px;line-height:1.7}.member-points-balance{text-align:right}.member-points-balance strong{display:block;font-size:38px}.member-points-balance span{font-size:12px}.member-points-history{margin-top:28px}.member-points-history>div{display:flex;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line)}.member-points-history small{display:block;color:var(--muted)}.member-points-policy{font-size:12px;color:var(--muted);margin-top:16px}@media(max-width:600px){.member-points-panel{flex-direction:column}.member-points-balance{text-align:left}}

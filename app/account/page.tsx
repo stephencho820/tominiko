@@ -26,6 +26,10 @@ export default async function Account() {
   }
 
   const orders = await getMyOrders();
+  const [{ data: loyalty }, { data: pointHistory }] = await Promise.all([
+    supabase.from("loyalty_accounts").select("balance,lifetime_earned").eq("user_id",user.id).maybeSingle(),
+    supabase.from("loyalty_transactions").select("id,kind,points,note,created_at").eq("user_id",user.id).order("created_at",{ascending:false}).limit(5),
+  ]);
   const displayName = user.user_metadata?.name ?? user.user_metadata?.full_name ?? user.email?.split("@")[0];
 
   return <main className="mx-auto max-w-4xl px-6 py-14 md:px-12 md:py-20">
@@ -38,6 +42,8 @@ export default async function Account() {
       <AccountSignOutButton />
     </div>
 
+    <section className="member-points-panel" aria-label="멤버 포인트"><div><p className="section-label">CASA REWARDS</p><h2>My Points</h2><p>로그인 회원의 결제 완료 및 픽업·배송 완료 주문에 2%가 적립됩니다.</p></div><div className="member-points-balance"><strong>{Number(loyalty?.balance??0).toLocaleString("ko-KR")} P</strong><span>누적 적립 {Number(loyalty?.lifetime_earned??0).toLocaleString("ko-KR")} P</span></div></section>
+    <div className="member-points-history"><h3>포인트 내역</h3>{pointHistory?.length?pointHistory.map(item=><div key={item.id}><span>{item.note}<small>{new Date(item.created_at).toLocaleDateString("ko-KR")}</small></span><strong>{item.points>0?"+":""}{item.points.toLocaleString("ko-KR")} P</strong></div>):<p>아직 적립된 포인트가 없습니다.</p>}<p className="member-points-policy">1P = 1원 상당 · 현재는 적립 및 조회만 제공하며 결제 시 사용 기능은 준비 중입니다. 취소·환불 시 적립이 회수됩니다.</p></div>
     <div className="mt-16 flex items-center justify-between border-b border-[var(--line)] pb-4">
       <h2 className="text-3xl"><span className="lang-ko">최근 주문</span><span className="lang-en">Recent orders</span></h2>
       <Link href="/account/orders" className="eyebrow"><span className="lang-ko">전체 보기</span><span className="lang-en">View all</span> ↗</Link>
