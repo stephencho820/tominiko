@@ -1,6 +1,8 @@
 "use client";
+import Link from "next/link";
 import { useEffect,useMemo,useRef,useState } from "react";
 import { createPortal } from "react-dom";
+import { saveTastingOrder } from "@/lib/tasting-order-history";
 import { BankTransferInstructions } from "@/components/BankTransferInstructions";
 import type { Product } from "@/types";
 import type { TastingMenuItem } from "@/services/tasting-menu";
@@ -55,7 +57,7 @@ export function TastingRoomOrderMenu({menu,beans}:{menu:TastingMenuItem[];beans:
     const idempotencyKey=crypto.randomUUID(),accessToken=newToken();
     sessionStorage.setItem("tasting-order-access-token",accessToken);
     const res=await fetch("/api/tasting-room/orders",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerName:name.trim()||"현장 고객",phone,email,tableLabel:"",idempotencyKey,accessToken,paymentMethod,items:lines.map(l=>({kind:l.kind,id:l.id,variantId:l.variantId,option:l.kind==="menu"?(l.option==="STANDARD"?"":l.option):"",quantity:l.quantity}))})});
-    const order=await res.json(); if(!res.ok)throw new Error(order.error||"주문을 만들지 못했습니다."); try{localStorage.setItem("tasting-last-order",JSON.stringify({id:order.orderId,token:accessToken}));}catch{}
+    const order=await res.json(); if(!res.ok)throw new Error(order.error||"주문을 만들지 못했습니다."); saveTastingOrder(order.orderId,accessToken);
     if(paymentMethod==="BANK_TRANSFER"){setManualOrder({id:order.orderId,token:accessToken});setLines([]);try{localStorage.removeItem(TASTING_CART_KEY)}catch{}setOpen(false);setBusy(false);submitRef.current=false;return;}
     if(!window.TossPayments){await new Promise<void>((resolve,reject)=>{const s=document.createElement("script");s.src="https://js.tosspayments.com/v2/standard";s.onload=()=>resolve();s.onerror=reject;document.head.appendChild(s)})}
     if(!window.TossPayments)throw new Error("결제 모듈을 시작하지 못했습니다.");
@@ -65,7 +67,7 @@ export function TastingRoomOrderMenu({menu,beans}:{menu:TastingMenuItem[];beans:
  const groups=[["brewed","BREWED COFFEE"],["espresso","ESPRESSO"],["non-coffee","NON-COFFEE"],["sweet","SWEET"]] as const;
  return <div>
   {manualOrder?<BankTransferInstructions orderId={manualOrder.id} token={manualOrder.token}/>:<>
-  <section id="drinks" className="tasting-menu-section"><div className="tasting-menu-section-head"><p className="section-label">DRINKS</p><h2>At the bar</h2><span>결제 후 주문번호가 불리면 카운터에서 픽업하세요.</span></div>
+  <section id="drinks" className="tasting-menu-section"><div className="tasting-menu-section-head"><p className="section-label">DRINKS</p><h2>At the bar</h2><span>결제 후 주문번호가 불리면 카운터에서 픽업하세요.</span><Link className="tasting-menu-history-link" href="/tasting-room/order/history">MY ORDERS · 주문 내역 →</Link></div>
    <div className="tasting-drink-groups">{groups.map(([cat,label])=><article key={cat}><h3>{label}</h3>{menu.filter(m=>m.category===cat).map(item=><div className="tasting-drink-row tasting-order-row" key={item.id}><div><strong>{item.name}</strong><p>{item.description}</p><b>{money(item.price)}</b></div><div className="tasting-option-actions">{item.sold_out?<span>SOLD OUT</span>:<>{item.hot_available&&<button type="button" aria-label={`${item.name} HOT 담기`} onClick={()=>addMenu(item,"HOT")}>+ HOT</button>}{item.iced_available&&<button type="button" aria-label={`${item.name} ICE 담기`} onClick={()=>addMenu(item,"ICE")}>+ ICE</button>}{!item.hot_available&&!item.iced_available&&<button type="button" aria-label={`${item.name} 담기`} onClick={()=>addMenu(item,"STANDARD")}>+ ADD</button>}</>}</div></div>)}</article>)}</div>
   </section>
   <section id="beans" className="tasting-menu-section tasting-beans"><div className="tasting-menu-section-head"><p className="section-label">BEANS · TAKE HOME</p><h2>Coffee to take home</h2><span>음료와 원두를 한 번에 결제할 수 있습니다.</span></div>

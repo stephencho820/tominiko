@@ -46,7 +46,7 @@ export default async function Account() {
     <div className="member-points-history"><h3>포인트 내역</h3>{pointHistory?.length?pointHistory.map(item=><div key={item.id}><span>{item.note}<small>{new Date(item.created_at).toLocaleDateString("ko-KR")}</small></span><strong>{item.points>0?"+":""}{item.points.toLocaleString("ko-KR")} P</strong></div>):<p>아직 적립된 포인트가 없습니다.</p>}<p className="member-points-policy">1P = 1원 상당 · 현재는 적립 및 조회만 제공하며 결제 시 사용 기능은 준비 중입니다. 취소·환불 시 적립이 회수됩니다.</p></div>
     <div className="mt-16 flex items-center justify-between border-b border-[var(--line)] pb-4">
       <h2 className="text-3xl"><span className="lang-ko">최근 주문</span><span className="lang-en">Recent orders</span></h2>
-      <Link href="/account/orders" className="eyebrow"><span className="lang-ko">전체 보기</span><span className="lang-en">View all</span> ↗</Link>
+      <Link href="/tasting-room/order/history" className="eyebrow">TASTING ROOM ORDERS ↗</Link><Link href="/account/orders" className="eyebrow"><span className="lang-ko">전체 보기</span><span className="lang-en">View all</span> ↗</Link>
     </div>
     {orders.length ? orders.map((order) => <div className="flex justify-between border-b border-[var(--line)] py-5" key={order.id}>
       <span>{order.order_number}</span>
