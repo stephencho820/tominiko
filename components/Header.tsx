@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, ShoppingBag, X } from "lucide-react";
 import { useCart } from "./CartProvider";
@@ -14,6 +15,13 @@ const primaryLinks = [
 
 export function Header() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const openTastingOrder = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (pathname !== "/tasting-room/menu") return;
+    event.preventDefault();
+    window.dispatchEvent(new Event("tasting-open-order"));
+    setOpen(false);
+  };
   const [scrolled, setScrolled] = useState(false);
   const { cartCount: itemCount, cartSubtotal, cartNotice, dismissCartNotice } = useCart();
   const freeShippingThreshold = 50000;
@@ -78,7 +86,7 @@ export function Header() {
           <Link href="/account" className="nav-meta transition-colors hover:text-[var(--accent)]">
             Account
           </Link>
-          {tastingCount > 0 && <Link href="/tasting-room/menu#drinks" className="nav-meta" aria-label={`Tasting Room 주문 ${tastingCount}개`}>MENU ORDER · {tastingCount}</Link>}
+          {tastingCount > 0 && <Link href="/tasting-room/menu#order" onClick={openTastingOrder} className="nav-meta" aria-label={`Tasting Room 주문 ${tastingCount}개`}>MENU ORDER · {tastingCount}</Link>}
           <Link href="/cart" className="nav-meta flex items-center gap-2 transition-colors hover:text-[var(--accent)]">
             <span>Cart</span>
             <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--ink)] px-1 text-[9px] font-semibold text-[var(--paper)]" aria-label={`${itemCount} items in cart`}>
@@ -88,7 +96,7 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-1 md:hidden">
-          {tastingCount > 0 && <Link href="/tasting-room/menu#drinks" className="nav-meta text-[10px]" aria-label={`Tasting Room 주문 ${tastingCount}개`}>ORDER {tastingCount}</Link>}
+          {tastingCount > 0 && <Link href="/tasting-room/menu#order" onClick={openTastingOrder} className="nav-meta text-[10px]" aria-label={`Tasting Room 주문 ${tastingCount}개`}>ORDER {tastingCount}</Link>}
           <Link
             href="/cart"
             className="relative grid h-11 w-11 place-items-center rounded"
