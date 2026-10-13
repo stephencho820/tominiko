@@ -3378,3 +3378,11 @@ body:has(> .site-header) { padding-top: 72px; }
 .checkout-payment-method legend { margin-bottom:8px; font-weight:700; }
 .checkout-payment-method label { display:flex; align-items:center; gap:7px; padding:10px 13px; border:1px solid var(--line); cursor:pointer; }
 @media(max-width:700px){ .site-cart-toast{left:12px;right:12px;justify-content:space-between;} }
+
+/* Stable viewport order controls and accessible dismiss area */
+.tasting-cart-fab{position:fixed;bottom:max(16px,env(safe-area-inset-bottom));z-index:80;}
+.tasting-order-overlay{position:fixed;inset:0;z-index:100;isolation:isolate;}
+.tasting-order-backdrop{position:absolute;inset:0;width:100%;height:100%;background:rgba(20,17,14,.48);cursor:pointer;}
+.tasting-order-overlay .tasting-cart-sheet{z-index:1;top:0;bottom:0;height:100%;height:100dvh;overscroll-behavior:contain;padding-top:max(54px,env(safe-area-inset-top));}
+.tasting-order-overlay .tasting-sheet-close{position:sticky;top:0;float:right;display:grid;place-items:center;width:48px;height:48px;margin:-38px -14px 4px 8px;z-index:5;cursor:pointer;background:var(--paper);border:1px solid var(--line);border-radius:50%;font-size:30px;line-height:1;touch-action:manipulation;}
+@media(max-width:700px){.tasting-cart-fab{bottom:max(16px,env(safe-area-inset-bottom));}.tasting-order-overlay .tasting-sheet-close{margin:-24px -4px 8px 8px;}}
