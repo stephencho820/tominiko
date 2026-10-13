@@ -18,6 +18,7 @@ export function Header() {
   const { cartCount: itemCount, cartNotice, dismissCartNotice } = useCart();
   const [tastingCount, setTastingCount] = useState(0);
   useEffect(() => {
+    try { const saved=localStorage.getItem("casa-tasting-cart-v1"); if(saved){const lines=JSON.parse(saved); if(Array.isArray(lines)) setTastingCount(lines.reduce((sum:number,line:{quantity?:number})=>sum+(Number(line.quantity)||0),0));} } catch {}
     const update = (event: Event) => setTastingCount((event as CustomEvent<number>).detail || 0);
     window.addEventListener("tasting-cart-count", update);
     return () => window.removeEventListener("tasting-cart-count", update);
