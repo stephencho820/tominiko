@@ -1,5 +1,6 @@
 "use client";
 import { useEffect,useMemo,useRef,useState } from "react";
+import { createPortal } from "react-dom";
 import { BankTransferInstructions } from "@/components/BankTransferInstructions";
 import { useSearchParams } from "next/navigation";
 import type { Product } from "@/types";
@@ -24,6 +25,14 @@ export function TastingRoomOrderMenu({menu,beans}:{menu:TastingMenuItem[];beans:
  const total=useMemo(()=>lines.reduce((s,l)=>s+l.price*l.quantity,0),[lines]);
  const count=lines.reduce((s,l)=>s+l.quantity,0);
  useEffect(() => { if(!hydrated)return; window.dispatchEvent(new CustomEvent("tasting-cart-count",{detail:count})); },[count,hydrated]);
+ useEffect(() => {
+   const showOrder = () => { if (manualOrder) return; setCheckout(false); setOpen(true); };
+   window.addEventListener("tasting-open-order", showOrder);
+   const onHash = () => { if (window.location.hash === "#order") showOrder(); };
+   window.addEventListener("hashchange", onHash);
+   onHash();
+   return () => { window.removeEventListener("tasting-open-order", showOrder); window.removeEventListener("hashchange", onHash); };
+ }, [manualOrder]);
  const [paymentMethod,setPaymentMethod]=useState<"CARD"|"BANK_TRANSFER">("CARD");
  const [manualOrder,setManualOrder]=useState<{id:string;token:string}|null>(null);
  const add=(line:Omit<Line,"quantity">)=>{setCheckout(false);setLines(v=>{const found=v.find(x=>x.key===line.key);return found?v.map(x=>x.key===line.key?{...x,quantity:x.quantity+1}:x):[...v,{...line,quantity:1}]});setAdded(`${line.name} · ${line.option}`);if(toastTimer.current)window.clearTimeout(toastTimer.current);toastTimer.current=window.setTimeout(()=>setAdded(""),2200)};
@@ -54,10 +63,10 @@ export function TastingRoomOrderMenu({menu,beans}:{menu:TastingMenuItem[];beans:
    <div className="tasting-bean-grid">{beans.map(bean=>{const v=defaultProductVariant(bean,"150g");return <article className="tasting-bean-card" key={bean.id}><div className="tasting-bean-image"><img src={productImage(bean)} alt={bean.name}/></div><div><p className="section-label">{bean.origin}</p><h3>{bean.name}</h3><p>{bean.tasting_notes}</p><div className="tasting-bean-actions"><strong>{v?money(v.salePrice??v.price):"SOLD OUT"} <small>150g</small></strong><button type="button" disabled={!v?.available} onClick={()=>addBean(bean)}>{v?.available?"+ ADD":"SOLD OUT"}</button></div></div></article>})}</div>
   </section>
   {added&&<div className="tasting-added-toast" role="status">✓ {added} 담았습니다 · ORDER에서 확인하세요</div>}{count>0&&<button type="button" className="tasting-cart-fab" onClick={()=>{setCheckout(false);setOpen(true)}}><span>ORDER · {count}</span><strong>{money(total)} →</strong></button>}
-  {open&&<div className="tasting-cart-sheet" role="dialog" aria-modal="true"><button type="button" className="tasting-sheet-close" onClick={()=>{setOpen(false);setCheckout(false);setError("")}}>×</button><p className="section-label">YOUR ORDER</p><h2>{checkout?"Order details":"Review order"}</h2>
+  {open&&createPortal(<div className="tasting-cart-sheet" role="dialog" aria-modal="true"><button type="button" className="tasting-sheet-close" onClick={()=>{setOpen(false);setCheckout(false);setError("")}}>×</button><p className="section-label">YOUR ORDER</p><h2>{checkout?"Order details":"Review order"}</h2>
    {!checkout?<><div className="tasting-cart-lines">{lines.map(l=><div key={l.key}><span><strong>{l.name}</strong><small>{l.option}</small></span><span className="tasting-qty"><button type="button" onClick={()=>qty(l.key,-1)}>−</button>{l.quantity}<button type="button" onClick={()=>qty(l.key,1)}>+</button></span><b>{money(l.price*l.quantity)}</b></div>)}</div><div className="tasting-cart-total"><span>TOTAL</span><strong>{money(total)}</strong></div><button type="button" className="button-primary tasting-pay-button" onClick={()=>{setError("");setCheckout(true)}}>주문 정보 입력 →</button></>
    :<div className="tasting-quick-checkout"><label>이름<input value={name} onChange={e=>setName(e.target.value)} autoComplete="name"/></label><label>휴대전화<input value={phone} onChange={e=>setPhone(e.target.value)} type="tel" autoComplete="tel" placeholder="010-0000-0000"/></label><label>이메일 <small>OPTIONAL</small><input value={email} onChange={e=>setEmail(e.target.value)} type="email"/></label><label>TABLE / PICK-UP <small>QR로 들어오면 자동 입력됩니다.</small><input value={table} onChange={e=>setTable(e.target.value)} placeholder="TAKE OUT"/></label><fieldset className="checkout-payment-method"><legend>결제 방법</legend><label><input type="radio" name="tasting-payment" checked={paymentMethod==="CARD"} onChange={()=>setPaymentMethod("CARD")}/> 카드 결제</label><label><input type="radio" name="tasting-payment" checked={paymentMethod==="BANK_TRANSFER"} onChange={()=>setPaymentMethod("BANK_TRANSFER")}/> 계좌이체 (직접 송금)</label></fieldset>{error&&<p className="submit-error">{error}</p>}<div className="tasting-cart-total"><span>PAYMENT</span><strong>{money(total)}</strong></div><button type="button" disabled={busy} className="button-primary tasting-pay-button" onClick={pay}>{busy?"결제 준비 중…":paymentMethod==="CARD"?"카드로 결제하기 →":"계좌이체로 주문하기 →"}</button><button type="button" className="tasting-back-button" onClick={()=>setCheckout(false)}>← 주문 수정</button></div>}
-  </div>}
+  </div>, document.body)}
   </>}
  </div>
 }
