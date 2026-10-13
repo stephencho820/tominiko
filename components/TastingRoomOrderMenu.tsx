@@ -15,7 +15,9 @@ const TASTING_CUSTOMER_KEY="casa-tasting-customer-v1";
 export function TastingRoomOrderMenu({menu,beans}:{menu:TastingMenuItem[];beans:Product[]}) {
  const params=useSearchParams(); const qrTable=(params.get("table")||"").slice(0,30);
  const [lines,setLines]=useState<Line[]>([]),[added,setAdded]=useState(""),[open,setOpen]=useState(false),[checkout,setCheckout]=useState(false),[name,setName]=useState(""),[phone,setPhone]=useState(""),[email,setEmail]=useState(""),[table,setTable]=useState(qrTable),[busy,setBusy]=useState(false),[error,setError]=useState("");
- const [hydrated,setHydrated]=useState(false);\n const submitRef=useRef(false),toastTimer=useRef<number|undefined>(undefined);\n useEffect(()=>()=>{if(toastTimer.current)window.clearTimeout(toastTimer.current)},[]);
+ const [hydrated,setHydrated]=useState(false);
+ const submitRef=useRef(false),toastTimer=useRef<number|undefined>(undefined);
+ useEffect(()=>()=>{if(toastTimer.current)window.clearTimeout(toastTimer.current)},[]);
  useEffect(()=>{try{const raw=localStorage.getItem(TASTING_CART_KEY);if(raw){const saved=JSON.parse(raw);if(Array.isArray(saved))setLines(saved)}const c=localStorage.getItem(TASTING_CUSTOMER_KEY);if(c){const v=JSON.parse(c);setName(v.name||"");setPhone(v.phone||"");setEmail(v.email||"");if(!qrTable)setTable(v.table||"")}}catch{}finally{setHydrated(true)}},[qrTable]);
  useEffect(()=>{if(!hydrated)return;try{localStorage.setItem(TASTING_CART_KEY,JSON.stringify(lines))}catch{}},[lines,hydrated]);
  useEffect(()=>{if(!hydrated)return;try{localStorage.setItem(TASTING_CUSTOMER_KEY,JSON.stringify({name,phone,email,table}))}catch{}},[name,phone,email,table,hydrated]);
