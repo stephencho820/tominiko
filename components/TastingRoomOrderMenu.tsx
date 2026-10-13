@@ -15,7 +15,7 @@ const TASTING_CUSTOMER_KEY="casa-tasting-customer-v1";
 export function TastingRoomOrderMenu({menu,beans}:{menu:TastingMenuItem[];beans:Product[]}) {
  const params=useSearchParams(); const qrTable=(params.get("table")||"").slice(0,30);
  const [lines,setLines]=useState<Line[]>([]),[added,setAdded]=useState(""),[open,setOpen]=useState(false),[checkout,setCheckout]=useState(false),[name,setName]=useState(""),[phone,setPhone]=useState(""),[email,setEmail]=useState(""),[table,setTable]=useState(qrTable),[busy,setBusy]=useState(false),[error,setError]=useState("");
- const [hydrated,setHydrated]=useState(false);\n const submitRef=useRef(false),toastTimer=useRef<number|undefined>(undefined);
+ const [hydrated,setHydrated]=useState(false);\n const submitRef=useRef(false),toastTimer=useRef<number|undefined>(undefined);\n useEffect(()=>()=>{if(toastTimer.current)window.clearTimeout(toastTimer.current)},[]);
  useEffect(()=>{try{const raw=localStorage.getItem(TASTING_CART_KEY);if(raw){const saved=JSON.parse(raw);if(Array.isArray(saved))setLines(saved)}const c=localStorage.getItem(TASTING_CUSTOMER_KEY);if(c){const v=JSON.parse(c);setName(v.name||"");setPhone(v.phone||"");setEmail(v.email||"");if(!qrTable)setTable(v.table||"")}}catch{}finally{setHydrated(true)}},[qrTable]);
  useEffect(()=>{if(!hydrated)return;try{localStorage.setItem(TASTING_CART_KEY,JSON.stringify(lines))}catch{}},[lines,hydrated]);
  useEffect(()=>{if(!hydrated)return;try{localStorage.setItem(TASTING_CUSTOMER_KEY,JSON.stringify({name,phone,email,table}))}catch{}},[name,phone,email,table,hydrated]);
@@ -36,7 +36,7 @@ export function TastingRoomOrderMenu({menu,beans}:{menu:TastingMenuItem[];beans:
     sessionStorage.setItem("tasting-order-access-token",accessToken);
     const res=await fetch("/api/tasting-room/orders",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerName:name,phone,email,tableLabel:table,idempotencyKey,accessToken,paymentMethod,items:lines.map(l=>({kind:l.kind,id:l.id,variantId:l.variantId,option:l.kind==="menu"?(l.option==="STANDARD"?"":l.option):"",quantity:l.quantity}))})});
     const order=await res.json(); if(!res.ok)throw new Error(order.error||"주문을 만들지 못했습니다.");
-    if(paymentMethod==="BANK_TRANSFER"){setManualOrder({id:order.orderId,token:accessToken});setLines([]);try{localStorage.removeItem(TASTING_CART_KEY)}catch{}setOpen(false);setBusy(false);return;}
+    if(paymentMethod==="BANK_TRANSFER"){setManualOrder({id:order.orderId,token:accessToken});setLines([]);try{localStorage.removeItem(TASTING_CART_KEY)}catch{}setOpen(false);setBusy(false);submitRef.current=false;return;}
     if(!window.TossPayments){await new Promise<void>((resolve,reject)=>{const s=document.createElement("script");s.src="https://js.tosspayments.com/v2/standard";s.onload=()=>resolve();s.onerror=reject;document.head.appendChild(s)})}
     if(!window.TossPayments)throw new Error("결제 모듈을 시작하지 못했습니다.");
     await window.TossPayments(order.clientKey).payment({customerKey:window.TossPayments.ANONYMOUS}).requestPayment({method:paymentMethod,amount:{currency:"KRW",value:order.amount},orderId:order.orderId,orderName:order.orderName,successUrl:`${location.origin}/tasting-room/order/success`,failUrl:`${location.origin}/checkout/fail`,customerName:name,customerMobilePhone:phone.replace(/\D/g,""),customerEmail:email||undefined,...(paymentMethod==="CARD"?{card:{useEscrow:false,flowMode:"DEFAULT",useCardPoint:false,useAppCardOnly:false}}:{})});
