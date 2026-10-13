@@ -9,7 +9,8 @@ export async function POST(request:Request){
  const paymentKey=typeof b?.paymentKey==="string"?b.paymentKey:"",orderId=typeof b?.orderId==="string"?b.orderId:"",token=typeof b?.accessToken==="string"?b.accessToken:"";
  if(!paymentKey||!orderId||!Number.isInteger(b?.amount))return fail();
  const db=createServiceClient();
- const {data:o}=await db.from("orders").select("id,order_number,total,payment_status,payment_key,guest_access_token_hash,order_source,table_label,order_items(id,product_id,menu_item_id,variant_id,weight,quantity,unit_price,selected_option)").eq("id",orderId).maybeSingle();
+ const {data:o}=await db.from("orders").select("id,order_number,total,payment_status,payment_method,payment_key,guest_access_token_hash,order_source,table_label,order_items(id,product_id,menu_item_id,variant_id,weight,quantity,unit_price,selected_option)").eq("id",orderId).maybeSingle();
+ if(o?.payment_method==="BANK_TRANSFER")return fail(409);
  if(!o||o.order_source!=="tasting_room"||!tokenMatches(token,o.guest_access_token_hash)||o.total!==b.amount)return fail(403);
  if(o.payment_status==="paid")return o.payment_key===paymentKey?response(db,o.id):fail(409);
  if(["cancelled","refunded"].includes(o.payment_status))return fail(409);

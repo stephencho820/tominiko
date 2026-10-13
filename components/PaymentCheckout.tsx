@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { BankTransferInstructions } from "@/components/BankTransferInstructions";
 import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/components/CartProvider";
@@ -34,7 +35,8 @@ export default function PaymentCheckout() {
   const [bootstrap, setBootstrap] = useState<Bootstrap>({ settings: DEFAULT_DELIVERY_SETTINGS, zones: [], user: null, addresses: [] });
   const [form, setForm] = useState(initial); const [method, setMethod] = useState<DeliveryMethod>("shipping");
   const [errors, setErrors] = useState<Record<string, string>>({}); const [notice, setNotice] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"CARD" | "TRANSFER">("CARD");
+  const [paymentMethod, setPaymentMethod] = useState<"CARD" | "BANK_TRANSFER">("CARD");
+  const [manualOrder,setManualOrder]=useState<{id:string;token:string}|null>(null);
   const [postcodeReady, setPostcodeReady] = useState(false);
   const [addressOpen, setAddressOpen] = useState(false); const [showNewAddress, setShowNewAddress] = useState(true);
   const [saveAddress, setSaveAddress] = useState(false); const [defaultAddress, setDefaultAddress] = useState(false); const [submitting, setSubmitting] = useState(false); const [policyAccepted, setPolicyAccepted] = useState(false);
@@ -76,14 +78,16 @@ export default function PaymentCheckout() {
       if (!latestItems.length || cartSnapshot(latestItems) !== cartSnapshot(items)) throw new Error("상품 가격 또는 재고가 변경되었습니다. 장바구니를 확인한 뒤 다시 결제해 주세요.");
       if (bootstrap.user && saveAddress && method !== "pickup") { const saved = await fetch("/api/addresses", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, recipientName: form.customerName, isDefault: defaultAddress }) }); if (!saved.ok) throw new Error((await saved.json()).error); setSaveAddress(false); }
       const orderForm = { ...form, memoType: method === "pickup" ? "" : form.memoType, memoText: method === "pickup" ? "" : form.memoText };
-      const fingerprint = JSON.stringify({ form: orderForm, method, items: cartSnapshot(latestItems), settings: bootstrap.settings }); let key = sessionStorage.getItem("tominiko-checkout-reference"), token = sessionStorage.getItem("tominiko-order-access-token");
+      const fingerprint = JSON.stringify({ form: orderForm, method, paymentMethod, items: cartSnapshot(latestItems), settings: bootstrap.settings }); let key = sessionStorage.getItem("tominiko-checkout-reference"), token = sessionStorage.getItem("tominiko-order-access-token");
       if (!key || !token || sessionStorage.getItem("tominiko-checkout-cart") !== fingerprint) { key = crypto.randomUUID(); token = newToken(); sessionStorage.setItem("tominiko-checkout-reference", key); sessionStorage.setItem("tominiko-order-access-token", token); sessionStorage.setItem("tominiko-checkout-cart", fingerprint); }
-      const response = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...orderForm, fulfillmentType: method, items: latestItems, idempotencyKey: key, accessToken: token }) }); const order = await response.json(); if (!response.ok) throw new Error(order.error);
+      const response = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...orderForm, fulfillmentType: method, items: latestItems, idempotencyKey: key, accessToken: token, paymentMethod }) }); const order = await response.json(); if (!response.ok) throw new Error(order.error);
+      if(paymentMethod==="BANK_TRANSFER"){setManualOrder({id:order.orderId,token:token!});setSubmitting(false);submittingRef.current=false;return;}
       sessionStorage.setItem("tominiko-payment-order-id", order.orderId); await loadToss(); if (!window.TossPayments) throw new Error("결제 모듈을 시작하지 못했습니다.");
       await window.TossPayments(order.clientKey).payment({ customerKey: window.TossPayments.ANONYMOUS }).requestPayment({ method: paymentMethod, amount: { currency: "KRW", value: order.amount }, orderId: order.orderId, orderName: order.orderName, successUrl: `${location.origin}/checkout/success`, failUrl: `${location.origin}/checkout/fail`, customerEmail: form.email || undefined, customerName: form.customerName, customerMobilePhone: form.phone.replace(/\D/g, ""), ...(paymentMethod === "CARD" ? { card: { useEscrow: false, flowMode: "DEFAULT", useCardPoint: false, useAppCardOnly: false } } : {}) });
     } catch (error) { setErrors({ submit: error instanceof Error ? error.message : "결제를 시작하지 못했습니다." }); setSubmitting(false); submittingRef.current = false; }
   }
   const field = (key: "customerName"|"phone"|"email", label: string, type="text") => <label className={`checkout-field ${errors[key] ? "has-error" : ""}`}><span>{label}{key === "email" && <small>OPTIONAL</small>}</span><input type={type} value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} />{errors[key] && <em>{errors[key]}</em>}</label>;
+  if(manualOrder)return <main className="purchase-page checkout-page"><BankTransferInstructions orderId={manualOrder.id} token={manualOrder.token}/><Link href="/shop">쇼핑 계속하기 →</Link></main>;
   if (!items.length) return <main className="purchase-page"><section className="empty-bag"><p>장바구니가 비어 있습니다.</p><Link href="/shop" className="button-primary purchase-button">커피 둘러보기 →</Link></section></main>;
   return <main className="purchase-page checkout-page"><Script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js" strategy="afterInteractive" onReady={() => setPostcodeReady(true)} onError={() => { setAddressOpen(false); setErrors((old) => ({ ...old, address: "주소 검색을 불러오지 못했습니다. 다시 시도해 주세요." })); }} />
     {(refreshError || bootstrapError) && <p role="alert" className="submit-error">{refreshError || bootstrapError}</p>}
@@ -106,7 +110,7 @@ export default function PaymentCheckout() {
   </label>
   <p><Link href="/privacy" target="_blank">개인정보처리방침 보기 ↗</Link></p>
   {errors.policy && <em>{errors.policy}</em>}
-</div><fieldset className="checkout-payment-method"><legend>결제 방법</legend><label><input type="radio" name="shop-payment" checked={paymentMethod==="CARD"} onChange={()=>setPaymentMethod("CARD")}/> 카드 결제</label><label><input type="radio" name="shop-payment" checked={paymentMethod==="TRANSFER"} onChange={()=>setPaymentMethod("TRANSFER")}/> 계좌이체</label></fieldset><button disabled={submitting || !cartReady || !bootstrapReady} className="button-primary purchase-button">{submitting ? "결제 준비 중…" : `${money(totals.finalAmount)} 결제하기`}</button><div className="checkout-assurance"><span>✓ 결제 직전 가격·재고 재확인</span><span>✓ 주문 금액은 서버에서 최종 검증</span></div><p className="checkout-note">결제 버튼을 누르면 선택한 토스페이먼츠 결제수단으로 이동합니다.</p></aside>
+</div><fieldset className="checkout-payment-method"><legend>결제 방법</legend><label><input type="radio" name="shop-payment" checked={paymentMethod==="CARD"} onChange={()=>setPaymentMethod("CARD")}/> 카드 결제</label><label><input type="radio" name="shop-payment" checked={paymentMethod==="BANK_TRANSFER"} onChange={()=>setPaymentMethod("BANK_TRANSFER")}/> 계좌이체 (직접 송금)</label></fieldset><button disabled={submitting || !cartReady || !bootstrapReady} className="button-primary purchase-button">{submitting ? "결제 준비 중…" : `${money(totals.finalAmount)} ${paymentMethod==="BANK_TRANSFER"?"계좌이체로 주문하기":"결제하기"}`}</button><div className="checkout-assurance"><span>✓ 결제 직전 가격·재고 재확인</span><span>✓ 주문 금액은 서버에서 최종 검증</span></div><p className="checkout-note">카드는 토스페이먼츠로 결제합니다. 계좌이체는 주문 접수 후 표시되는 계좌로 직접 송금해 주세요.</p></aside>
     </form>{addressOpen && <div className="postcode-modal" role="dialog" aria-modal="true" aria-label="주소 찾기"><div><header><strong>주소 찾기</strong><button type="button" onClick={() => setAddressOpen(false)}>닫기</button></header><div ref={postcodeRef} className="postcode-frame" /></div></div>}
   </main>;
 }
