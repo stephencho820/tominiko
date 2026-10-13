@@ -2,7 +2,6 @@
 import { useEffect,useMemo,useRef,useState } from "react";
 import { createPortal } from "react-dom";
 import { BankTransferInstructions } from "@/components/BankTransferInstructions";
-import { useSearchParams } from "next/navigation";
 import type { Product } from "@/types";
 import type { TastingMenuItem } from "@/services/tasting-menu";
 import { defaultProductVariant,productImage } from "@/lib/products";
@@ -14,7 +13,6 @@ const TASTING_CART_KEY="casa-tasting-cart-v1";
 const TASTING_CUSTOMER_KEY="casa-tasting-customer-v1";
 
 export function TastingRoomOrderMenu({menu,beans}:{menu:TastingMenuItem[];beans:Product[]}) {
- const params=useSearchParams(); void params;
  const [lines,setLines]=useState<Line[]>([]),[added,setAdded]=useState(""),[open,setOpen]=useState(false),[checkout,setCheckout]=useState(false),[name,setName]=useState(""),[phone,setPhone]=useState(""),[email,setEmail]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState("");
  const [hydrated,setHydrated]=useState(false);
  const submitRef=useRef(false),toastTimer=useRef<number|undefined>(undefined);
