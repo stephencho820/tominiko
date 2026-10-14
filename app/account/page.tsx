@@ -26,9 +26,10 @@ export default async function Account() {
   }
 
   const orders = await getMyOrders();
-  const [{ data: loyalty }, { data: pointHistory }] = await Promise.all([
+  const [{ data: loyalty }, { data: pointHistory }, { data: vip }] = await Promise.all([
     supabase.from("loyalty_accounts").select("balance,lifetime_earned").eq("user_id",user.id).maybeSingle(),
     supabase.from("loyalty_transactions").select("id,kind,points,note,created_at").eq("user_id",user.id).order("created_at",{ascending:false}).limit(5),
+    supabase.from("vip_customers").select("tier,benefit_note").eq("user_id",user.id).maybeSingle(),
   ]);
   const displayName = user.user_metadata?.name ?? user.user_metadata?.full_name ?? user.email?.split("@")[0];
 
@@ -42,6 +43,7 @@ export default async function Account() {
       <AccountSignOutButton />
     </div>
 
+    {vip && <section className="mb-8 rounded border border-[var(--line)] p-6" aria-label="VIP membership"><p className="section-label">CASA PRIVATE MEMBERSHIP</p><h2 className="mt-3 text-2xl">{vip.tier === "private" ? "PRIVATE" : "VIP"} MEMBER</h2><p className="mt-3 text-[var(--muted)]">{vip.benefit_note || "회원님을 위한 개별 혜택은 매장에서 안내해 드립니다."}</p><p className="mt-2 text-xs text-[var(--muted)]">혜택은 자동 결제 할인으로 적용되지 않습니다.</p></section>}
     <section className="member-points-panel" aria-label="멤버 포인트"><div><p className="section-label">CASA REWARDS</p><h2>My Points</h2><p>로그인 회원의 결제 완료 및 픽업·배송 완료 주문에 2%가 적립됩니다.</p></div><div className="member-points-balance"><strong>{Number(loyalty?.balance??0).toLocaleString("ko-KR")} P</strong><span>누적 적립 {Number(loyalty?.lifetime_earned??0).toLocaleString("ko-KR")} P</span></div></section>
     <div className="member-points-history"><h3>포인트 내역</h3>{pointHistory?.length?pointHistory.map(item=><div key={item.id}><span>{item.note}<small>{new Date(item.created_at).toLocaleDateString("ko-KR")}</small></span><strong>{item.points>0?"+":""}{item.points.toLocaleString("ko-KR")} P</strong></div>):<p>아직 적립된 포인트가 없습니다.</p>}<p className="member-points-policy">1P = 1원 상당 · 현재는 적립 및 조회만 제공하며 결제 시 사용 기능은 준비 중입니다. 취소·환불 시 적립이 회수됩니다.</p></div>
     <div className="mt-16 flex items-center justify-between border-b border-[var(--line)] pb-4">
