@@ -21,10 +21,12 @@ function isLowStock(product: Product) {
 export default async function Admin() {
   const supabase = await createClient();
   const { start, end } = seoulTodayRange();
-  const [{ data: productsData }, { data: ordersData }, { count: todayCount }] = await Promise.all([
+  const [{ data: productsData }, { data: ordersData }, { count: todayCount }, { data: todaySales }, { count: paidCount }] = await Promise.all([
     supabase.from("products").select("*").order("display_order"),
     supabase.from("orders").select("*,order_items(*)").not("order_status", "in", "(completed,cancelled)").order("created_at", { ascending: false }).limit(8),
     supabase.from("orders").select("id", { count: "exact", head: true }).gte("created_at", start).lt("created_at", end),
+    supabase.from("orders").select("total,final_amount").eq("payment_status", "paid").gte("created_at", start).lt("created_at", end),
+    supabase.from("orders").select("id", { count: "exact", head: true }).eq("payment_status", "paid").gte("created_at", start).lt("created_at", end),
   ]);
 
   const products = (productsData ?? []) as Product[];
@@ -32,6 +34,7 @@ export default async function Admin() {
   const activeProducts = products.filter((product) => product.status === "active");
   const todaysCoffee = activeProducts.find((product) => product.todays_roast);
   const lowStock = activeProducts.filter(isLowStock);
+  const todayRevenue = (todaySales ?? []).reduce((sum, order) => sum + Number(order.final_amount ?? order.total ?? 0), 0);
   const newOrders = orders.filter((order) => ["new", "confirmed"].includes(order.order_status)).length;
   const preparing = orders.filter((order) => ["roasting", "preparing"].includes(order.order_status)).length;
   const todayLabel = new Intl.DateTimeFormat("ko-KR", {
@@ -49,6 +52,8 @@ export default async function Admin() {
     </header>
 
     <section className="admin-kpis" aria-label="오늘 운영 현황">
+      <article><span>오늘 결제 매출</span><strong>₩{todayRevenue.toLocaleString("ko-KR")}</strong><small>오늘 결제 완료 주문 합계 · 환불 별도</small></article>
+      <article><span>오늘 결제 완료</span><strong>{paidCount ?? 0}</strong><small>결제 완료 주문 수</small></article>
       <article><span>오늘 주문</span><strong>{todayCount ?? 0}</strong><small>오늘 접수된 주문</small></article>
       <article className={newOrders ? "needs-attention" : ""}><span>처리 필요</span><strong>{newOrders}</strong><small>신규 · 확인 대기</small></article>
       <article><span>준비 중</span><strong>{preparing}</strong><small>로스팅 · 포장 중</small></article>
