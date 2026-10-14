@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Header } from "@/components/Header";
+import { SiteChrome } from "@/components/SiteChrome";
 import { CartProvider } from "@/components/CartProvider";
 import { BUSINESS_INFO, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, siteUrl } from "@/lib/site";
 import "./globals.css";
@@ -41,9 +41,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return <html lang="ko">
     <body>
       <CartProvider>
-        <Header />
-        <div className="site-shell">{children}</div>
-        <footer className="site-footer site-footer-complete">
+        <SiteChrome footer={<footer className="site-footer site-footer-complete">
           <div className="site-footer-brand">
             <p className="eyebrow">CASA DI STEFANO</p>
             <p className="mt-2 sans text-[10px] uppercase tracking-[.12em] text-[var(--muted)]">TOMINIKO BEANS &amp; COFFEE · ROASTED BY ZERO DEGREES</p>
@@ -58,7 +56,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <Link href="/privacy">개인정보처리방침</Link>
             <Link href="/shipping-returns">배송 · 교환 · 환불</Link>
           </nav>
-        </footer>
+        </footer>}>
+          {children}
+        </SiteChrome>
       </CartProvider>
     </body>
   </html>;
