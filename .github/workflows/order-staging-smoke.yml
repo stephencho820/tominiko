@@ -26,7 +26,7 @@ jobs:
         run: |
           node --input-type=module -e '
           const u = new URL(process.env.STAGING_URL);
-          if (u.protocol !== "https:" || !/\\.vercel\\.app$/.test(u.hostname) ||
+          if (u.protocol !== "https:" || !/\.vercel\.app$/.test(u.hostname) ||
               u.hostname === "tominiko-tominiko.vercel.app" ||
               u.hostname === "tominiko.vercel.app") {
             throw Error("Only a non-production Vercel preview URL is allowed");
