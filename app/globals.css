@@ -3501,3 +3501,66 @@ body:has(> .site-header) { padding-top: 72px; }
 @media (max-width: 560px) {
   .category-tabs .catalog-subscription-tab { min-height: 44px; padding-inline: 13px; font-size: 10px; }
 }
+
+
+/* CASA DI STEFANO — Coffee Club editorial experience */
+.club-page{background:var(--paper);color:var(--ink);padding:0 24px 100px}
+.club-page-inner{max-width:1180px;margin:auto}
+.club-hero{display:grid;grid-template-columns:1.05fr .95fr;min-height:490px;border-bottom:1px solid var(--line)}
+.club-hero-copy{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:68px 36px 68px 0}
+.club-hero h1{margin:32px 0 0;font:400 clamp(54px,6.1vw,93px)/1.03 Georgia,serif;letter-spacing:-.065em}
+.club-hero h1 em{font-weight:400}
+.club-hero-desc{margin:28px 0 0;color:var(--muted);font-size:13px;line-height:2}
+.club-hero-link{display:flex;align-items:center;gap:24px;margin-top:37px;padding-bottom:9px;border-bottom:1px solid var(--ink);font:700 10px "Avenir Next",sans-serif;letter-spacing:.15em}
+.club-hero-art{position:relative;display:grid;place-items:center;overflow:hidden;min-height:440px;background:#d8d0c3}
+.club-hero-art:before,.club-hero-art:after{content:"";position:absolute;border:1px solid rgba(72,61,49,.22);border-radius:50%;width:460px;height:460px}
+.club-hero-art:after{width:355px;height:355px}
+.club-art-ring{z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:265px;height:265px;border:1px solid rgba(72,61,49,.48);border-radius:50%;text-align:center}
+.club-art-ring>span{font:400 42px/1.04 Georgia,serif;letter-spacing:-.07em}
+.club-art-ring small{margin-top:22px;font:700 8px "Avenir Next",sans-serif;letter-spacing:.2em}
+.club-art-caption{position:absolute;bottom:26px;left:30px;font:700 9px "Avenir Next",sans-serif;letter-spacing:.15em}
+.club-builder{padding-top:88px}
+.club-section-intro h2{margin-top:13px;font:400 clamp(32px,4vw,51px) Georgia,serif;letter-spacing:-.05em}
+.club-section-intro>p{margin-top:13px;color:var(--muted);font-size:13px}
+.club-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;align-items:start;gap:55px;margin-top:54px}
+.club-steps{min-width:0}
+.club-step{margin:0 0 45px;padding:0;border:0}
+.club-step legend{display:flex;flex-direction:column;gap:13px;width:100%;margin-bottom:20px}
+.club-step legend>span{font:700 10px "Avenir Next",sans-serif;letter-spacing:.16em;color:var(--muted)}
+.club-step legend>strong{font:400 26px Georgia,serif;letter-spacing:-.035em}
+.club-taste-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.club-taste-card{display:flex;flex-direction:column;position:relative;min-height:188px;padding:21px;border:1px solid var(--line);cursor:pointer;transition:background .2s,border-color .2s}
+.club-taste-card:hover,.club-option:hover{border-color:var(--ink)}
+.club-taste-card.is-selected,.club-option.is-selected{background:#eee8dd;border-color:var(--ink)}
+.club-taste-card input,.club-option input{position:absolute;width:1px;height:1px;opacity:0}
+.club-taste-card:focus-within,.club-option:focus-within{outline:2px solid var(--ink);outline-offset:3px}
+.club-taste-top{display:flex;justify-content:space-between;align-items:center;gap:8px;font:700 9px "Avenir Next",sans-serif;letter-spacing:.11em;color:var(--muted)}
+.club-radio-mark{width:14px;height:14px;flex:none;border:1px solid var(--muted);border-radius:50%}
+.is-selected .club-radio-mark{border:4px solid var(--ink)}
+.club-taste-card>strong{margin-top:28px;font:400 22px Georgia,serif;letter-spacing:-.045em}
+.club-taste-description{margin-top:8px;color:var(--muted);font-size:11px;line-height:1.6}
+.club-taste-notes{margin-top:auto;padding-top:16px;font:700 8px "Avenir Next",sans-serif;letter-spacing:.1em;color:var(--muted)}
+.club-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.club-option{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:111px;gap:8px;border:1px solid var(--line);cursor:pointer}
+.club-option strong{font:400 34px Georgia,serif;letter-spacing:-.05em}
+.club-option strong small{margin-left:5px;font:500 12px "Avenir Next",sans-serif;letter-spacing:0}
+.club-option>span{font-size:11px;color:var(--muted)}
+.club-summary{position:sticky;top:104px;background:#e9e3d8;padding:28px}
+.club-summary-top{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.club-summary-top>span:last-child{font:700 8px "Avenir Next",sans-serif;letter-spacing:.08em;color:var(--muted)}
+.club-summary-symbol{display:flex;justify-content:center;align-items:center;gap:15px;margin:28px 0 25px;font:400 58px Georgia,serif;letter-spacing:-.07em}
+.club-summary-symbol span{font:24px Georgia,serif}
+.club-summary h3{font:400 32px/1.15 Georgia,serif;letter-spacing:-.05em}
+.club-summary-description{margin-top:12px;font-size:11px;color:var(--muted)}
+.club-summary dl{margin-top:29px;border-top:1px solid #c9c0b3}
+.club-summary dl>div{display:flex;justify-content:space-between;gap:12px;padding:15px 0;border-bottom:1px solid #c9c0b3}
+.club-summary dt{font:700 9px "Avenir Next",sans-serif;letter-spacing:.13em;color:var(--muted)}
+.club-summary dd{font-size:12px;font-weight:600;text-align:right}
+.club-status{display:flex;align-items:center;gap:8px;margin-top:23px;font:700 10px "Avenir Next",sans-serif;letter-spacing:.04em}
+.club-status-dot{width:7px;height:7px;background:#6f7961;border-radius:50%}
+.club-disclaimer{margin-top:12px;color:var(--muted);font-size:11px;line-height:1.8}
+.club-cta{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:52px;margin-top:22px;padding:0 19px;background:var(--ink);color:var(--paper);font:700 11px "Avenir Next",sans-serif;letter-spacing:.02em}
+.club-cta:hover{opacity:.85}
+.club-shop-link{display:block;margin-top:17px;text-align:center;text-decoration:underline;text-underline-offset:4px;font-size:11px}
+@media(max-width:900px){.club-layout{grid-template-columns:1fr;gap:0}.club-summary{position:static;max-width:none}.club-hero{min-height:390px}.club-hero-art{min-height:390px}.club-art-ring{width:210px;height:210px}.club-art-ring>span{font-size:35px}}
+@media(max-width:600px){.club-page{padding:0 16px 72px}.club-hero{display:flex;flex-direction:column}.club-hero-copy{padding:52px 0 36px}.club-hero h1{margin-top:22px;font-size:clamp(50px,12vw,70px)}.club-hero-desc{margin-top:20px;font-size:12px}.club-hero-link{margin-top:22px}.club-hero-art{min-height:230px}.club-hero-art:before{width:330px;height:330px}.club-hero-art:after{width:245px;height:245px}.club-art-ring{width:170px;height:170px}.club-art-ring>span{font-size:27px}.club-art-ring small{font-size:6px;margin-top:12px}.club-art-caption{bottom:14px;left:15px;font-size:7px}.club-builder{padding-top:60px}.club-layout{margin-top:34px}.club-step{margin-bottom:38px}.club-step legend>strong{font-size:23px}.club-taste-grid{gap:8px}.club-taste-card{min-height:173px;padding:15px}.club-taste-top{font-size:7px}.club-taste-card>strong{font-size:18px;margin-top:25px}.club-taste-description{font-size:10px}.club-taste-notes{font-size:7px}.club-options{gap:8px}.club-summary{padding:24px}}
