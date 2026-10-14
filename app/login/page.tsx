@@ -1,13 +1,24 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 type AuthMode = "sign-in" | "sign-up";
 
 export default function Login() {
 	const router = useRouter();
+	const searchParams = useSearchParams();
+	const requestedNext = searchParams.get("next");
+	const safeNext = requestedNext && requestedNext.startsWith("/") && !requestedNext.startsWith("//") && !requestedNext.startsWith("/\\\\") && !requestedNext.startsWith("/login") && !requestedNext.startsWith("/auth/") ? requestedNext : null;
+	const getReturnPath = () => {
+		if (safeNext) return safeNext;
+		if (typeof window === "undefined") return "/";
+		const saved = window.sessionStorage.getItem("casa-auth-return");
+		if (saved && saved.startsWith("/") && !saved.startsWith("//") && !saved.startsWith("/login") && !saved.startsWith("/auth/")) return saved;
+		try { const previous = new URL(document.referrer); if (previous.origin === window.location.origin && !previous.pathname.startsWith("/login") && !previous.pathname.startsWith("/auth/")) return previous.pathname + previous.search + previous.hash; } catch { /* no same-origin referrer */ }
+		return "/";
+	};
 	const [mode, setMode] = useState<AuthMode>("sign-in");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -41,7 +52,7 @@ export default function Login() {
 			const supabase = createClient();
 			const { error: authError } = await supabase.auth.signInWithOAuth({
 				provider,
-				options: { redirectTo: `${window.location.origin}/auth/callback` },
+				options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(getReturnPath())}` },
 			});
 			if (authError) {
 				setError("소셜 로그인을 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.");
@@ -71,7 +82,7 @@ export default function Login() {
 				: await supabase.auth.signUp({
 						email,
 						password,
-						options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+						options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(getReturnPath())}` },
 					});
 
 			if (result.error) {
@@ -84,7 +95,9 @@ export default function Login() {
 				return;
 			}
 
-			router.push("/account");
+			const destination = getReturnPath();
+			window.sessionStorage.removeItem("casa-auth-return");
+			router.replace(destination);
 			router.refresh();
 		} catch { setError("로그인 요청을 완료하지 못했습니다. 다시 시도해 주세요."); }
 		finally { setIsSubmitting(false); }
