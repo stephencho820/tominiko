@@ -7,12 +7,12 @@ type Order={id:string;order_number:string;created_at:string;table_label:string|n
 const clock=(d:string)=>new Date(d).toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
 export function TastingLiveOrders({initial}:{initial:Order[]}){
  const [orders,setOrders]=useState(initial),[error,setError]=useState(""),[sound,setSound]=useState(false),[lastUpdated,setLastUpdated]=useState("");
- const seen=useRef(new Set(initial.map(o=>o.id))),audio=useRef<AudioContext|null>(null),ready=useRef(false);
+ const seen=useRef(new Set(initial.filter(o=>o.payment_status==="paid").map(o=>o.id))),audio=useRef<AudioContext|null>(null),ready=useRef(false);
  const ping=useCallback(()=>{try{const ctx=audio.current;if(!ctx)return;const oscillator=ctx.createOscillator(),gain=ctx.createGain();oscillator.type="sine";oscillator.frequency.setValueAtTime(880,ctx.currentTime);gain.gain.setValueAtTime(.12,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.23);oscillator.connect(gain);gain.connect(ctx.destination);oscillator.start();oscillator.stop(ctx.currentTime+.23)}catch{}},[]);
  const refresh=useCallback(async()=>{try{const res=await fetch("/api/admin/tasting-live",{cache:"no-store"});if(!res.ok)throw Error("주문 정보를 갱신하지 못했습니다.");const data=await res.json();const incoming:Order[]=data.orders||[];
   const newPaid=incoming.some(o=>o.payment_status==="paid"&&!seen.current.has(o.id));
   if(ready.current&&newPaid&&sound)ping();
-  incoming.forEach(o=>seen.current.add(o.id));ready.current=true;setOrders(incoming);setError("");setLastUpdated(new Date().toLocaleTimeString("ko-KR"));
+  incoming.filter(o=>o.payment_status==="paid").forEach(o=>seen.current.add(o.id));ready.current=true;setOrders(incoming);setError("");setLastUpdated(new Date().toLocaleTimeString("ko-KR"));
  }catch{setError("자동 새로고침에 실패했습니다. 연결 상태를 확인해 주세요.")}},[sound,ping]);
  useEffect(()=>{void refresh();const timer=window.setInterval(()=>{if(!document.hidden)void refresh()},5000);const onVisible=()=>{if(!document.hidden)void refresh()};document.addEventListener("visibilitychange",onVisible);return()=>{clearInterval(timer);document.removeEventListener("visibilitychange",onVisible)}},[refresh]);
  async function enableSound(){try{const ctx=audio.current||new AudioContext();audio.current=ctx;await ctx.resume();setSound(true);ping()}catch{setError("이 브라우저에서 알림음을 사용할 수 없습니다.")}}
