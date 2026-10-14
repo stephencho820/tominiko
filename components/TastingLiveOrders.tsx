@@ -2,8 +2,9 @@
 import Link from "next/link";
 import {useCallback,useEffect,useRef,useState} from "react";
 import {OrderStatusSelect} from "@/components/OrderStatusSelect";
+import type {DeliveryMethod} from "@/types";
 type Item={id:string;product_name:string;selected_option:string|null;weight:string|null;quantity:number};
-type Order={id:string;order_number:string;created_at:string;table_label:string|null;total:number;payment_status:string;payment_method:string|null;order_status:string;delivery_method:string;order_items:Item[]};
+type Order={id:string;order_number:string;created_at:string;table_label:string|null;total:number;payment_status:string;payment_method:string|null;order_status:string;delivery_method:DeliveryMethod;order_items:Item[]};
 const clock=(d:string)=>new Date(d).toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
 export function TastingLiveOrders({initial}:{initial:Order[]}){
  const [orders,setOrders]=useState(initial),[error,setError]=useState(""),[sound,setSound]=useState(false),[lastUpdated,setLastUpdated]=useState("");
