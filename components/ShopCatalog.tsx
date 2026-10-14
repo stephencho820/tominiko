@@ -98,7 +98,7 @@ export function ShopCatalog({ products }: { products: Product[] }) {
   }), [category, products, sort]);
   return <section className="shop-catalog" aria-label="Coffee catalog">
     <div className="catalog-toolbar">
-      <div className="category-tabs">{availableCategories.map((item) => <button type="button" key={item.value} aria-pressed={category === item.value} onClick={() => selectCategory(item.value)}>{item.label}<small>{item.count}</small></button>)}</div>
+      <div className="category-tabs">{availableCategories.map((item) => <button type="button" key={item.value} aria-pressed={category === item.value} onClick={() => selectCategory(item.value)}>{item.label}<small>{item.count}</small></button>)}<Link href="/subscription" className="catalog-subscription-tab">구독</Link></div>
       <div className="catalog-controls"><span className="catalog-count">{shown.length} COFFEE{shown.length === 1 ? "" : "S"}</span><select aria-label="상품 정렬" value={sort} onChange={(event) => setSort(event.target.value)}><option value="featured">추천순</option><option value="new">신상품순</option><option value="low">가격 낮은순</option><option value="high">가격 높은순</option></select>
         <div className="view-controls" aria-label="보기 방식">{([["grid", Grid2X2], ["list", List], ["large", Rows3]] as const).map(([value, Icon]) => <button title={value} aria-label={`${value} view`} aria-pressed={view === value} type="button" key={value} onClick={() => setView(value)}><Icon size={17} /></button>)}</div>
       </div>
