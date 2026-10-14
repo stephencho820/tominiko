@@ -6,14 +6,12 @@ import { useEffect, useState } from "react";
 import { Menu, ShoppingBag, X } from "lucide-react";
 import { useCart } from "./CartProvider";
 
-const primaryLinks = [
-  ["TASTING ROOM", "/tasting-room"],
-  ["ABOUT", "/our-story"],
-];
+
 
 export function Header() {
   const [open, setOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
+  const [tastingOpen, setTastingOpen] = useState(false);
   const pathname = usePathname();
   const openTastingOrder = (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (pathname !== "/tasting-room/menu") return;
@@ -46,7 +44,7 @@ export function Header() {
     };
   }, []);
 
-  useEffect(() => { setOpen(false); setShopOpen(false); }, [pathname]);
+  useEffect(() => { setOpen(false); setShopOpen(false); setTastingOpen(false); }, [pathname]);
 
   useEffect(() => {
     if (!open) return;
@@ -82,15 +80,16 @@ export function Header() {
               <Link href="/subscription" className="nav-link block px-5 py-3 hover:text-[var(--accent)]" onClick={() => setShopOpen(false)}>COFFEE SUBSCRIPTION</Link>
             </div>
           </div>
-          {primaryLinks.map(([label, href]) => (
-            <Link
-              key={href}
-              href={href}
-              className="nav-link transition-colors hover:text-[var(--accent)]"
-            >
-              {label}
-            </Link>
-          ))}
+          <div className="group relative" onMouseEnter={() => setTastingOpen(true)} onMouseLeave={() => setTastingOpen(false)}>
+            <button type="button" className="nav-link flex items-center gap-2 transition-colors hover:text-[var(--accent)]" aria-expanded={tastingOpen} aria-haspopup="true" onClick={() => setTastingOpen(!tastingOpen)} onKeyDown={event => { if (event.key === "Escape") setTastingOpen(false); }}>
+              TASTING ROOM <span aria-hidden="true">⌄</span>
+            </button>
+            <div className={`absolute left-0 top-full z-30 min-w-[220px] border border-[var(--line)] bg-[var(--ivory)] py-3 shadow-lg ${tastingOpen ? "block" : "hidden"} group-focus-within:block`}>
+              <Link href="/tasting-room" className="nav-link block px-5 py-3 hover:text-[var(--accent)]" onClick={() => setTastingOpen(false)}>TASTING ROOM</Link>
+              <Link href="/tasting-room/menu" className="nav-link block px-5 py-3 hover:text-[var(--accent)]" onClick={() => setTastingOpen(false)}>MENU · ORDER</Link>
+            </div>
+          </div>
+          <Link href="/our-story" className="nav-link transition-colors hover:text-[var(--accent)]">ABOUT</Link>
         </nav>
 
         <div className="hidden items-center justify-end gap-5 md:flex">
@@ -138,16 +137,9 @@ export function Header() {
           <Link href="/" className="nav-link" onClick={() => setOpen(false)}>HOME</Link>
           <button type="button" className="nav-link flex items-center justify-between text-left" aria-expanded={shopOpen} onClick={() => setShopOpen(!shopOpen)}>ONLINE SHOP <span aria-hidden="true">{shopOpen ? "−" : "+"}</span></button>
           {shopOpen && <div className="flex flex-col gap-4 border-l border-[var(--line)] py-3 pl-5"><Link href="/shop" className="nav-link" onClick={() => setOpen(false)}>SHOP COFFEE</Link><Link href="/subscription" className="nav-link" onClick={() => setOpen(false)}>COFFEE SUBSCRIPTION</Link></div>}
-          {primaryLinks.map(([label, href]) => (
-            <Link
-              key={href}
-              href={href}
-              className="nav-link"
-              onClick={() => setOpen(false)}
-            >
-              {label}
-            </Link>
-          ))}
+          <button type="button" className="nav-link flex items-center justify-between text-left" aria-expanded={tastingOpen} onClick={() => setTastingOpen(!tastingOpen)}>TASTING ROOM <span aria-hidden="true">{tastingOpen ? "−" : "+"}</span></button>
+          {tastingOpen && <div className="flex flex-col gap-4 border-l border-[var(--line)] py-3 pl-5"><Link href="/tasting-room" className="nav-link" onClick={() => setOpen(false)}>TASTING ROOM</Link><Link href="/tasting-room/menu" className="nav-link" onClick={() => setOpen(false)}>MENU · ORDER</Link></div>}
+          <Link href="/our-story" className="nav-link" onClick={() => setOpen(false)}>ABOUT</Link>
           <div className="border-t border-[var(--line)] pt-4">
             <Link href="/account" className="nav-meta" onClick={() => setOpen(false)}>
               MY ACCOUNT
