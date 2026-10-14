@@ -12,6 +12,7 @@ const primaryLinks = [
   ["TASTING ROOM", "/tasting-room"],
   ["MENU", "/tasting-room/menu"],
   ["MY ORDERS", "/tasting-room/order/history"],
+  ["SUBSCRIPTION", "/subscription"],
 ];
 
 export function Header() {
