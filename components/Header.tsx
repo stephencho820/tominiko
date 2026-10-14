@@ -14,7 +14,7 @@ export function Header() {
   const [tastingOpen, setTastingOpen] = useState(false);
   const pathname = usePathname();
   const openTastingOrder = (event: React.MouseEvent<HTMLAnchorElement>) => {
-    if (pathname !== "/tasting-room/menu") return;
+    if (pathname !== "/tasting-room/qr") return;
     event.preventDefault();
     window.dispatchEvent(new Event("tasting-open-order"));
     setOpen(false);
@@ -86,7 +86,7 @@ export function Header() {
             </button>
             <div className={`absolute left-0 top-full z-30 min-w-[220px] border border-[var(--line)] bg-[var(--ivory)] py-3 shadow-lg ${tastingOpen ? "block" : "hidden"} group-focus-within:block`}>
               <Link href="/tasting-room" className="nav-link block px-5 py-3 hover:text-[var(--accent)]" onClick={() => setTastingOpen(false)}>TASTING ROOM</Link>
-              <Link href="/tasting-room/menu" className="nav-link block px-5 py-3 hover:text-[var(--accent)]" onClick={() => setTastingOpen(false)}>MENU · ORDER</Link>
+              <Link href="/tasting-room/menu" className="nav-link block px-5 py-3 hover:text-[var(--accent)]" onClick={() => setTastingOpen(false)}>MENU</Link>
             </div>
           </div>
           <Link href="/our-story" className="nav-link transition-colors hover:text-[var(--accent)]">ABOUT</Link>
@@ -96,7 +96,7 @@ export function Header() {
           <Link href="/account" className="nav-meta transition-colors hover:text-[var(--accent)]">
             Account
           </Link>
-          {tastingCount > 0 && <Link href="/tasting-room/menu#order" onClick={openTastingOrder} className="nav-meta" aria-label={`Tasting Room 주문 ${tastingCount}개`}>MENU ORDER · {tastingCount}</Link>}
+          {pathname.startsWith("/tasting-room/qr") && tastingCount > 0 && <Link href="/tasting-room/qr#order" onClick={openTastingOrder} className="nav-meta" aria-label={`Tasting Room 주문 ${tastingCount}개`}>MENU ORDER · {tastingCount}</Link>}
           <Link href="/cart" className="nav-meta flex items-center gap-2 transition-colors hover:text-[var(--accent)]">
             <span>Cart</span>
             <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--ink)] px-1 text-[9px] font-semibold text-[var(--paper)]" aria-label={`${itemCount} items in cart`}>
@@ -106,7 +106,7 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-1 md:hidden">
-          {tastingCount > 0 && <Link href="/tasting-room/menu#order" onClick={openTastingOrder} className="nav-meta text-[10px]" aria-label={`Tasting Room 주문 ${tastingCount}개`}>ORDER {tastingCount}</Link>}
+          {pathname.startsWith("/tasting-room/qr") && tastingCount > 0 && <Link href="/tasting-room/qr#order" onClick={openTastingOrder} className="nav-meta text-[10px]" aria-label={`Tasting Room 주문 ${tastingCount}개`}>ORDER {tastingCount}</Link>}
           <Link
             href="/cart"
             className="relative grid h-11 w-11 place-items-center rounded"
@@ -138,7 +138,7 @@ export function Header() {
           <button type="button" className="nav-link flex items-center justify-between text-left" aria-expanded={shopOpen} onClick={() => setShopOpen(!shopOpen)}>ONLINE SHOP <span aria-hidden="true">{shopOpen ? "−" : "+"}</span></button>
           {shopOpen && <div className="flex flex-col gap-4 border-l border-[var(--line)] py-3 pl-5"><Link href="/shop" className="nav-link" onClick={() => setOpen(false)}>SHOP COFFEE</Link><Link href="/subscription" className="nav-link" onClick={() => setOpen(false)}>COFFEE SUBSCRIPTION</Link></div>}
           <button type="button" className="nav-link flex items-center justify-between text-left" aria-expanded={tastingOpen} onClick={() => setTastingOpen(!tastingOpen)}>TASTING ROOM <span aria-hidden="true">{tastingOpen ? "−" : "+"}</span></button>
-          {tastingOpen && <div className="flex flex-col gap-4 border-l border-[var(--line)] py-3 pl-5"><Link href="/tasting-room" className="nav-link" onClick={() => setOpen(false)}>TASTING ROOM</Link><Link href="/tasting-room/menu" className="nav-link" onClick={() => setOpen(false)}>MENU · ORDER</Link></div>}
+          {tastingOpen && <div className="flex flex-col gap-4 border-l border-[var(--line)] py-3 pl-5"><Link href="/tasting-room" className="nav-link" onClick={() => setOpen(false)}>TASTING ROOM</Link><Link href="/tasting-room/menu" className="nav-link" onClick={() => setOpen(false)}>MENU</Link></div>}
           <Link href="/our-story" className="nav-link" onClick={() => setOpen(false)}>ABOUT</Link>
           <div className="border-t border-[var(--line)] pt-4">
             <Link href="/account" className="nav-meta" onClick={() => setOpen(false)}>

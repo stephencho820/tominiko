@@ -23,7 +23,7 @@ export default async function TastingRoomPage() {
     <section className="room-visit-hero"><picture><source media="(max-width: 700px)" srcSet={room.mobileHeroImage || defaultMobileHero} /><SafeHeroImage src={heroImage} fallback={defaultHero} alt="Casa di Stefano Tasting Room" /></picture><Link href="/our-story" className="room-story-link">PHILOSOPHY <span>↗</span></Link></section>
     <section className="room-intro" aria-labelledby="room-intro-title">
       <div><p className="section-label">CASA DI STEFANO</p><h1 id="room-intro-title">향긋한 커피를<br />직접 만나보세요.</h1></div>
-      <div><p>커피를 고르기 전에 맛보고 싶을 때, 로스팅 이야기가 궁금할 때, 천천히 머물고 싶을 때 찾아오세요.</p><div className="room-intro-actions"><Link href="/tasting-room/menu">TASTING MENU ↗</Link><Link href="/tasting-room/order/history">MY ORDERS ↗</Link><a href="#visit">방문 정보 ↓</a><Link href="/shop">원두 SHOP ↗</Link></div></div>
+      <div><p>커피를 고르기 전에 맛보고 싶을 때, 로스팅 이야기가 궁금할 때, 천천히 머물고 싶을 때 찾아오세요.</p><div className="room-intro-actions"><Link href="/tasting-room/menu">TASTING MENU ↗</Link><a href="#visit">방문 정보 ↓</a><Link href="/shop">원두 SHOP ↗</Link></div></div>
     </section>
     <section className="room-visit" id="visit" aria-labelledby="visit-title"><p className="section-label" id="visit-title">VISIT</p><div className="room-visit-layout">
       <figure className="room-map"><a href={naverMapHref} target="_blank" rel="noopener noreferrer" aria-label="네이버 지도에서 Casa Di Stefano 검색하기" title="네이버 지도에서 Casa Di Stefano 보기"><img src="/images/tasting-room/map-casa-user.svg" alt="Casa di Stefano Tasting Room location map in Suwon" /></a></figure>
