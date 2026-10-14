@@ -7,16 +7,13 @@ import { Menu, ShoppingBag, X } from "lucide-react";
 import { useCart } from "./CartProvider";
 
 const primaryLinks = [
-  ["SHOP", "/shop"],
-  ["PHILOSOPHY", "/our-story"],
   ["TASTING ROOM", "/tasting-room"],
-  ["MENU", "/tasting-room/menu"],
-  ["MY ORDERS", "/tasting-room/order/history"],
-  ["SUBSCRIPTION", "/subscription"],
+  ["ABOUT", "/our-story"],
 ];
 
 export function Header() {
   const [open, setOpen] = useState(false);
+  const [shopOpen, setShopOpen] = useState(false);
   const pathname = usePathname();
   const openTastingOrder = (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (pathname !== "/tasting-room/menu") return;
@@ -49,6 +46,8 @@ export function Header() {
     };
   }, []);
 
+  useEffect(() => { setOpen(false); setShopOpen(false); }, [pathname]);
+
   useEffect(() => {
     if (!open) return;
     const previousOverflow = document.body.style.overflow;
@@ -72,7 +71,17 @@ export function Header() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-7 md:flex">
+        <nav className="hidden items-center gap-7 md:flex" aria-label="Main navigation">
+          <Link href="/" className="nav-link transition-colors hover:text-[var(--accent)]">HOME</Link>
+          <div className="group relative" onMouseEnter={() => setShopOpen(true)} onMouseLeave={() => setShopOpen(false)}>
+            <button type="button" className="nav-link flex items-center gap-2 transition-colors hover:text-[var(--accent)]" aria-expanded={shopOpen} aria-haspopup="true" onClick={() => setShopOpen(!shopOpen)} onKeyDown={event => { if (event.key === "Escape") setShopOpen(false); }}>
+              ONLINE SHOP <span aria-hidden="true">⌄</span>
+            </button>
+            <div className={`absolute left-0 top-full z-30 min-w-[220px] border border-[var(--line)] bg-[var(--ivory)] py-3 shadow-lg ${shopOpen ? "block" : "hidden"} group-focus-within:block`}>
+              <Link href="/shop" className="nav-link block px-5 py-3 hover:text-[var(--accent)]" onClick={() => setShopOpen(false)}>SHOP COFFEE</Link>
+              <Link href="/subscription" className="nav-link block px-5 py-3 hover:text-[var(--accent)]" onClick={() => setShopOpen(false)}>COFFEE SUBSCRIPTION</Link>
+            </div>
+          </div>
           {primaryLinks.map(([label, href]) => (
             <Link
               key={href}
@@ -126,6 +135,9 @@ export function Header() {
       {cartNotice && <div className="site-cart-toast" role="status"><span>✓ {cartNotice}<br/><small>{freeShippingRemaining > 0 ? `${freeShippingRemaining.toLocaleString("ko-KR")}원 더 담으면 무료배송` : "무료배송 조건을 달성했어요"}</small></span><Link href="/cart" onClick={dismissCartNotice}>장바구니 보기 →</Link></div>}
       {open && (
         <nav className="mobile-nav-panel absolute left-0 top-full flex w-full flex-col gap-2 border-b border-[var(--line)] bg-[var(--ivory)] px-6 py-5 shadow-lg md:hidden">
+          <Link href="/" className="nav-link" onClick={() => setOpen(false)}>HOME</Link>
+          <button type="button" className="nav-link flex items-center justify-between text-left" aria-expanded={shopOpen} onClick={() => setShopOpen(!shopOpen)}>ONLINE SHOP <span aria-hidden="true">{shopOpen ? "−" : "+"}</span></button>
+          {shopOpen && <div className="flex flex-col gap-4 border-l border-[var(--line)] py-3 pl-5"><Link href="/shop" className="nav-link" onClick={() => setOpen(false)}>SHOP COFFEE</Link><Link href="/subscription" className="nav-link" onClick={() => setOpen(false)}>COFFEE SUBSCRIPTION</Link></div>}
           {primaryLinks.map(([label, href]) => (
             <Link
               key={href}
@@ -138,7 +150,7 @@ export function Header() {
           ))}
           <div className="border-t border-[var(--line)] pt-4">
             <Link href="/account" className="nav-meta" onClick={() => setOpen(false)}>
-              Account
+              MY ACCOUNT
             </Link>
           </div>
         </nav>
