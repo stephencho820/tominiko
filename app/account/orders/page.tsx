@@ -21,6 +21,7 @@ export default async function AccountOrdersPage() {
     <div className="mt-10 flex flex-wrap gap-5 border-b border-[var(--line)] pb-5">
       <Link href="/account">← 내 계정</Link>
       <Link href="/tasting-room/order/history">Tasting Room 주문 내역 ↗</Link>
+      <Link href="/orders/guest">비회원 온라인 주문 조회 ↗</Link>
     </div>
     {orders.length ? <div className="divide-y divide-[var(--line)]">
       {orders.map(order => <article key={order.id} className="py-7">
