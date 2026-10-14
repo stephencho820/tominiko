@@ -13,6 +13,7 @@ export default function PaymentSuccess() {
   const started = useRef(false);
   const [order, setOrder] = useState<CompletedOrder | null>(null);
   const [error, setError] = useState("");
+  const [guestLookup, setGuestLookup] = useState<{orderId:string;token:string}|null>(null);
   useEffect(() => {
     if (started.current) return; started.current = true;
     const paymentKey = params.get("paymentKey"), orderId = params.get("orderId"), amount = Number(params.get("amount"));
@@ -25,6 +26,7 @@ export default function PaymentSuccess() {
       .then((data) => {
         if (data.order?.payment_status !== "paid") throw new Error("결제가 완료되지 않았습니다.");
         setOrder(data.order);
+        setGuestLookup({orderId,token:accessToken});
         clear();
         try {
           sessionStorage.removeItem("tominiko-checkout-reference");
@@ -39,5 +41,6 @@ export default function PaymentSuccess() {
   if (!order) return <main className="px-6 py-24 text-center"><p className="eyebrow">결제를 안전하게 확인하고 있습니다…</p></main>;
   return <main className="mx-auto max-w-2xl px-6 py-20"><div className="text-center"><p className="eyebrow">Order complete</p><h1 className="mt-5 text-6xl">주문이 완료되었습니다.</h1><p className="sans mt-5 text-sm text-[var(--muted)]">주문 번호 <strong className="text-[var(--ink)]">{order.order_number}</strong></p></div><section className="mt-12 border-y border-[var(--line)]">
     {order.order_items.map((item,index) => <div key={index} className="flex justify-between gap-5 border-b border-[var(--line)] py-4 last:border-0"><span>{item.product_name} · {item.weight} · {item.grind} × {item.quantity}</span><span>₩{item.subtotal.toLocaleString()}</span></div>)}
-  </section><div className="mt-6 flex justify-between text-2xl"><span>결제 금액</span><span>₩{order.total.toLocaleString()}</span></div><p className="sans mt-3 text-sm text-[var(--muted)]">수령 방법: {{ shipping: "택배 배송", local_delivery: "CASA LOCAL DELIVERY", pickup: "매장 픽업" }[order.delivery_method ?? (order.fulfillment_type === "pickup" ? "pickup" : "shipping")]}</p><div className="mt-10 text-center"><Link href="/shop" className="button-primary inline-block px-7 py-3 sans text-xs">쇼핑 계속하기</Link></div></main>;
+  </section><div className="mt-6 flex justify-between text-2xl"><span>결제 금액</span><span>₩{order.total.toLocaleString()}</span></div><p className="sans mt-3 text-sm text-[var(--muted)]">수령 방법: {{ shipping: "택배 배송", local_delivery: "CASA LOCAL DELIVERY", pickup: "매장 픽업" }[order.delivery_method ?? (order.fulfillment_type === "pickup" ? "pickup" : "shipping")]}</p>{guestLookup && <section className="mt-10 rounded border border-[var(--line)] p-6"><h2 className="text-xl">비회원 주문 조회 정보</h2><p className="mt-3 text-sm text-[var(--muted)]">주문 조회에 필요한 정보입니다. 안전한 곳에 따로 보관해 주세요. 이 정보가 있는 사람은 주문 상태를 볼 수 있습니다.</p><label className="mt-4 block text-sm">주문 ID<input className="mt-2 w-full border p-3 font-mono text-xs" readOnly value={guestLookup.orderId} onFocus={e=>e.target.select()}/></label><label className="mt-4 block text-sm">접근 토큰<input className="mt-2 w-full border p-3 font-mono text-xs" readOnly value={guestLookup.token} onFocus={e=>e.target.select()}/></label><Link className="mt-4 inline-block underline" href="/orders/guest">비회원 주문 조회 페이지 →</Link></section>}
+  <div className="mt-10 text-center"><Link href="/shop" className="button-primary inline-block px-7 py-3 sans text-xs">쇼핑 계속하기</Link></div></main>;
 }
