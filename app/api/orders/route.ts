@@ -72,6 +72,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: unavailable ? "품절되었거나 구매할 수 없는 상품이 있습니다." : "주문을 만들지 못했습니다. 잠시 후 다시 시도해 주세요." }, { status: unavailable ? 409 : 400 });
   }
   const order = data[0];
+  // An idempotent replay needs the original token. A different token cannot read the order.
+  if (order.token_matches === false) return NextResponse.json({ error: "이미 처리된 주문 요청입니다. 결제 화면을 새로 열어 주세요." }, { status: 409 });
+
   // Associate an authenticated checkout with the signed-in account. The guest
   // token remains the payment-recovery credential for both guest and user checkouts.
   if (authData.user?.id) {
@@ -85,8 +88,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "주문 계정을 연결하지 못했습니다. 다시 시도해 주세요." }, { status: 503 });
     }
   }
-  // An idempotent replay needs the original token. A different token cannot read the order.
-  if (order.token_matches === false) return NextResponse.json({ error: "이미 처리된 주문 요청입니다. 결제 화면을 새로 열어 주세요." }, { status: 409 });
 
   if(manual){
     const {data:bank}=await supabase.from("manual_transfer_settings").select("id").eq("id",true).maybeSingle();
