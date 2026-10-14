@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { getMyOrders } from "@/services/orders";
 import { deliveryMethodLabels, orderStatusLabel, paymentStatusLabels } from "@/lib/admin";
+import type { Order } from "@/types";
 
 export const metadata = { title: "My Orders" };
 
@@ -12,7 +13,7 @@ export default async function AccountOrdersPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  const orders = await getMyOrders();
+  const orders = (await getMyOrders()) as Order[];
   return <main className="mx-auto max-w-4xl px-6 py-14 md:px-12 md:py-20">
     <p className="section-label">CASA DI STEFANO · MY ACCOUNT</p>
     <h1 className="mt-4 text-4xl md:text-5xl">My Orders</h1>
