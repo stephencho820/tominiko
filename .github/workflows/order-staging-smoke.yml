@@ -1,0 +1,38 @@
+name: Order API staging smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      staging_url:
+        description: "Explicit staging origin (never production)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate staging target
+        env:
+          STAGING_URL: ${{ inputs.staging_url }}
+        run: |
+          node --input-type=module -e '
+          const u = new URL(process.env.STAGING_URL);
+          if (u.protocol !== "https:" || !/\.vercel\.app$/.test(u.hostname) ||
+              u.hostname === "tominiko-tominiko.vercel.app" ||
+              u.hostname === "tominiko.vercel.app") {
+            throw Error("Only a non-production Vercel preview URL is allowed");
+          }
+          '
+      - name: Run safe unauthenticated smoke checks
+        env:
+          SMOKE_BASE_URL: ${{ inputs.staging_url }}
+        run: node scripts/smoke-order-apis.mjs
