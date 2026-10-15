@@ -11,6 +11,7 @@ export function PageContentEditor({ slug, initial }: { slug: PageSlug; initial: 
   const [settings, setSettings] = useState(initial);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ name: string; percent: number; stage: string } | null>(null);
   const busyRef = useRef(false);
   const changeBusy = (next: boolean) => { busyRef.current = next; setBusy(next); };
   const updateText = (key: string, patch: Partial<PageSettings["texts"][string]>) => setSettings((current) => ({ ...current, texts: { ...current.texts, [key]: { ...current.texts[key], ...patch } } }));
@@ -19,18 +20,49 @@ export function PageContentEditor({ slug, initial }: { slug: PageSlug; initial: 
     const validation = validatePageMedia(file, { video: key.startsWith("hero-"), svg: key in definition.images });
     if (validation.error) return setStatus(validation.error);
     changeBusy(true);
-    setStatus(`업로드 중: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+    setUploadProgress({ name: file.name, percent: 0, stage: "서버 연결 중" });
+    setStatus(`파일 업로드 준비 중: ${file.name}`);
     try {
       const supabase = createClient();
       const path = `${slug}/${crypto.randomUUID()}.${validation.extension}`;
-      const { error } = await supabase.storage.from("page-images").upload(path, file);
-      if (error) return setStatus(`업로드 실패: ${error.message}. 영상 파일은 업로드가 성공해야 저장할 수 있습니다.`);
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session) throw new Error("로그인 세션이 만료되었습니다. 다시 로그인해 주세요.");
+      const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+      const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `${baseUrl}/storage/v1/object/page-images/${path}`);
+        xhr.setRequestHeader("Authorization", `Bearer ${sessionData.session!.access_token}`);
+        xhr.setRequestHeader("apikey", anonKey);
+        xhr.setRequestHeader("Content-Type", file.type);
+        xhr.setRequestHeader("cache-control", "3600");
+        xhr.upload.onprogress = (event) => {
+          if (!event.lengthComputable) return;
+          const percent = Math.min(100, Math.round(event.loaded / event.total * 100));
+          setUploadProgress({ name: file.name, percent, stage: percent === 100 ? "서버에서 파일 확인 중" : "업로드 중" });
+        };
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) resolve();
+          else {
+            let message = xhr.responseText || `HTTP ${xhr.status}`;
+            try { message = JSON.parse(xhr.responseText).message || message; } catch { /* raw error */ }
+            reject(new Error(message));
+          }
+        };
+        xhr.onerror = () => reject(new Error("네트워크 연결 오류가 발생했습니다."));
+        xhr.ontimeout = () => reject(new Error("업로드 시간이 초과되었습니다."));
+        xhr.timeout = 180000;
+        xhr.send(file);
+      });
+      setUploadProgress({ name: file.name, percent: 100, stage: "업로드 완료" });
       const { data } = supabase.storage.from("page-images").getPublicUrl(path);
       if (onComplete) onComplete(data.publicUrl);
       else setSettings((current) => ({ ...current, images: { ...current.images, [key]: data.publicUrl } }));
       setStatus("업로드 완료! 이제 Save & publish 버튼을 눌러 반영하세요.");
-    } catch {
-      setStatus("Could not upload the image. Check your connection and try again.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "알 수 없는 오류";
+      setStatus(`업로드 실패: ${message}`);
+      setUploadProgress((current) => current ? { ...current, stage: "업로드 실패" } : null);
     } finally {
       changeBusy(false);
     }
@@ -58,7 +90,7 @@ export function PageContentEditor({ slug, initial }: { slug: PageSlug; initial: 
       changeBusy(false);
     }
   };
-  return <div className="admin-page-editor">
+  return <div className="admin-page-editor">\n    {uploadProgress && <div role="status" aria-live="polite" className="admin-panel" style={{ padding: "18px 22px", marginBottom: 18 }}><strong>미디어 업로드 · {uploadProgress.stage}</strong><p style={{ margin: "8px 0", overflowWrap: "anywhere" }}>{uploadProgress.name} — {uploadProgress.percent}%</p><progress value={uploadProgress.percent} max={100} style={{ width: "100%", height: 12, accentColor: "#343028" }} /><p style={{ marginTop: 8, fontSize: 12 }}>업로드 완료 후 Save & publish 버튼을 눌러주세요. 진행 중에는 페이지를 닫지 마세요.</p></div>}
     {slug === "tasting-room" && settings.tastingRoom && <TastingRoomEditor value={settings.tastingRoom} onChange={(tastingRoom) => setSettings((current) => ({ ...current, tastingRoom }))} onStatus={setStatus} onBusy={changeBusy} busy={busy} isBusy={() => busyRef.current} />}
     {Object.keys(definition.texts).length > 0 && <section className="admin-panel"><div className="admin-section-heading"><div><p className="eyebrow">{slug === "our-story" ? "Brand assets & philosophy" : "Text & typography"}</p><h2>{slug === "our-story" ? "Philosophy settings" : "Page copy"}</h2></div></div><p className="admin-muted">Line breaks are preserved. Leave text size empty to use the page&apos;s responsive default.</p>
       <div className="admin-content-fields">{Object.entries(definition.texts).map(([key, entry]) => <div className="admin-content-field" key={key}><label>{entry[0]}<textarea value={settings.texts[key]?.value ?? ""} onChange={(event) => updateText(key, { value: event.target.value })} /></label><div><label>Font<select value={settings.texts[key]?.font ?? "serif"} onChange={(event) => updateText(key, { font: event.target.value as "serif" | "sans" | "display" })}><option value="serif">Serif</option><option value="sans">Sans serif</option><option value="display">Display</option></select></label><label>Text size<input value={settings.texts[key]?.size ?? ""} placeholder="e.g. 48px, 5vw" onChange={(event) => updateText(key, { size: event.target.value })} /></label></div></div>)}</div>
