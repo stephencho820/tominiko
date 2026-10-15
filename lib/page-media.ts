@@ -7,7 +7,7 @@ export function validatePageMedia(file: Pick<File, "type" | "size">, options: { 
     ?? (options.svg && file.type === "image/svg+xml" ? "svg" : undefined)
     ?? (options.video ? ({ "video/mp4": "mp4", "video/webm": "webm" } as Record<string, string>)[file.type] : undefined);
   if (!extension) return { error: "지원하지 않는 파일 형식입니다." } as const;
-  const maxMB = file.type.startsWith("video/") ? 50 : 5;
+  const maxMB = options.video && file.type.startsWith("video/") ? 200 : 5;
   if (file.size > maxMB * 1024 * 1024) return { error: `파일은 ${maxMB}MB 이하여야 합니다.` } as const;
   return { extension } as const;
 }
