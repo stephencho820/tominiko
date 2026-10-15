@@ -5,7 +5,7 @@ export function EditorialBanner({ banners, placement }: { banners: PromotionBann
   if (!banner) return null;
 
   return <section className={`editorial-home-banner editorial-home-banner-${placement}`} aria-label={banner.alt}>
-    <a href={banner.hyperlink || (placement === "our-story" ? "/our-story" : "/tasting-room")}>
+    <a href={placement === "our-story" ? "/our-story" : "/tasting-room"}>
       <picture>
         {banner.mobileImage && <source media="(max-width: 760px)" srcSet={banner.mobileImage} />}
         <img src={banner.image} alt={banner.alt} />
