@@ -3586,3 +3586,9 @@ body:has(> .site-header) { padding-top: 72px; }
 .club-history-pill{padding:7px 11px;border:1px solid #c4c9b9;background:#eff1e9;color:#475443;font-size:11px;font-weight:700}
 .club-history-item-meta time{font-size:11px;color:var(--muted)}
 @media(max-width:600px){.club-hero{min-height:auto}.club-hero-copy{padding:40px 0 30px}.club-hero h1{font-size:clamp(42px,10.5vw,57px)}.club-hero-art{min-height:230px}.club-history{margin-top:58px;padding-top:28px}.club-history-heading{align-items:start}.club-history-item{padding:20px;min-height:110px;gap:12px}.club-history-item h3{font-size:19px}.club-history-item-meta{gap:9px}.club-history-label{font-size:8px}}
+
+/* Hero artwork contains typography: preserve its full composition at every viewport. */
+.room-visit-hero { aspect-ratio: auto; min-height: 0; max-height: none; }
+.room-visit-hero > picture { display: block; width: 100%; height: auto; }
+.room-visit-hero > picture > img { display: block; width: 100%; height: auto; object-fit: contain; }
+@media (max-width: 760px) { .room-visit-hero { aspect-ratio: auto; min-height: 0; } }
