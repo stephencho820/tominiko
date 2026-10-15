@@ -19,16 +19,16 @@ export function PageContentEditor({ slug, initial }: { slug: PageSlug; initial: 
     const validation = validatePageMedia(file, { video: key.startsWith("hero-"), svg: key in definition.images });
     if (validation.error) return setStatus(validation.error);
     changeBusy(true);
-    setStatus("Uploading image…");
+    setStatus(`업로드 중: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
     try {
       const supabase = createClient();
       const path = `${slug}/${crypto.randomUUID()}.${validation.extension}`;
       const { error } = await supabase.storage.from("page-images").upload(path, file);
-      if (error) return setStatus("파일을 업로드하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      if (error) return setStatus(`업로드 실패: ${error.message}. 영상 파일은 업로드가 성공해야 저장할 수 있습니다.`);
       const { data } = supabase.storage.from("page-images").getPublicUrl(path);
       if (onComplete) onComplete(data.publicUrl);
       else setSettings((current) => ({ ...current, images: { ...current.images, [key]: data.publicUrl } }));
-      setStatus("Media uploaded. Save the page to publish it.");
+      setStatus("업로드 완료! 이제 Save & publish 버튼을 눌러 반영하세요.");
     } catch {
       setStatus("Could not upload the image. Check your connection and try again.");
     } finally {
@@ -38,6 +38,14 @@ export function PageContentEditor({ slug, initial }: { slug: PageSlug; initial: 
   const updatePromotion = (id: string, patch: Partial<PromotionBanner>) => setSettings((current) => ({ ...current, promotions: (current.promotions ?? []).map((banner) => banner.id === id ? { ...banner, ...patch } : banner) }));
   const save = async () => {
     if (busyRef.current) return;
+    if (slug === "home" && settings.heroMedia) {
+      const media = settings.heroMedia;
+      const isInvalidVideo = (url: string, type: string) => type === "video" && (!url || !/^https:\/\//i.test(url) || !/\.(mp4|webm)(\?|$)/i.test(url));
+      if (isInvalidVideo(media.url, media.type) || (media.mobileUrl && isInvalidVideo(media.mobileUrl, media.mobileType))) {
+        setStatus("영상 주소가 올바르지 않습니다. /images/home-hero.mp4 같은 경로를 직접 입력해도 파일이 업로드되지 않습니다. 위 파일 선택으로 영상을 업로드한 후 저장해 주세요.");
+        return;
+      }
+    }
     changeBusy(true);
     setStatus("Saving…");
     try {
