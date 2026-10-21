@@ -80,7 +80,7 @@ export function Header() {
           </Link>
           {pathname.startsWith("/tasting-room/qr") && tastingCount > 0 && <Link href="/tasting-room/qr#order" onClick={openTastingOrder} className="nav-meta" aria-label={`Tasting Room 주문 ${tastingCount}개`}>MENU ORDER · {tastingCount}</Link>}
           <Link href="/cart" className="nav-meta flex items-center gap-2 transition-colors hover:text-[var(--accent)]">
-            <span>Cart</span>
+            <span>장바구니</span>
             <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--ink)] px-1 text-[9px] font-semibold text-[var(--paper)]" aria-label={`${itemCount} items in cart`}>
               {itemCount}
             </span>
@@ -92,7 +92,7 @@ export function Header() {
           <Link
             href="/cart"
             className="relative grid h-11 w-11 place-items-center rounded"
-            aria-label={`Cart with ${itemCount} items`}
+            aria-label={`장바구니, ${itemCount}개 상품`}
             onClick={() => setOpen(false)}
           >
             <ShoppingBag size={20} aria-hidden="true" />
