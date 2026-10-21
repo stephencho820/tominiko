@@ -3,13 +3,30 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu, ShoppingBag, X } from "lucide-react";
+import { Menu, ShoppingBag, UserRound, X } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 import { useCart } from "./CartProvider";
 
 
 
 export function Header() {
   const [open, setOpen] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
+  const [accountName, setAccountName] = useState("");
+  useEffect(() => {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) return;
+    const supabase = createClient();
+    let active = true;
+    const sync = (user: { email?: string; user_metadata?: Record<string, unknown> } | null) => {
+      if (!active) return;
+      setSignedIn(Boolean(user));
+      const name = user?.user_metadata?.name ?? user?.user_metadata?.full_name;
+      setAccountName(typeof name === "string" && name.trim() ? name.trim() : "");
+    };
+    void supabase.auth.getUser().then(({ data }) => sync(data.user)).catch(() => sync(null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => sync(session?.user ?? null));
+    return () => { active = false; subscription.unsubscribe(); };
+  }, []);
   const pathname = usePathname();
   const openTastingOrder = (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (pathname !== "/tasting-room/qr") return;
@@ -76,7 +93,7 @@ export function Header() {
 
         <div className="hidden items-center justify-end gap-5 md:flex">
           <Link href="/account" className="nav-meta transition-colors hover:text-[var(--accent)]">
-            Account
+            {signedIn ? (accountName ? `${accountName}님` : "내 계정 ✓") : "로그인"}
           </Link>
           {pathname.startsWith("/tasting-room/qr") && tastingCount > 0 && <Link href="/tasting-room/qr#order" onClick={openTastingOrder} className="nav-meta" aria-label={`Tasting Room 주문 ${tastingCount}개`}>MENU ORDER · {tastingCount}</Link>}
           <Link href="/cart" className="nav-meta flex items-center gap-2 transition-colors hover:text-[var(--accent)]">
@@ -88,6 +105,10 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-1 md:hidden">
+          <Link href={signedIn ? "/account" : "/login"} onClick={() => setOpen(false)} className="relative grid h-11 w-11 place-items-center rounded" aria-label={signedIn ? "로그인 상태 · 내 계정" : "로그인"} title={signedIn ? "로그인됨" : "로그인"}>
+            <UserRound size={20} aria-hidden="true" />
+            {signedIn && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-[var(--accent)]" aria-hidden="true" />}
+          </Link>
           {pathname.startsWith("/tasting-room/qr") && tastingCount > 0 && <Link href="/tasting-room/qr#order" onClick={openTastingOrder} className="nav-meta text-[10px]" aria-label={`Tasting Room 주문 ${tastingCount}개`}>ORDER {tastingCount}</Link>}
           <Link
             href="/cart"
@@ -122,7 +143,7 @@ export function Header() {
           <Link href="/our-story" className="nav-link" onClick={() => setOpen(false)}>PHILOSOPHY</Link>
           <div className="border-t border-[var(--line)] pt-4">
             <Link href="/account" className="nav-meta" onClick={() => setOpen(false)}>
-              MY ACCOUNT
+              {signedIn ? (accountName ? `${accountName}님 · 내 계정 ✓` : "로그인됨 · 내 계정 ✓") : "로그인 / 회원가입"}
             </Link>
           </div>
         </nav>
