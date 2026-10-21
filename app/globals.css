@@ -3627,3 +3627,11 @@ body:has(> .site-header) { padding-top: 72px; }
 
 /* Minimal checkout header: keep cart edit link accessible without a large heading. */
 .checkout-cart-edit { display: flex; justify-content: flex-end; align-items: center; padding: 10px 0 0; }
+
+/* Checkout without section headings: preserve form spacing without blank title areas. */
+.checkout-page .checkout-layout { padding-top: 18px; }
+.checkout-page .checkout-section { padding-bottom: 28px; margin-bottom: 28px; }
+@media (max-width: 560px) {
+  .checkout-page .checkout-layout { padding-top: 12px; }
+  .checkout-page .checkout-section { padding-bottom: 24px; margin-bottom: 24px; }
+}
