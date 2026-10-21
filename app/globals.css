@@ -3624,3 +3624,6 @@ body:has(> .site-header) { padding-top: 72px; }
   .catalog-buy button.cart-added { animation: none; }
 }
 
+
+/* Minimal checkout header: keep cart edit link accessible without a large heading. */
+.checkout-cart-edit { display: flex; justify-content: flex-end; align-items: center; padding: 10px 0 0; }
