@@ -38,8 +38,8 @@ export function isLocalDeliveryEligible(address: AddressForEligibility, zones: L
   const zonecode = (address.zonecode ?? "").replace(/\D/g, "");
   // The database matches district zones against the structured bname only.
   const district = normalizeAddressText(address.bname);
-  const jibunDistricts = (address.jibunAddress ?? "").split(/\\s+/).map(normalizeAddressText);
-  const roadDistricts = (address.roadAddress ?? "").split(/\\s+/).map(normalizeAddressText);
+  const jibunDistricts = (address.jibunAddress ?? "").split(/\s+/).map(normalizeAddressText);
+  const roadDistricts = (address.roadAddress ?? "").split(/\s+/).map(normalizeAddressText);
   const searchableAddresses = [address.roadAddress, address.jibunAddress].filter(Boolean).map(normalizeAddressText);
   return zones.some((zone) => {
     if (!zone.enabled) return false;
