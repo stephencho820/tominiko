@@ -37,7 +37,9 @@ export function isLocalDeliveryEligible(address: AddressForEligibility, zones: L
   if (!enabled) return false;
   const zonecode = (address.zonecode ?? "").replace(/\D/g, "");
   // The database matches district zones against the structured bname only.
-  const district = address.bname;
+  const district = normalizeAddressText(address.bname);
+  const jibunDistricts = (address.jibunAddress ?? "").split(/\\s+/).map(normalizeAddressText);
+  const roadDistricts = (address.roadAddress ?? "").split(/\\s+/).map(normalizeAddressText);
   const searchableAddresses = [address.roadAddress, address.jibunAddress].filter(Boolean).map(normalizeAddressText);
   return zones.some((zone) => {
     if (!zone.enabled) return false;
@@ -50,7 +52,8 @@ export function isLocalDeliveryEligible(address: AddressForEligibility, zones: L
       const keyword = normalizeAddressText(zone.zone_value);
       return keyword.length >= 2 && searchableAddresses.some((addressText) => addressText.includes(keyword));
     }
-    return district === zone.zone_value;
+    const target = normalizeAddressText(zone.zone_value);
+    return district === target || jibunDistricts.includes(target) || roadDistricts.includes(target);
   });
 }
 
