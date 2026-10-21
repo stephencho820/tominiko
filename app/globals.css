@@ -3623,3 +3623,32 @@ body:has(> .site-header) { padding-top: 72px; }
   .catalog-options select, .catalog-buy button { transition: none; }
   .catalog-buy button.cart-added { animation: none; }
 }
+
+
+/* Checkout heading: preserve two-column hierarchy without squeezing Korean titles on mobile. */
+.checkout-section-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+.checkout-section-title > span {
+  flex: 0 0 28px;
+}
+.checkout-section-title > div {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}
+.checkout-section-title h2 {
+  width: auto;
+  max-width: 100%;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+@media (max-width: 560px) {
+  .checkout-section-title h2 { font-size: clamp(23px, 6vw, 28px); }
+  .checkout-form, .checkout-section, .checkout-layout { min-width: 0; }
+}
