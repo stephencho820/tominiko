@@ -33,11 +33,11 @@ export default function CartPage() {
       {!items.length ? (
         <section className="empty-bag" aria-live="polite">
           <p><span className="lang-ko">아직 담긴 커피가 없습니다.</span><span className="lang-en">Your bag is ready for something good.</span></p>
-          <Link href="/shop" className="button-primary purchase-button"><span>Back to Shop</span><span>→</span></Link>
+          <Link href="/shop" className="button-primary purchase-button"><span>쇼핑 계속하기</span><span>→</span></Link>
         </section>
       ) : (
         <div className="cart-layout">
-          <section className="cart-list" aria-label="Cart items">
+          <section className="cart-list" aria-label="장바구니 상품">
             {items.map((item, index) => (
               <article className="cart-item" key={cartItemKey(item)}>
                 <div className="cart-image grain">
@@ -67,11 +67,11 @@ export default function CartPage() {
           <aside className="cart-totals">
             <p className="section-label"><span className="lang-ko">주문 금액</span><span className="lang-en">Order total</span></p>
             <div className="total-line"><span><span className="lang-ko">상품 금액</span><span className="lang-en">Subtotal</span></span><span>{money(total)}</span></div>
-            <div className="total-line"><span>예상 배송비</span><span>{shippingEstimate.shippingFee ? money(shippingEstimate.shippingFee) : "무료"}</span></div>
+            <div className="total-line"><span>배송비</span><span>{shippingEstimate.shippingFee ? money(shippingEstimate.shippingFee) : "무료"}</span></div>
             <div className="shipping-progress cart-progress"><div><span>{shippingProgress.qualified ? "✓ 무료배송 혜택을 받으셨어요." : `${money(shippingProgress.remaining)} 더 담으면 무료배송`}</span><small>{Math.round(shippingProgress.percent)}%</small></div><i><span style={{ width: `${shippingProgress.percent}%` }} /></i></div>
-            <div className="total-line total-emphasis"><span>택배 기준 예상 결제금액</span><strong>{money(shippingEstimate.finalAmount)}</strong></div>
-            <p className="cart-total-note">체크아웃에서 매장 픽업 또는 가능한 경우 로컬배송을 선택하면 배송비가 다시 계산됩니다.</p>
-            {cartReady && settingsReady ? <Link href="/checkout" className="button-primary purchase-button"><span className="lang-ko">주문 정보 입력</span><span className="lang-en">Continue to checkout</span><span>→</span></Link> : <button disabled className="button-primary purchase-button">상품 및 배송 정보 확인 필요</button>}
+            <div className="total-line total-emphasis"><span>합계</span><strong>{money(shippingEstimate.finalAmount)}</strong></div>
+            <p className="cart-total-note">광교·서광교 무료배송 및 매장 픽업은 주문 시 자동 반영됩니다.</p>
+            {cartReady && settingsReady ? <Link href="/checkout" className="button-primary purchase-button"><span className="lang-ko">주문하기</span><span className="lang-en">Continue to checkout</span><span>→</span></Link> : <button disabled className="button-primary purchase-button">상품 및 배송 정보 확인 필요</button>}
             <Link href="/shop" className="continue-link"><span className="lang-ko">쇼핑 계속하기</span><span className="lang-en">Continue shopping</span></Link>
           </aside>
         </div>
