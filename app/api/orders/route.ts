@@ -22,7 +22,8 @@ export async function POST(request: Request) {
   try { body = await request.json() as OrderInput; }
   catch { return NextResponse.json({ error: "요청 형식이 올바르지 않습니다." }, { status: 400 }); }
 
-  const manual = body.paymentMethod === "BANK_TRANSFER";
+  if (body.paymentMethod !== "BANK_TRANSFER") return NextResponse.json({ error: "현재 계좌이체만 이용할 수 있습니다." }, { status: 400 });
+  const manual = true;
   const items = Array.isArray(body.items) ? body.items as OrderItemInput[] : [];
   const fulfillmentType = text(body.fulfillmentType);
   const email = text(body.email, 254).toLowerCase();
