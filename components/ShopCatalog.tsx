@@ -50,7 +50,7 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
         <select aria-label="Grind" value={grind} onChange={(event) => setGrind(event.target.value as Grind)}>{STANDARD_GRINDS.map((value) => <option key={value} value={value}>{value}</option>)}</select>
       </div>
       <div className="catalog-buy"><strong className="catalog-price">{salePrice < regularPrice && <del>₩{regularPrice.toLocaleString("ko-KR")}</del>}<span>₩{salePrice.toLocaleString("ko-KR")}</span></strong>
-        <button type="button" onClick={addProduct} disabled={!variant?.available || variant.stock < 1} aria-live="polite"><ShoppingBag size={14} />{variant?.available && variant.stock > 0 ? added ? "ADDED" : "ADD TO CART" : "SOLD OUT"}</button>
+        <button type="button" onClick={addProduct} disabled={!variant?.available || variant.stock < 1} aria-live="polite" className={added ? "cart-added" : ""}><ShoppingBag size={15} />{variant?.available && variant.stock > 0 ? added ? "✓ 담았어요" : "장바구니 추가" : "SOLD OUT"}</button>
       </div>
     </div>
   </article>;
