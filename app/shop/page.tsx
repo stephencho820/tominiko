@@ -4,23 +4,23 @@ import { getProducts } from "@/services/products";
 import { getPageSettings } from "@/lib/page-content";
 
 export const metadata: Metadata = {
-  title: "CASA DI STEFANO | 원두 온라인 쇼핑몰",
+  title: "Zero Degrees Coffee Roasters",
   description: "Tominiko의 블렌드, 싱글 오리진, 디카페인 커피를 만나보세요. Zero Degrees가 수원에서 로스팅합니다.",
   alternates: { canonical: "/shop" },
   openGraph: {
     type: "website",
     locale: "ko_KR",
     siteName: "CASA DI STEFANO",
-    title: "CASA DI STEFANO | 원두 온라인 쇼핑몰",
+    title: "Zero Degrees Coffee Roasters",
     description: "TOMINIKO BEANS & COFFEE · ZERO DEGREES ROASTERS. 블렌드, 싱글 오리진, 디카페인 원두를 만나보세요.",
     url: "/shop",
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "CASA DI STEFANO 커피 쇼핑몰" }],
+    images: [{ url: "/shop/opengraph-image", width: 1200, height: 630, alt: "Zero Degrees Coffee Roasters" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CASA DI STEFANO | 원두 온라인 쇼핑몰",
+    title: "Zero Degrees Coffee Roasters",
     description: "TOMINIKO BEANS & COFFEE · ZERO DEGREES ROASTERS",
-    images: ["/opengraph-image"],
+    images: ["/shop/opengraph-image"],
   },
 };
 
