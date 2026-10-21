@@ -16,6 +16,7 @@ function connectGmail(): Promise<Connection> {
     let buffer = "";
     let pending: { resolve: (reply: Reply) => void; reject: (error: Error) => void } | null = null;
     let multiline = "";
+    const queued: Reply[] = [];
     let fatal: Error | null = null;
     socket.on("data", (chunk: Buffer) => {
       buffer += chunk.toString("utf8");
@@ -28,12 +29,14 @@ function connectGmail(): Promise<Connection> {
         const reply = { code: Number(line.slice(0, 3)), message: multiline };
         multiline = "";
         if (pending) { const waiter = pending; pending = null; waiter.resolve(reply); }
+        else queued.push(reply);
       }
     });
     socket.on("error", (error) => { fatal = error; if (pending) { const waiter = pending; pending = null; waiter.reject(error); } else reject(error); });
     socket.on("close", () => { if (pending) { const waiter = pending; pending = null; waiter.reject(fatal ?? new Error("SMTP connection closed")); } });
     socket.once("secureConnect", () => {
       const read = () => new Promise<Reply>((ok, fail) => {
+        if (queued.length) return ok(queued.shift()!);
         if (fatal || socket.destroyed) return fail(fatal ?? new Error("SMTP connection unavailable"));
         if (pending) return fail(new Error("Concurrent SMTP read"));
         pending = { resolve: ok, reject: fail };
