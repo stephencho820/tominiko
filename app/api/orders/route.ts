@@ -1,6 +1,7 @@
 import { isSize, normalizeGrind, validVariantId } from "@/lib/product-contract";
 import { NextResponse } from "next/server";
 import { hashAccessToken } from "@/lib/order-access";
+import { notifyAdminsOfNewOrder } from "@/lib/order-notifications";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -90,11 +91,16 @@ export async function POST(request: Request) {
     }
   }
 
+  let newlyRegisteredBankOrder = false;
   if(manual){
     const {data:bank}=await supabase.from("manual_transfer_settings").select("id").eq("id",true).maybeSingle();
     if(!bank)return NextResponse.json({error:"계좌이체가 아직 준비되지 않았습니다."},{status:503});
     const {data:marked,error:markError}=await supabase.from("orders").update({payment_method:"BANK_TRANSFER"}).eq("id",order.order_id).eq("guest_access_token_hash",guestTokenHash).eq("payment_status","pending").is("payment_method",null).select("id");
+    newlyRegisteredBankOrder = !markError && Boolean(marked?.length);
     if(markError||!marked?.length){const {data:existing}=await supabase.from("orders").select("payment_method").eq("id",order.order_id).maybeSingle();if(existing?.payment_method!=="BANK_TRANSFER")return NextResponse.json({error:"계좌이체 주문을 등록하지 못했습니다."},{status:409});}
+  }
+  if (newlyRegisteredBankOrder) {
+    await notifyAdminsOfNewOrder({ number: String(order.order_number), name: text(body.customerName, 100), amount: Number(order.total), method: fulfillmentType });
   }
   return NextResponse.json({
     orderId: order.order_id, orderNumber: order.order_number, amount: order.total,
