@@ -31,6 +31,18 @@ export default async function Account() {
     supabase.from("loyalty_transactions").select("id,kind,points,note,created_at").eq("user_id",user.id).order("created_at",{ascending:false}).limit(5),
     supabase.from("vip_customers").select("tier,benefit_note").eq("user_id",user.id).maybeSingle(),
   ]);
+  const orderIds = orders.map(order => order.id);
+  const { data: coffeeLines } = orderIds.length
+    ? await supabase.from("order_items").select("product_name,quantity,order_id").in("order_id", orderIds)
+    : { data: [] };
+  const favoriteCounts = new Map<string, number>();
+  for (const line of coffeeLines ?? []) {
+    if (!line.product_name) continue;
+    favoriteCounts.set(line.product_name, (favoriteCounts.get(line.product_name) ?? 0) + Number(line.quantity ?? 0));
+  }
+  const favoriteCoffee = [...favoriteCounts].sort((a,b) => b[1] - a[1])[0]?.[0];
+  const paidOrders = orders.filter(order => order.payment_status === "paid");
+  const totalSpent = paidOrders.reduce((sum, order) => sum + Number(order.final_amount ?? order.total ?? 0), 0);
   const displayName = user.user_metadata?.name ?? user.user_metadata?.full_name ?? user.email?.split("@")[0];
 
   return <main className="mx-auto max-w-4xl px-6 py-14 md:px-12 md:py-20">
@@ -43,6 +55,15 @@ export default async function Account() {
       <AccountSignOutButton />
     </div>
 
+    <section className="mb-10 grid gap-4 sm:grid-cols-3" aria-label="MY CASA overview">
+      <article className="rounded border border-[var(--line)] p-5"><p className="section-label">MY ORDERS</p><strong className="mt-3 block text-3xl">{orders.length}</strong><p className="mt-2 text-sm text-[var(--muted)]">온라인 주문 내역</p></article>
+      <article className="rounded border border-[var(--line)] p-5"><p className="section-label">TOTAL PURCHASES</p><strong className="mt-3 block text-3xl">₩{totalSpent.toLocaleString("ko-KR")}</strong><p className="mt-2 text-sm text-[var(--muted)]">결제 완료 주문 기준</p></article>
+      <article className="rounded border border-[var(--line)] p-5"><p className="section-label">YOUR FAVORITE</p><strong className="mt-3 block text-xl">{favoriteCoffee ?? "첫 커피를 만나보세요"}</strong><p className="mt-2 text-sm text-[var(--muted)]">가장 많이 주문한 커피</p></article>
+    </section>
+    <nav className="mb-10 grid gap-3 sm:grid-cols-2" aria-label="MY CASA quick actions">
+      <Link href="/account/orders" className="button-secondary px-5 py-4 text-center">주문 내역 · 다시 주문하기 ↗</Link>
+      <Link href="/shop" className="button-secondary px-5 py-4 text-center">새로운 커피 둘러보기 ↗</Link>
+    </nav>
     {vip && <section className="mb-8 rounded border border-[var(--line)] p-6" aria-label="VIP membership"><p className="section-label">CASA PRIVATE MEMBERSHIP</p><h2 className="mt-3 text-2xl">{vip.tier === "private" ? "PRIVATE" : "VIP"} MEMBER</h2><p className="mt-3 text-[var(--muted)]">{vip.benefit_note || "회원님을 위한 개별 혜택은 매장에서 안내해 드립니다."}</p><p className="mt-2 text-xs text-[var(--muted)]">혜택은 자동 결제 할인으로 적용되지 않습니다.</p></section>}
     <section className="member-points-panel" aria-label="멤버 포인트"><div><p className="section-label">CASA REWARDS</p><h2>My Points</h2><p>로그인 회원의 결제 완료 및 픽업·배송 완료 주문에 2%가 적립됩니다.</p></div><div className="member-points-balance"><strong>{Number(loyalty?.balance??0).toLocaleString("ko-KR")} P</strong><span>누적 적립 {Number(loyalty?.lifetime_earned??0).toLocaleString("ko-KR")} P</span></div></section>
     <div className="member-points-history"><h3>포인트 내역</h3>{pointHistory?.length?pointHistory.map(item=><div key={item.id}><span>{item.note}<small>{new Date(item.created_at).toLocaleDateString("ko-KR")}</small></span><strong>{item.points>0?"+":""}{item.points.toLocaleString("ko-KR")} P</strong></div>):<p>아직 적립된 포인트가 없습니다.</p>}<p className="member-points-policy">1P = 1원 상당 · 현재는 적립 및 조회만 제공하며 결제 시 사용 기능은 준비 중입니다. 취소·환불 시 적립이 회수됩니다.</p></div>
