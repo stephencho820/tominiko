@@ -37,6 +37,21 @@ export default async function Admin() {
   const todayRevenue = (todaySales ?? []).reduce((sum, order) => sum + Number(order.final_amount ?? order.total ?? 0), 0);
   const newOrders = orders.filter((order) => ["new", "confirmed"].includes(order.order_status)).length;
   const preparing = orders.filter((order) => ["roasting", "preparing"].includes(order.order_status)).length;
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: recentPaidOrders } = await supabase.from("orders")
+    .select("id,user_id,email,total,final_amount")
+    .eq("payment_status", "paid")
+    .gte("created_at", thirtyDaysAgo)
+    .limit(1000);
+  const recentSales = recentPaidOrders ?? [];
+  const recentRevenue = recentSales.reduce((sum, order) => sum + Number(order.final_amount ?? order.total ?? 0), 0);
+  const customers = new Map<string, number>();
+  for (const order of recentSales) {
+    const key = order.user_id || order.email?.trim().toLowerCase();
+    if (key) customers.set(key, (customers.get(key) ?? 0) + 1);
+  }
+  const returningCustomers = [...customers.values()].filter(count => count > 1).length;
+  const averageOrderValue = recentSales.length ? Math.round(recentRevenue / recentSales.length) : 0;
   const todayLabel = new Intl.DateTimeFormat("ko-KR", {
     timeZone: "Asia/Seoul", month: "long", day: "numeric", weekday: "short",
   }).format(new Date());
@@ -60,6 +75,15 @@ export default async function Admin() {
       <article className={lowStock.length ? "needs-attention" : ""}><span>재고 부족</span><strong>{lowStock.length}</strong><small>{lowStock.length ? "확인이 필요한 상품" : "모든 재고 정상"}</small></article>
     </section>
 
+    <section className="mb-10" aria-label="최근 30일 고객 및 매출 분석">
+      <div className="admin-section-heading"><div><p className="eyebrow">CUSTOMER INSIGHTS</p><h2>최근 30일</h2></div></div>
+      <div className="admin-kpis">
+        <article><span>결제 매출</span><strong>₩{recentRevenue.toLocaleString("ko-KR")}</strong><small>최근 30일 결제 완료</small></article>
+        <article><span>평균 주문 금액</span><strong>₩{averageOrderValue.toLocaleString("ko-KR")}</strong><small>결제 완료 주문 기준</small></article>
+        <article><span>재구매 고객</span><strong>{returningCustomers}</strong><small>최근 30일 2회 이상 구매 · 이메일/회원 ID 기준</small></article>
+      </div>
+      {recentSales.length === 1000 && <p className="mt-2 text-xs text-[var(--muted)]">최근 1,000건 기준으로 계산한 값입니다.</p>}
+    </section>
     <section className="admin-today-card" aria-labelledby="today-coffee-title">
       <div className="admin-today-copy">
         <p className="eyebrow">TODAY'S COFFEE</p>
