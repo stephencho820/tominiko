@@ -63,7 +63,7 @@ export default async function Admin() {
         <h1>Dashboard</h1>
         <p>{todayLabel}</p>
       </div>
-      <div className="flex flex-wrap gap-3"><Link href="/admin/roasting" className="admin-dashboard-primary-link">로스팅 준비 현황 →</Link><Link href="/admin/orders" className="admin-dashboard-primary-link">주문 전체 보기 →</Link></div>
+      <div className="flex flex-wrap gap-3"><Link href="/admin/roasting" className="admin-dashboard-primary-link">로스팅 준비 현황 →</Link><div className="flex flex-wrap gap-3"><Link href="/admin/subscriptions" className="admin-dashboard-primary-link">구독 관리 →</Link><Link href="/admin/vip" className="admin-dashboard-primary-link">VIP 관리 →</Link><Link href="/admin/orders" className="admin-dashboard-primary-link">주문 전체 보기 →</Link></div></div>
     </header>
 
     <section className="admin-kpis" aria-label="오늘 운영 현황">
