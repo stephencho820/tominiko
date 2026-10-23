@@ -22,7 +22,7 @@ export type BannerPlacement = "tasting-room" | "our-story";
 export type PromotionBanner = { id: string; placement: BannerPlacement; image: string; mobileImage: string; hyperlink: string; active: boolean; sortOrder: number; alt: string };
 export type HeroMedia = { url: string; type: "image" | "video"; mobileUrl: string; mobileType: "image" | "video"; active: boolean; overlay: boolean };
 export type GalleryImage = { id: string; url: string; alt: string; order: number };
-export type TastingRoomSettings = { heroImage: string; mobileHeroImage: string; address: string; phone: string; phoneNote: string; openingHours: string; galleryImages: GalleryImage[] };
+export type TastingRoomSettings = { heroImage: string; mobileHeroImage: string; address: string; phone: string; phoneNote: string; openingHours: string; mapImage: string; mapLink: string; galleryImages: GalleryImage[] };
 export type PageSettings = { texts: Record<string, TextSetting>; images: Record<string, string>; heroMedia?: HeroMedia; promotions?: PromotionBanner[]; tastingRoom?: TastingRoomSettings };
 
 export function defaultPageSettings(slug: PageSlug): PageSettings {
@@ -38,6 +38,8 @@ export function defaultPageSettings(slug: PageSlug): PageSettings {
         phone: "",
         phoneNote: "",
         openingHours: "",
+        mapImage: "/images/tasting-room/map-casa-user.svg",
+        mapLink: "",
         galleryImages: [],
       },
     } : {}),

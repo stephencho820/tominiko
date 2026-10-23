@@ -13,7 +13,7 @@ export function TastingRoomEditor({ value, onChange, onStatus, onBusy, busy, isB
   const [uploading, setUploading] = useState(false);
   const uploadRef = useRef(false);
   const patch = (next: Partial<TastingRoomSettings>) => onChange({ ...value, ...next });
-  const uploadFiles = async (files: File[], kind: "hero" | "mobile-hero" | "gallery") => {
+  const uploadFiles = async (files: File[], kind: "hero" | "mobile-hero" | "gallery" | "map") => {
     if (!files.length || uploadRef.current || isBusy()) return;
     if (kind === "gallery" && valueRef.current.galleryImages.length + files.length > MAX_PAGE_GALLERY_IMAGES) return onStatus("갤러리는 최대 50개까지 등록할 수 있습니다.");
     for (const file of files) {
@@ -33,7 +33,8 @@ export function TastingRoomEditor({ value, onChange, onStatus, onBusy, busy, isB
         const { data } = supabase.storage.from("page-images").getPublicUrl(path);
         uploaded.push({ id, url: data.publicUrl, alt: file.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " "), order: 0 });
       }
-      if (kind === "hero") onChange({ ...valueRef.current, heroImage: uploaded[0].url });
+      if (kind === "map") onChange({ ...valueRef.current, mapImage: uploaded[0].url });
+      else if (kind === "hero") onChange({ ...valueRef.current, heroImage: uploaded[0].url });
       else if (kind === "mobile-hero") onChange({ ...valueRef.current, mobileHeroImage: uploaded[0].url });
       else {
         const existing = valueRef.current.galleryImages;
@@ -59,6 +60,7 @@ export function TastingRoomEditor({ value, onChange, onStatus, onBusy, busy, isB
       <div className="admin-content-field"><label>Address<textarea value={value.address} onChange={(event) => patch({ address: event.target.value })} /></label></div>
       <div className="admin-content-field"><label>Phone<input value={value.phone} onChange={(event) => patch({ phone: event.target.value })} /></label><label>Phone Note<textarea value={value.phoneNote} onChange={(event) => patch({ phoneNote: event.target.value })} /></label></div>
       <div className="admin-content-field"><label>Opening Hours<textarea value={value.openingHours} placeholder={"화–금 11:00–18:00\n토–일 11:00–19:00\n월요일 휴무"} onChange={(event) => patch({ openingHours: event.target.value })} /></label></div>
+      <div className="admin-room-hero"><div className="admin-image-preview"><img src={value.mapImage || "/images/tasting-room/map-casa-user.svg"} alt="현재 위치 지도" /></div><div><h3>Location map</h3><p className="admin-muted">지도를 업로드하고 클릭 시 열릴 주소를 입력하세요. 저장 후 방문 페이지에 적용됩니다.</p><label className="admin-field">지도 이미지 업로드<input type="file" disabled={busy || uploading} accept="image/jpeg,image/png,image/webp,image/gif" onChange={(event) => void uploadFiles(Array.from(event.target.files ?? []).slice(0,1), "map")} /></label><label className="admin-field">지도 이미지 URL<input value={value.mapImage ?? ""} onChange={(event) => patch({ mapImage: event.target.value })} /></label><label className="admin-field">지도 클릭 링크 (https://)<input type="url" placeholder="https://map.naver.com/..." value={value.mapLink ?? ""} onChange={(event) => patch({ mapLink: event.target.value })} /></label><p className="admin-muted">링크를 비워두면 기본 네이버 지도 검색으로 연결됩니다.</p></div></div>
     </div></section>
     <section className="admin-panel"><div className="admin-section-heading"><div><p className="eyebrow">Gallery</p><h2>Tasting Room Gallery</h2></div></div><p className="admin-muted">Select several images at once. Their saved order is their storefront order.</p>
       <label className="admin-field admin-gallery-upload">Upload images<input type="file" disabled={busy || uploading} multiple accept="image/jpeg,image/png,image/webp,image/gif" onChange={(event) => void uploadFiles(Array.from(event.target.files ?? []), "gallery")} /></label>
