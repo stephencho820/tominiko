@@ -62,7 +62,7 @@ export default async function Account() {
     </section>
     <nav className="mb-10 grid gap-3 sm:grid-cols-2" aria-label="MY CASA quick actions">
       <Link href="/account/orders" className="button-secondary px-5 py-4 text-center">주문 내역 · 다시 주문하기 ↗</Link>
-      <Link href="/shop" className="button-secondary px-5 py-4 text-center">새로운 커피 둘러보기 ↗</Link>
+      <Link href="/account/subscriptions" className="button-secondary px-5 py-4 text-center">커피 구독 신청·조회 ↗</Link>
     </nav>
     {vip && <section className="mb-8 rounded border border-[var(--line)] p-6" aria-label="VIP membership"><p className="section-label">CASA PRIVATE MEMBERSHIP</p><h2 className="mt-3 text-2xl">{vip.tier === "private" ? "PRIVATE" : "VIP"} MEMBER</h2><p className="mt-3 text-[var(--muted)]">{vip.benefit_note || "회원님을 위한 개별 혜택은 매장에서 안내해 드립니다."}</p><p className="mt-2 text-xs text-[var(--muted)]">혜택은 자동 결제 할인으로 적용되지 않습니다.</p></section>}
     <section className="member-points-panel" aria-label="멤버 포인트"><div><p className="section-label">CASA REWARDS</p><h2>My Points</h2><p>로그인 회원의 결제 완료 및 픽업·배송 완료 주문에 2%가 적립됩니다.</p></div><div className="member-points-balance"><strong>{Number(loyalty?.balance??0).toLocaleString("ko-KR")} P</strong><span>누적 적립 {Number(loyalty?.lifetime_earned??0).toLocaleString("ko-KR")} P</span></div></section>
