@@ -3685,3 +3685,12 @@ body:has(> .site-header) { padding-top: 72px; }
   .checkout-page .checkout-summary .purchase-button { position: static; width: 100%; margin-top: 20px; box-shadow: none; }
   .checkout-page .checkout-note { margin-bottom: 0; }
 }
+
+/* Commerce quality-of-life improvements */
+.checkout-shipping-old { color: var(--muted); font-size: 11px; margin-right: 6px; }
+.checkout-summary .summary-costs dd strong { color: #406449; font-weight: 700; font-size: 12px; }
+.admin-phone-link { display: inline-flex; align-items: center; min-height: 38px; margin-left: 10px; color: #53452f; font-weight: 650; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; }
+.admin-phone-link:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+.admin-order-number-link { display: inline-block; margin-left: 12px; font-size: 11px; color: var(--muted); }
+.admin-queue-divider { margin: 24px 0 12px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 14px; font-weight: 600; }
+@media(max-width:560px){.admin-phone-link{margin-left:0;margin-right:12px}.admin-order-number-link{margin-left:0}}
