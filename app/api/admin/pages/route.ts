@@ -34,6 +34,9 @@ function parseSettings(value: unknown) {
     const room = body.tastingRoom as Record<string, unknown> | undefined;
     if (!room || typeof room.heroImage !== "string" || typeof room.mobileHeroImage !== "string" || typeof room.address !== "string" || typeof room.phone !== "string" || typeof room.phoneNote !== "string" || typeof room.openingHours !== "string" || !Array.isArray(room.galleryImages) || room.galleryImages.length > 50) return null;
     if (room.heroImage.length > 2_000 || room.mobileHeroImage.length > 2_000 || room.address.length > 5_000 || room.phone.length > 100 || room.phoneNote.length > 1_000 || room.openingHours.length > 5_000) return null;
+    const mapImage = typeof room.mapImage === "string" ? room.mapImage : "/images/tasting-room/map-casa-user.svg";
+    const mapLink = typeof room.mapLink === "string" ? room.mapLink.trim() : "";
+    if (mapImage.length > 2_000 || mapLink.length > 2_000 || !((mapImage.startsWith("/") && !mapImage.startsWith("//")) || /^https:\/\/[^\s]+$/i.test(mapImage)) || (mapLink && !/^https:\/\/[^\s]+$/i.test(mapLink))) return null;
     const galleryImages = room.galleryImages.map((item, order) => {
       if (!item || typeof item !== "object") return null;
       const image = item as Record<string, unknown>;
@@ -41,7 +44,7 @@ function parseSettings(value: unknown) {
       return { id: image.id, url: image.url, alt: image.alt, order };
     });
     if (galleryImages.some((image) => !image) || galleryImages.length > 50) return null;
-    tasting_room = { heroImage: room.heroImage, mobileHeroImage: room.mobileHeroImage, address: room.address, phone: room.phone, phoneNote: room.phoneNote, openingHours: room.openingHours, galleryImages: galleryImages as NonNullable<PageSettings["tastingRoom"]>["galleryImages"] };
+    tasting_room = { heroImage: room.heroImage, mobileHeroImage: room.mobileHeroImage, address: room.address, phone: room.phone, phoneNote: room.phoneNote, openingHours: room.openingHours, mapImage, mapLink, galleryImages: galleryImages as NonNullable<PageSettings["tastingRoom"]>["galleryImages"] };
   }
   if (slug === "home") {
     const hero = body.heroMedia as Record<string, unknown> | undefined;
