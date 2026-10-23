@@ -55,6 +55,8 @@ function mergePageSettings(fallback: PageSettings, data: { texts: unknown; image
     phone: typeof rawRoom.phone === "string" ? rawRoom.phone : roomFallback.phone,
     phoneNote: typeof rawRoom.phoneNote === "string" ? rawRoom.phoneNote : roomFallback.phoneNote,
     openingHours: typeof rawRoom.openingHours === "string" ? rawRoom.openingHours : roomFallback.openingHours,
+    mapImage: typeof rawRoom.mapImage === "string" ? rawRoom.mapImage : roomFallback.mapImage,
+    mapLink: typeof rawRoom.mapLink === "string" ? rawRoom.mapLink : roomFallback.mapLink,
     galleryImages: Array.isArray(rawRoom.galleryImages) ? rawRoom.galleryImages.filter(isGalleryImage).sort((a, b) => a.order - b.order) : roomFallback.galleryImages,
   } : roomFallback;
   return { texts, images, heroMedia, promotions, tastingRoom };
