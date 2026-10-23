@@ -5,6 +5,7 @@ import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { getMyOrders } from "@/services/orders";
 import { deliveryMethodLabels, orderStatusLabel, paymentStatusLabels } from "@/lib/admin";
 import type { Order } from "@/types";
+import { ReorderButton, type ReorderLine } from "@/components/ReorderButton";
 
 export const metadata = { title: "My Orders" };
 
@@ -14,6 +15,14 @@ export default async function AccountOrdersPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   const orders = (await getMyOrders()) as Order[];
+  const orderIds = orders.map(order => order.id);
+  const { data: reorderItems } = orderIds.length ? await supabase.from("order_items").select("order_id,product_id,weight,grind,quantity").in("order_id", orderIds) : { data: [] };
+  const linesByOrder = new Map<string, ReorderLine[]>();
+  for (const item of reorderItems ?? []) {
+    const current = linesByOrder.get(item.order_id) ?? [];
+    current.push({ product_id: item.product_id, weight: item.weight, grind: item.grind, quantity: item.quantity });
+    linesByOrder.set(item.order_id, current);
+  }
   return <main className="mx-auto max-w-4xl px-6 py-14 md:px-12 md:py-20">
     <p className="section-label">CASA DI STEFANO · MY ACCOUNT</p>
     <h1 className="mt-4 text-4xl md:text-5xl">My Orders</h1>
@@ -37,6 +46,7 @@ export default async function AccountOrdersPage() {
           <span className="rounded-full border border-[var(--line)] px-3 py-2">{orderStatusLabel(order.order_status, order.delivery_method)}</span>
           <span className="rounded-full border border-[var(--line)] px-3 py-2">{deliveryMethodLabels[order.delivery_method] ?? order.delivery_method}</span>
         </div>
+        {order.order_source !== "tasting_room" && (linesByOrder.get(order.id)?.length ?? 0) > 0 && <ReorderButton lines={linesByOrder.get(order.id)!} />}
       </article>)}
     </div> : <section className="py-20 text-center">
       <h2 className="text-2xl">아직 온라인 주문이 없습니다.</h2>
