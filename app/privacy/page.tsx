@@ -78,7 +78,7 @@ export default function PrivacyPage() {
     <LegalSection title="9. 개인정보 보호 문의">
       <dl className="legal-facts">
         <div><dt>운영자</dt><dd>{BUSINESS_INFO.displayName}</dd></div>
-        <div><dt>전화</dt><dd>{BUSINESS_INFO.phone}</dd></div>
+        <div><dt>문의</dt><dd><a href={BUSINESS_INFO.contactUrl} target="_blank" rel="noopener noreferrer">카카오톡 오픈프로필 ↗</a></dd></div>
       </dl>
       <p className="legal-notice">개인정보 보호책임자 및 전자우편 주소는 사업자등록과 정식 오픈 준비가 완료되는 즉시 실제 정보로 업데이트합니다.</p>
     </LegalSection>
