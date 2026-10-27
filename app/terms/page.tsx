@@ -24,7 +24,7 @@ export default function TermsPage() {
       <dl className="legal-facts">
         <div><dt>브랜드</dt><dd>{BUSINESS_INFO.displayName} · {BUSINESS_INFO.productBrand}</dd></div>
         <div><dt>사업장</dt><dd>{BUSINESS_INFO.address}</dd></div>
-        <div><dt>연락처</dt><dd>{BUSINESS_INFO.phone}</dd></div>
+        <div><dt>연락처</dt><dd><a href={BUSINESS_INFO.contactUrl} target="_blank" rel="noopener noreferrer">카카오톡 오픈프로필 ↗</a></dd></div>
       </dl>
       <p className="legal-notice">현재 프리오픈 준비 단계입니다. 대표자명, 사업자등록번호, 통신판매업 신고번호, 전자우편 주소는 정식 판매 개시 전에 실제 등록 정보로 업데이트합니다.</p>
     </LegalSection>
@@ -59,7 +59,7 @@ export default function TermsPage() {
     </LegalSection>
 
     <LegalSection title="10. 문의와 분쟁">
-      <p>주문 또는 상품 관련 문의는 {BUSINESS_INFO.phone}으로 접수할 수 있습니다. 분쟁이 발생한 경우 당사자 간 협의를 우선하며, 해결되지 않는 경우 관련 소비자분쟁조정 절차와 관계 법령을 따릅니다.</p>
+      <p>주문 또는 상품 관련 문의는 <a href={BUSINESS_INFO.contactUrl} target="_blank" rel="noopener noreferrer">카카오톡 오픈프로필</a>로 접수할 수 있습니다. 분쟁이 발생한 경우 당사자 간 협의를 우선하며, 해결되지 않는 경우 관련 소비자분쟁조정 절차와 관계 법령을 따릅니다.</p>
     </LegalSection>
   </LegalPage>;
 }
