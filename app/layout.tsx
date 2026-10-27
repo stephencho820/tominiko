@@ -48,7 +48,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           </div>
           <div className="site-footer-info">
             <p>{BUSINESS_INFO.address}</p>
-            <p>{BUSINESS_INFO.phone}</p>
+            <a href={BUSINESS_INFO.contactUrl} target="_blank" rel="noopener noreferrer">카카오톡으로 문의하기 ↗</a>
             <p className="site-footer-prelaunch">사업자등록정보 · 통신판매업 신고정보는 정식 오픈 전에 업데이트됩니다.</p>
           </div>
           <nav className="site-footer-policy" aria-label="운영 정책">
