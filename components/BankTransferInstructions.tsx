@@ -4,7 +4,7 @@ import Link from "next/link";
 
 type TransferInfo = { orderNumber:string; amount:number; bankName:string; accountNumber:string; accountHolder:string };
 
-export function BankTransferInstructions({ orderId, token }: { orderId:string; token:string }) {
+export function BankTransferInstructions({ orderId, token, online = false }: { orderId:string; token:string; online?: boolean }) {
   const [info,setInfo]=useState<TransferInfo|null>(null);
   const [error,setError]=useState("");
   const [copied,setCopied]=useState(false);
@@ -38,7 +38,7 @@ export function BankTransferInstructions({ orderId, token }: { orderId:string; t
 
   return <main className="bank-transfer-page">
     <section className="bank-transfer-panel" aria-labelledby="transfer-title">
-      <p className="bank-transfer-eyebrow">CASA DI STEFANO · TASTING ROOM</p>
+      <p className="bank-transfer-eyebrow">CASA DI STEFANO · {online ? "ONLINE SHOP" : "TASTING ROOM"}</p>
       <div className="bank-transfer-step"><span className="bank-transfer-step-dot"/> 계좌이체 · 입금 대기</div>
       <h1 id="transfer-title">주문이 접수되었어요.</h1>
       <p className="bank-transfer-intro">아래 계좌로 입금해 주시면 확인 후 주문 준비를 시작합니다.</p>
@@ -54,9 +54,9 @@ export function BankTransferInstructions({ orderId, token }: { orderId:string; t
       <div className="bank-transfer-amount"><span>입금하실 금액</span><strong>₩{info.amount.toLocaleString("ko-KR")}</strong></div>
       <p className="bank-transfer-notice">은행 앱에서 직접 송금해 주세요. 자동 출금되지 않으며, 실제 입금이 확인된 뒤 제조가 시작됩니다.</p>
       {error&&<p className="bank-transfer-copy-error" role="status">{error}</p>}
-      <Link className="bank-transfer-primary" href="/tasting-room/order/status">주문 상태 확인 <span aria-hidden="true">→</span></Link>
-      <p className="bank-transfer-footnote">주문번호를 보관해 주세요. 픽업 준비가 완료되면 카운터에서 안내해 드립니다.</p>
+      <Link className="bank-transfer-primary" href={online ? "/orders/guest" : "/tasting-room/order/status"}>주문 상태 확인 <span aria-hidden="true">→</span></Link>
+      <p className="bank-transfer-footnote">{online ? "비회원 주문은 이 브라우저에서 주문 조회 정보를 이용해 확인할 수 있습니다. 다른 기기에서 조회하려면 주문 ID와 접근 토큰을 별도로 보관해 주세요." : "주문번호를 보관해 주세요. 픽업 준비가 완료되면 카운터에서 안내해 드립니다."}</p>
     </section>
-    <nav className="bank-transfer-links" aria-label="다른 페이지"><Link href="/tasting-room/order/history">MY ORDERS →</Link><Link href="/tasting-room">← TASTING ROOM</Link><Link href="/shop">ONLINE SHOP →</Link></nav>
+    <nav className="bank-transfer-links" aria-label="다른 페이지"><Link href={online ? "/orders/guest" : "/tasting-room/order/history"}>MY ORDERS →</Link>{!online && <Link href="/tasting-room">← TASTING ROOM</Link>}<Link href="/shop">ONLINE SHOP →</Link></nav>
   </main>;
 }
