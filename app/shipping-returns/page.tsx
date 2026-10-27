@@ -43,7 +43,7 @@ export default function ShippingReturnsPage() {
     </LegalSection>
 
     <LegalSection title="상품 하자 · 오배송">
-      <p>주문한 상품과 다른 상품이 도착했거나 상품에 하자가 있는 경우 수령 후 가능한 한 빨리 {BUSINESS_INFO.phone}으로 알려주세요. 확인 후 교환, 재배송 또는 환불 절차를 안내하며 판매자 책임이 확인된 경우 필요한 배송비는 판매자가 부담합니다.</p>
+      <p>주문한 상품과 다른 상품이 도착했거나 상품에 하자가 있는 경우 수령 후 가능한 한 빨리 <a href={BUSINESS_INFO.contactUrl} target="_blank" rel="noopener noreferrer">카카오톡 오픈프로필</a>로 알려주세요. 확인 후 교환, 재배송 또는 환불 절차를 안내하며 판매자 책임이 확인된 경우 필요한 배송비는 판매자가 부담합니다.</p>
     </LegalSection>
 
     <LegalSection title="환불">
@@ -55,7 +55,7 @@ export default function ShippingReturnsPage() {
     </LegalSection>
 
     <LegalSection title="문의">
-      <p>배송, 교환, 환불 문의: {BUSINESS_INFO.phone}</p>
+      <p>배송, 교환, 환불 문의: <a href={BUSINESS_INFO.contactUrl} target="_blank" rel="noopener noreferrer">카카오톡 오픈프로필 ↗</a></p>
     </LegalSection>
   </LegalPage>;
 }

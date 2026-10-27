@@ -3,6 +3,7 @@ import Link from "next/link";
 import { TastingRoomGallery } from "@/components/TastingRoomGallery";
 import { SafeHeroImage } from "@/components/SafeHeroImage";
 import { getPageSettings } from "@/lib/page-content";
+import { BUSINESS_INFO } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Tasting Room",
@@ -17,7 +18,6 @@ export default async function TastingRoomPage() {
   const content = await getPageSettings("tasting-room");
   const room = content.tastingRoom!;
   const heroImage = room.heroImage || defaultHero;
-  const phoneHref = room.phone.replace(/[^\d+]/g, "");
   const defaultMapHref = `https://map.naver.com/p/search/${encodeURIComponent("Casa Di Stefano")}`;
   const naverMapHref = /^https:\/\/[^\s]+$/i.test(room.mapLink) ? room.mapLink : defaultMapHref;
   return <main className="tasting-room-page">
@@ -30,7 +30,7 @@ export default async function TastingRoomPage() {
       <figure className="room-map"><a href={naverMapHref} target="_blank" rel="noopener noreferrer" aria-label="지도에서 Casa Di Stefano 위치 보기" title="Casa Di Stefano 지도 열기"><img src={room.mapImage || "/images/tasting-room/map-casa-user.svg"} alt="Casa di Stefano Tasting Room location map in Suwon" /></a></figure>
       <div className="room-visit-details">
         <div><h2>ADDRESS</h2>{room.address ? <><p className="room-preline">{room.address}</p>{naverMapHref && <a className="room-detail-action" href={naverMapHref} target="_blank" rel="noreferrer">지도에서 위치 보기 ↗</a>}</> : <p className="room-empty">Details coming soon.</p>}</div>
-        <div><h2>PHONE</h2>{room.phone ? <><a href={phoneHref ? `tel:${phoneHref}` : undefined}>{room.phone}</a>{phoneHref && <a className="room-detail-action" href={`tel:${phoneHref}`}>전화 문의 →</a>}</> : <p className="room-empty">Details coming soon.</p>}{room.phoneNote && <p className="room-phone-note">{room.phoneNote}</p>}</div>
+        <div><h2>CONTACT</h2><a href={BUSINESS_INFO.contactUrl} target="_blank" rel="noopener noreferrer">카카오톡 오픈프로필 ↗</a><p className="room-phone-note">방문 및 예약 문의는 카카오톡으로 연락해 주세요.</p></div>
         <div><h2>OPENING HOURS</h2>{room.openingHours ? <p className="room-preline">{room.openingHours}</p> : <p className="room-empty">Details coming soon.</p>}</div>
       </div>
     </div></section>
