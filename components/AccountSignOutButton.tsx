@@ -20,6 +20,7 @@ export function AccountSignOutButton({ compact = false }: { compact?: boolean })
         setError("로그아웃하지 못했습니다. 다시 시도해 주세요.");
         return;
       }
+      try { sessionStorage.removeItem("casa-tasting-order-history-v1"); sessionStorage.removeItem("tasting-last-order"); sessionStorage.removeItem("tominiko-last-online-order"); } catch {}
       router.replace("/");
       router.refresh();
     } catch {

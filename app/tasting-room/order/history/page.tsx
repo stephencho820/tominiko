@@ -2,6 +2,7 @@
 import Link from "next/link";
 import {useEffect,useState} from "react";
 import {getSavedTastingOrders} from "@/lib/tasting-order-history";
+import {createClient} from "@/lib/supabase/client";
 type Item={product_name:string;selected_option:string|null;quantity:number;subtotal:number};
 type Order={id?:string;order_number:string;order_status:string;payment_status:string;payment_method:string|null;total:number;created_at?:string;order_items:Item[]};
 const labels:Record<string,string>={new:"주문 접수",confirmed:"주문 확인",preparing:"제조 중",ready_for_pickup:"픽업 준비 완료",completed:"픽업 완료",cancelled:"취소"};
@@ -9,7 +10,8 @@ function state(o:Order){return o.order_status==="cancelled"?"주문 취소":o.pa
 export default function TastingOrderHistory(){
  const [orders,setOrders]=useState<Order[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState("");
  useEffect(()=>{let active=true;async function load(){
-  const saved=getSavedTastingOrders();
+  const {data:{user}}=await createClient().auth.getUser();
+  const saved=user?[]:getSavedTastingOrders();
   try{
    const [member,guests]=await Promise.all([
     fetch("/api/tasting-room/my-orders",{cache:"no-store"}).then(r=>r.ok?r.json():{orders:[]}),
