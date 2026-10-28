@@ -41,7 +41,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const itemsRef = useRef<CartItem[]>([]);
   const [hasHydrated, setHasHydrated] = useState(false);
   const activeOwner = useRef<string | null | undefined>(undefined);
-  const [storageKey, setStorageKey] = useState<string | null>(null);
   const [refreshError, setRefreshError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const pathname = usePathname();
@@ -50,6 +49,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const next = typeof update === "function" ? update(itemsRef.current) : update;
     itemsRef.current = next;
     setItems(next);
+    if (activeOwner.current !== undefined) {
+      try { window.localStorage.setItem(cartKey(activeOwner.current), JSON.stringify(next)); } catch {}
+    }
   }, []);
 
   const refreshCart = useCallback(async () => {
@@ -104,7 +106,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       itemsRef.current = next;
       setItems(next);
       setRefreshError("");
-      setStorageKey(key);
       setHasHydrated(true);
     };
     void supabase.auth.getUser().then(({ data }) => switchOwner(data.user?.id ?? null)).catch(() => switchOwner(null));
@@ -121,15 +122,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener("focus", refresh);
     return () => { ++refreshRequest.current; window.removeEventListener("focus", refresh); };
   }, [hasHydrated, pathname, refreshCart]);
-
-  useEffect(() => {
-    if (!hasHydrated || !storageKey) return;
-    try {
-      window.localStorage.setItem(storageKey, JSON.stringify(items));
-    } catch {
-      // Checkout remains usable when storage is unavailable or full.
-    }
-  }, [hasHydrated, items, storageKey]);
 
   const add = useCallback((item: CartItem) => {
     const next = addCartItem(itemsRef.current, item);
