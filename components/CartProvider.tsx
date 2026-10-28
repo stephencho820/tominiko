@@ -3,9 +3,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { addCartItem, cartItemKey, maxCartQuantity, refreshCartProducts, sanitizeCart, updateCartOptions } from "@/lib/cart";
 import { usePathname } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import type { CartItem } from "@/types";
 
 const CART_STORAGE_KEY = "casa-cart";
+const cartKey = (userId: string | null) => `${CART_STORAGE_KEY}:${userId ?? "guest"}`;
 
 type CartContext = {
   items: CartItem[];
@@ -38,6 +40,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const dismissCartNotice = useCallback(() => setCartNotice(""), []);
   const itemsRef = useRef<CartItem[]>([]);
   const [hasHydrated, setHasHydrated] = useState(false);
+  const activeOwner = useRef<string | null | undefined>(undefined);
+  const [storageKey, setStorageKey] = useState<string | null>(null);
   const [refreshError, setRefreshError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const pathname = usePathname();
@@ -77,12 +81,38 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [setCartItems]);
 
   useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(CART_STORAGE_KEY);
-      if (stored) setCartItems(sanitizeCart(JSON.parse(stored)));
-    } catch { /* Site storage may be unavailable. */ }
-    setHasHydrated(true);
-  }, [setCartItems]);
+    let active = true;
+    const supabase = createClient();
+    const switchOwner = (userId: string | null) => {
+      if (!active || activeOwner.current === userId) return;
+      // Prevent any in-flight refresh from restoring another account's items.
+      ++refreshRequest.current;
+      activeOwner.current = userId;
+      const key = cartKey(userId);
+      let next: CartItem[] = [];
+      try {
+        const stored = window.localStorage.getItem(key);
+        if (stored) next = sanitizeCart(JSON.parse(stored));
+        // Never import the legacy shared cart into a member's private cart.
+        // Existing guest carts remain accessible only to guests.
+        if (!stored && userId === null) {
+          const legacy = window.localStorage.getItem(CART_STORAGE_KEY);
+          if (legacy) next = sanitizeCart(JSON.parse(legacy));
+        }
+        window.localStorage.removeItem(CART_STORAGE_KEY);
+      } catch { /* Storage may be unavailable. */ }
+      itemsRef.current = next;
+      setItems(next);
+      setRefreshError("");
+      setStorageKey(key);
+      setHasHydrated(true);
+    };
+    void supabase.auth.getUser().then(({ data }) => switchOwner(data.user?.id ?? null)).catch(() => switchOwner(null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      switchOwner(session?.user?.id ?? null);
+    });
+    return () => { active = false; subscription.unsubscribe(); };
+  }, []);
 
   useEffect(() => {
     if (!hasHydrated) return;
@@ -93,13 +123,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [hasHydrated, pathname, refreshCart]);
 
   useEffect(() => {
-    if (!hasHydrated) return;
+    if (!hasHydrated || !storageKey) return;
     try {
-      window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+      window.localStorage.setItem(storageKey, JSON.stringify(items));
     } catch {
       // Checkout remains usable when storage is unavailable or full.
     }
-  }, [hasHydrated, items]);
+  }, [hasHydrated, items, storageKey]);
 
   const add = useCallback((item: CartItem) => {
     const next = addCartItem(itemsRef.current, item);
