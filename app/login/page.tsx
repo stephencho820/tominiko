@@ -1,15 +1,15 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 type AuthMode = "sign-in" | "sign-up";
 
 export default function Login() {
 	const router = useRouter();
-	const searchParams = useSearchParams();
-	const requestedNext = searchParams.get("next");
+	const [requestedNext, setRequestedNext] = useState<string | null>(null);
+	useEffect(() => { setRequestedNext(new URLSearchParams(window.location.search).get("next")); }, []);
 	const safeNext = requestedNext?.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : null;
 	const [mode, setMode] = useState<AuthMode>("sign-in");
 	const [email, setEmail] = useState("");
