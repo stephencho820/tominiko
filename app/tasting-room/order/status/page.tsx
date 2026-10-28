@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import {createClient} from "@/lib/supabase/client";
 import {useEffect,useState} from "react";
 
 type Order={order_number:string;order_status:string;payment_status:string;payment_method:string|null;total:number;order_items:{product_name:string;selected_option:string|null;quantity:number;subtotal:number}[]};
@@ -10,7 +11,11 @@ export default function PickupStatusPage(){
   let active=true;let timer:ReturnType<typeof setInterval>;
   const refresh=async()=>{
    let saved:{id:string;token:string}|null=null;
-   try{saved=JSON.parse(localStorage.getItem("tasting-last-order")||"null")}catch{}
+   try{
+    const {data:{user}}=await createClient().auth.getUser();
+    if(user){if(active)setMessage("로그인 계정의 주문은 내 주문 내역에서 확인해 주세요.");return}
+    saved=JSON.parse(localStorage.getItem("tasting-last-order")||"null");
+   }catch{}
    if(!saved?.id||!saved.token){if(active)setMessage("저장된 주문이 없습니다. 주문 완료 화면에서 주문번호를 확인해 주세요.");return}
    try{
     const res=await fetch("/api/tasting-room/order-status",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({orderId:saved.id,accessToken:saved.token}),cache:"no-store"});
