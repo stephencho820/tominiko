@@ -16,6 +16,8 @@ export default function Login() {
 	const [error, setError] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [oauthProvider, setOauthProvider] = useState<"google" | null>(null);
+	const [needsConfirmation, setNeedsConfirmation] = useState(false);
+	const [resending, setResending] = useState(false);
 	const [socialProviders, setSocialProviders] = useState({ google: false, loaded: false });
 
 	useEffect(() => {
@@ -57,6 +59,7 @@ export default function Login() {
 		event.preventDefault();
 		setError("");
 		setMessage("");
+		setNeedsConfirmation(false);
 
 		if (mode === "sign-up" && password !== confirmPassword) {
 			setError("비밀번호가 일치하지 않습니다.");
@@ -75,12 +78,18 @@ export default function Login() {
 					});
 
 			if (result.error) {
-				setError(result.error.message);
+				if (result.error.code === "email_not_confirmed" || /email not confirmed/i.test(result.error.message)) {
+					setNeedsConfirmation(true);
+					setError("이메일 인증이 아직 완료되지 않았어요. 가입한 이메일의 받은편지함과 스팸함에서 인증 링크를 눌러 주세요.");
+				} else if (result.error.code === "invalid_credentials") {
+					setError("이메일 또는 비밀번호를 확인해 주세요. Google로 가입했다면 Google 로그인을 이용해 주세요.");
+				} else { setError(result.error.message); }
 				return;
 			}
 
 			if (mode === "sign-up" && !result.data.session) {
-				setMessage("가입이 완료되었습니다. 이메일의 확인 링크를 눌러 로그인을 완료해 주세요.");
+				setNeedsConfirmation(true);
+				setMessage("가입 신청이 접수됐어요. 이메일 인증을 완료해야 로그인할 수 있습니다. 받은편지함과 스팸함을 확인해 주세요. 카카오톡에서 가입했다면 인증 링크를 연 뒤 다시 이 페이지로 돌아와 로그인해 주세요.");
 				return;
 			}
 
@@ -88,6 +97,17 @@ export default function Login() {
 			router.refresh();
 		} catch { setError("로그인 요청을 완료하지 못했습니다. 다시 시도해 주세요."); }
 		finally { setIsSubmitting(false); }
+	};
+
+	const resendConfirmation = async () => {
+		if (!email.trim() || resending) return;
+		setResending(true); setError(""); setMessage("");
+		try {
+			const { error: resendError } = await createClient().auth.resend({ type: "signup", email: email.trim(), options: { emailRedirectTo: `${window.location.origin}/auth/callback` } });
+			if (resendError) setError(resendError.status === 429 ? "인증 메일을 연속해서 요청했어요. 잠시 기다린 후 다시 시도해 주세요." : "인증 메일을 재발송하지 못했어요. 잠시 후 다시 시도해 주세요.");
+			else setMessage("인증 메일을 다시 요청했어요. 받은편지함과 스팸함을 확인해 주세요.");
+		} catch { setError("인증 메일 재발송 중 문제가 발생했어요."); }
+		finally { setResending(false); }
 	};
 
 	const isSignUp = mode === "sign-up";
@@ -125,6 +145,7 @@ export default function Login() {
 
 			{error && <p role="alert" className="mt-5 sans text-sm text-[#a33f2b]">{error}</p>}
 			{message && <p role="status" className="mt-5 sans text-sm text-[var(--brown)]">{message}</p>}
+			{needsConfirmation && <div className="mt-4 border border-[var(--line)] p-4 text-left"><p className="sans text-sm">이메일 인증을 마치지 않았다면 로그인할 수 없습니다.</p><button type="button" disabled={resending || !email.trim()} onClick={resendConfirmation} className="button-secondary mt-3 px-4 py-3 text-sm disabled:opacity-50">{resending ? "재발송 중…" : "인증 메일 다시 보내기"}</button></div>}
 
 			<div className="my-9 flex items-center gap-4 text-[var(--muted)]"><span className="h-px flex-1 bg-[var(--line)]" /><span className="eyebrow">or</span><span className="h-px flex-1 bg-[var(--line)]" /></div>
 			<div className="grid gap-3">
