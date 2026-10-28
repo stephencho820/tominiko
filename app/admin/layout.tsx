@@ -4,7 +4,7 @@ import { getAdminClient } from "@/lib/supabase/admin";
 import { AccountSignOutButton } from "@/components/AccountSignOutButton";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  if (!(await getAdminClient())) redirect("/login");
+  if (!(await getAdminClient())) redirect("/login?next=%2Fadmin");
   return <div className="admin-shell">
     <header className="admin-header">
       <Link href="/admin" className="admin-brand">
@@ -15,6 +15,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <Link href="/admin">대시보드</Link>
         <Link href="/admin/orders">주문</Link>
         <Link href="/admin/customers">고객</Link>
+        <Link href="/admin/members">회원 관리</Link>
         <Link href="/admin/vip">VIP</Link>
         <Link href="/admin/subscriptions">정기구독</Link>
         <Link href="/admin/products">상품</Link>
