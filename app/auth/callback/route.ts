@@ -27,12 +27,16 @@ export async function GET(request: Request) {
     return NextResponse.redirect(failure);
   }
 
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: profile } = user ? await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle() : { data: null };
+  const destination = profile?.role === "admin" && next === "/account" ? "/admin" : next;
+
   const forwardedHost = request.headers.get("x-forwarded-host");
   const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
 
   if (process.env.NODE_ENV !== "development" && forwardedHost) {
-    return NextResponse.redirect(`${forwardedProto}://${forwardedHost}${next}`);
+    return NextResponse.redirect(`${forwardedProto}://${forwardedHost}${destination}`);
   }
 
-  return NextResponse.redirect(new URL(next, request.url));
+  return NextResponse.redirect(new URL(destination, request.url));
 }
