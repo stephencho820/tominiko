@@ -1,13 +1,16 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 type AuthMode = "sign-in" | "sign-up";
 
 export default function Login() {
 	const router = useRouter();
+	const searchParams = useSearchParams();
+	const requestedNext = searchParams.get("next");
+	const safeNext = requestedNext?.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : null;
 	const [mode, setMode] = useState<AuthMode>("sign-in");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -43,7 +46,7 @@ export default function Login() {
 			const supabase = createClient();
 			const { error: authError } = await supabase.auth.signInWithOAuth({
 				provider,
-				options: { redirectTo: `${window.location.origin}/auth/callback` },
+				options: { redirectTo: `${window.location.origin}/auth/callback${safeNext ? `?next=${encodeURIComponent(safeNext)}` : ""}` },
 			});
 			if (authError) {
 				setError("소셜 로그인을 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.");
@@ -93,7 +96,9 @@ export default function Login() {
 				return;
 			}
 
-			router.push("/account");
+			const { data: { user } } = await supabase.auth.getUser();
+			const { data: profile } = user ? await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle() : { data: null };
+			router.push(profile?.role === "admin" ? (safeNext?.startsWith("/admin") ? safeNext : "/admin") : (safeNext && !safeNext.startsWith("/admin") ? safeNext : "/account"));
 			router.refresh();
 		} catch { setError("로그인 요청을 완료하지 못했습니다. 다시 시도해 주세요."); }
 		finally { setIsSubmitting(false); }
