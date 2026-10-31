@@ -12,14 +12,16 @@ export async function GET() {
     supabase.auth.getUser(),
   ]);
   if (settingsError || zonesError || !settings) return NextResponse.json({ error: "Could not load delivery settings" }, { status: 503 });
-  let profile = null; let addresses: unknown[] = [];
+  let profile = null; let addresses: unknown[] = []; let isVip = false;
   if (auth.user) {
-    const [{ data: profileData }, { data: addressData }] = await Promise.all([
+    const [{ data: profileData }, { data: addressData }, { data: vipData }] = await Promise.all([
       supabase.from("profiles").select("name,email,phone").eq("id", auth.user.id).maybeSingle(),
       supabase.from("user_addresses").select("*").order("is_default", { ascending: false }).order("created_at"),
+      supabase.from("vip_customers").select("user_id").eq("user_id", auth.user.id).maybeSingle(),
     ]);
     profile = profileData;
+    isVip = Boolean(vipData);
     addresses = addressData ?? [];
   }
-  return NextResponse.json({ settings: settingsFromRow(settings), zones: zones ?? [], user: auth.user ? { ...profile, email: profile?.email || auth.user.email } : null, addresses });
+  return NextResponse.json({ settings: settingsFromRow(settings), zones: zones ?? [], user: auth.user ? { ...profile, email: profile?.email || auth.user.email } : null, addresses, isVip }, { headers: { "Cache-Control": "no-store" } });
 }
