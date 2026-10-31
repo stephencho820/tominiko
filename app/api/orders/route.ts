@@ -91,6 +91,20 @@ export async function POST(request: Request) {
     }
   }
 
+  // Server-verified VIP membership: never trust a client-supplied discount.
+  let finalTotal = Number(order.total);
+  if (authData.user?.id && fulfillmentType === "shipping") {
+    const { data: vip, error: vipError } = await supabase.from("vip_customers").select("user_id").eq("user_id", authData.user.id).maybeSingle();
+    if (vipError) return NextResponse.json({ error: "VIP 배송 혜택을 확인하지 못했습니다. 다시 시도해 주세요." }, { status: 503 });
+    if (vip) {
+      const { data: adjusted, error: adjustError } = await supabase.from("orders")
+        .update({ shipping_fee: 0, total: Number(order.total) - Number((await supabase.from("orders").select("shipping_fee").eq("id", order.order_id).single()).data?.shipping_fee ?? 0), final_amount: finalTotal - Number((await supabase.from("orders").select("shipping_fee").eq("id", order.order_id).single()).data?.shipping_fee ?? 0) })
+        .eq("id", order.order_id).eq("user_id", authData.user.id).eq("guest_access_token_hash", guestTokenHash).eq("payment_status", "pending").select("total").maybeSingle();
+      if (adjustError || !adjusted) return NextResponse.json({ error: "VIP 무료배송 적용에 실패했습니다. 다시 시도해 주세요." }, { status: 503 });
+      finalTotal = Number(adjusted.total);
+    }
+  }
+
   let newlyRegisteredBankOrder = false;
   if(manual){
     const {data:bank}=await supabase.from("manual_transfer_settings").select("id").eq("id",true).maybeSingle();
@@ -103,7 +117,7 @@ export async function POST(request: Request) {
     await notifyAdminsOfNewOrder({ number: String(order.order_number), name: text(body.customerName, 100), amount: Number(order.total), method: fulfillmentType });
   }
   return NextResponse.json({
-    orderId: order.order_id, orderNumber: order.order_number, amount: order.total,
+    orderId: order.order_id, orderNumber: order.order_number, amount: finalTotal,
     orderName: order.order_name, accessToken, clientKey: process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY,
   });
 }
