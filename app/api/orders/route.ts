@@ -97,9 +97,17 @@ export async function POST(request: Request) {
     const { data: vip, error: vipError } = await supabase.from("vip_customers").select("user_id").eq("user_id", authData.user.id).maybeSingle();
     if (vipError) return NextResponse.json({ error: "VIP 배송 혜택을 확인하지 못했습니다. 다시 시도해 주세요." }, { status: 503 });
     if (vip) {
+      const { data: currentOrder, error: readError } = await supabase.from("orders")
+        .select("shipping_fee,total,payment_status").eq("id", order.order_id).eq("user_id", authData.user.id)
+        .eq("guest_access_token_hash", guestTokenHash).maybeSingle();
+      if (readError || !currentOrder || currentOrder.payment_status !== "pending")
+        return NextResponse.json({ error: "VIP 배송 혜택을 확인하지 못했습니다." }, { status: 503 });
+      const vipTotal = Number(currentOrder.total) - Number(currentOrder.shipping_fee);
       const { data: adjusted, error: adjustError } = await supabase.from("orders")
-        .update({ shipping_fee: 0, total: Number(order.total) - Number((await supabase.from("orders").select("shipping_fee").eq("id", order.order_id).single()).data?.shipping_fee ?? 0), final_amount: finalTotal - Number((await supabase.from("orders").select("shipping_fee").eq("id", order.order_id).single()).data?.shipping_fee ?? 0) })
-        .eq("id", order.order_id).eq("user_id", authData.user.id).eq("guest_access_token_hash", guestTokenHash).eq("payment_status", "pending").select("total").maybeSingle();
+        .update({ shipping_fee: 0, total: vipTotal, final_amount: vipTotal })
+        .eq("id", order.order_id).eq("user_id", authData.user.id)
+        .eq("guest_access_token_hash", guestTokenHash).eq("payment_status", "pending")
+        .select("total").maybeSingle();
       if (adjustError || !adjusted) return NextResponse.json({ error: "VIP 무료배송 적용에 실패했습니다. 다시 시도해 주세요." }, { status: 503 });
       finalTotal = Number(adjusted.total);
     }
