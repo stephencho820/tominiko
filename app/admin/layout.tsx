@@ -13,6 +13,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       </Link>
       <nav aria-label="Admin navigation">
         <Link href="/admin">대시보드</Link>
+        <Link href="/admin/analytics">고객 행동 분석</Link>
         <Link href="/admin/orders">주문</Link>
         <Link href="/admin/customers">고객</Link>
         <Link href="/admin/members">회원 관리</Link>
