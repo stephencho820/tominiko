@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { trackEvent } from "@/lib/analytics";
 import { BankTransferInstructions } from "@/components/BankTransferInstructions";
 import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
@@ -85,7 +86,7 @@ export default function PaymentCheckout() {
       const fingerprint = JSON.stringify({ form: orderForm, method, paymentMethod, items: cartSnapshot(latestItems), settings: bootstrap.settings }); let key = sessionStorage.getItem("tominiko-checkout-reference"), token = sessionStorage.getItem("tominiko-order-access-token");
       if (!key || !token || sessionStorage.getItem("tominiko-checkout-cart") !== fingerprint) { key = crypto.randomUUID(); token = newToken(); sessionStorage.setItem("tominiko-checkout-reference", key); sessionStorage.setItem("tominiko-order-access-token", token); sessionStorage.setItem("tominiko-checkout-cart", fingerprint); }
       const response = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...orderForm, fulfillmentType: method, items: latestItems, idempotencyKey: key, accessToken: token, paymentMethod }) }); const order = await response.json(); if (!response.ok) throw new Error(order.error);
-      if(paymentMethod==="BANK_TRANSFER"){try { sessionStorage.setItem("tominiko-last-online-order", JSON.stringify({ id: order.orderId, token })); } catch { /* Manual lookup still available. */ } setManualOrder({id:order.orderId,token:token!});clearCart();sessionStorage.removeItem("tominiko-checkout-reference");sessionStorage.removeItem("tominiko-checkout-cart");sessionStorage.removeItem("tominiko-order-access-token");setSubmitting(false);submittingRef.current=false;return;}
+      if(paymentMethod==="BANK_TRANSFER"){try { sessionStorage.setItem("tominiko-last-online-order", JSON.stringify({ id: order.orderId, token })); } catch { /* Manual lookup still available. */ } setManualOrder({id:order.orderId,token:token!});trackEvent("order_placed");clearCart();sessionStorage.removeItem("tominiko-checkout-reference");sessionStorage.removeItem("tominiko-checkout-cart");sessionStorage.removeItem("tominiko-order-access-token");setSubmitting(false);submittingRef.current=false;return;}
       sessionStorage.setItem("tominiko-payment-order-id", order.orderId); await loadToss(); if (!window.TossPayments) throw new Error("결제 모듈을 시작하지 못했습니다.");
       await window.TossPayments(order.clientKey).payment({ customerKey: window.TossPayments.ANONYMOUS }).requestPayment({ method: paymentMethod, amount: { currency: "KRW", value: order.amount }, orderId: order.orderId, orderName: order.orderName, successUrl: `${location.origin}/checkout/success`, failUrl: `${location.origin}/checkout/fail`, customerEmail: form.email || undefined, customerName: form.customerName, customerMobilePhone: form.phone.replace(/\D/g, ""), ...(paymentMethod === "CARD" ? { card: { useEscrow: false, flowMode: "DEFAULT", useCardPoint: false, useAppCardOnly: false } } : {}) });
     } catch (error) { const message = error instanceof Error ? error.message : "결제를 시작하지 못했습니다."; setErrors({ submit: message }); setValidationSummary(message); window.scrollTo({ top: 0, behavior: "smooth" }); setSubmitting(false); submittingRef.current = false; }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteChrome } from "@/components/SiteChrome";
+import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { CartProvider } from "@/components/CartProvider";
 import { BUSINESS_INFO, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, siteUrl } from "@/lib/site";
 import "./globals.css";
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return <html lang="ko">
     <body>
       <CartProvider>
+        <AnalyticsTracker />
         <SiteChrome footer={<footer className="site-footer site-footer-complete">
           <div className="site-footer-brand">
             <p className="eyebrow">CASA DI STEFANO</p>

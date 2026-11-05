@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { addCartItem, cartItemKey, maxCartQuantity, refreshCartProducts, sanitizeCart, updateCartOptions } from "@/lib/cart";
 import { usePathname } from "next/navigation";
+import { trackEvent } from "@/lib/analytics";
 import { createClient } from "@/lib/supabase/client";
 import type { CartItem } from "@/types";
 
@@ -127,6 +128,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const next = addCartItem(itemsRef.current, item);
     if (next === itemsRef.current) return false;
     setCartItems(next);
+    trackEvent("add_to_cart", item.product.id);
     setCartNotice(`${item.product.name} · ${item.quantity}개 담았습니다`);
     return true;
   }, [setCartItems]);
