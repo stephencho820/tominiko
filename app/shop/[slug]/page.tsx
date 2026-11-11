@@ -40,6 +40,8 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
   if (!product) notFound();
   const reviewData = await getProductReviews(product.id);
   const notes = tastingNotes(product);
+  const displayTitle = product.korean_name || product.name;
+  const hasMixedScriptTitle = /[A-Za-z]/.test(displayTitle) && /[가-힣]/.test(displayTitle);
   const images = [productImage(product), ...(product.gallery_images ?? [])].filter((value, index, list) => list.indexOf(value) === index);
   const displayTags = (product.discovery_tags ?? []).filter(Boolean);
   const roastedDate = product.roasted_date ? new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(`${product.roasted_date}T00:00:00+09:00`)) : null;
@@ -65,7 +67,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
       <div className="product-gallery"><div className="pdp-gallery-track">{images.map((image, index) => <img src={image} alt={`${product.name}${index ? ` ${index+1}`:""}`} key={image} />)}</div>{images.length > 1 && <span className="pdp-gallery-hint">SWIPE TO EXPLORE · {String(images.length).padStart(2, "0")} PHOTOS</span>}</div>
       <div className="product-intro"><div className="pdp-intro-inner">
         <p className="section-label pdp-origin-label">COFFEE COLLECTION / {product.origin}{product.region ? ` · ${product.region}`:""}</p>
-        <h1>{product.korean_name || product.name}</h1>
+        <h1 className={hasMixedScriptTitle ? "pdp-title--mixed" : undefined}>{displayTitle}</h1>
         {product.korean_name && <p className="product-english-name">{product.name}</p>}
         {product.subtitle && <p className="product-subtitle">{product.subtitle}</p>}
         {notes.length > 0 && <div className="pdp-tasting"><span>IN THE CUP</span><p className="product-tasting-lead">{notes.join(" · ")}</p></div>}
