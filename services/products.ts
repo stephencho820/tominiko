@@ -21,7 +21,7 @@ export async function getProducts(options?: { activeOnly?: boolean; todaysRoast?
     if (options?.todaysRoast) query = query.eq("todays_roast", true);
     if (options?.featured) query = query.eq("featured", true);
     const { data, error } = await runSupabaseQuery(async (signal) => await query.abortSignal(signal));
-    if (error) return productQueryFailed("list", error);
+    if (error) throw error;
     return await attachReviewSummaries((data ?? []) as Product[]);
   } catch (error) {
     return productQueryFailed("list", error);
@@ -41,7 +41,7 @@ export async function getProduct(slug: string, options?: { includeInactive?: boo
     const query = options?.includeInactive ? base : base.in("status", ["active", "sold-out"]);
     // maybeSingle distinguishes a missing product (404) from a database outage.
     const { data, error } = await runSupabaseQuery(async (signal) => await query.abortSignal(signal).maybeSingle());
-    if (error) return productQueryFailed("detail", error);
+    if (error) throw error;
     if (!data) return null;
     return (await attachReviewSummaries([data as Product]))[0];
   } catch (error) {
