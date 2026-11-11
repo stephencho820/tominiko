@@ -33,7 +33,8 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
   const variants = useMemo(() => productVariants(product), [product]);
   const sizes = [...new Set(variants.map((item) => item.size))];
   const [size, setSize] = useState<string>(() => defaultProductVariant(product)?.size ?? "");
-  const [grind, setGrind] = useState<Grind>("Whole Bean");
+  const coffeeBag = product.product_format === "coffee_bag";
+  const [grind, setGrind] = useState<Grind>(product.product_format === "coffee_bag" ? "Coffee Bag" : "Whole Bean");
   const variant = variants.find((item) => item.size === size);
   const pricing = productPricing(product, size, variant);
   const regularPrice = pricing.price;
@@ -42,7 +43,7 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
   const [imageRevealed, setImageRevealed] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const notes = tastingNotes(product).join(" · ");
-  const hover = productHoverLabel(product);
+  const hover = coffeeBag ? {label:"COFFEE BAG",color:"#927B61"} : productHoverLabel(product);
   const hoverNotes = tastingNotes(product).filter(Boolean).slice(0, 3).join(" · ");
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
   const chooseSize = (nextSize: string) => {
@@ -68,7 +69,7 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
   return <article className={`catalog-card catalog-card--${view}`}>
     <Link href={`/shop/${product.slug}`} className={`catalog-card-image${imageRevealed ? " catalog-card-image--revealed" : ""}`} onClick={handleImageClick} onBlur={() => setImageRevealed(false)} aria-label={`${product.name}${hoverNotes ? ` — ${hoverNotes}` : ""} — 상품 상세 보기`}><img src={productImage(product)} alt={product.name} /><span className="catalog-image-reveal" style={{ backgroundColor: `${hover.color}B8` }} aria-hidden="true"><span className="catalog-reveal-content"><span className="catalog-reveal-origin">{hover.label}</span>{hoverNotes && <><span className="catalog-reveal-rule" /><span className="catalog-reveal-notes">{hoverNotes}</span></>}</span></span></Link>
     <div className="catalog-card-copy">
-      <p className="catalog-origin">{product.origin}{product.region ? ` · ${product.region}` : ""}</p>
+      <p className="catalog-origin">{coffeeBag ? "COFFEE BAG · " : ""}{product.origin}{product.region ? ` · ${product.region}` : ""}</p>
       <Link href={`/shop/${product.slug}`}><h2>{product.korean_name || product.name}</h2></Link>
       {product.korean_name && <p className="catalog-english">{product.name}</p>}
       {notes && <p className="catalog-notes">{notes}</p>}
@@ -76,10 +77,10 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
       {view === "list" && product.short_description && <p className="catalog-description">{product.short_description}</p>}
       <div className="catalog-options" aria-label={`${product.name} options`}>
         <select aria-label="Size" value={size} onChange={(event) => chooseSize(event.target.value)}>{sizes.map((value) => <option key={value} value={value}>{value}</option>)}</select>
-        <select aria-label="Grind" value={grind} onChange={(event) => setGrind(event.target.value as Grind)}>{STANDARD_GRINDS.map((value) => <option key={value} value={value}>{value}</option>)}</select>
+        {!coffeeBag && <select aria-label="Grind" value={grind} onChange={(event) => setGrind(event.target.value as Grind)}>{STANDARD_GRINDS.map((value) => <option key={value} value={value}>{value}</option>)}</select>}
       </div>
-      <div className="catalog-buy"><strong className="catalog-price">{salePrice < regularPrice && <del>₩{regularPrice.toLocaleString("ko-KR")}</del>}<span>₩{salePrice.toLocaleString("ko-KR")}</span></strong>
-        <button type="button" onClick={addProduct} disabled={!variant?.available || variant.stock < 1} aria-live="polite" className={added ? "cart-added" : ""}><ShoppingBag size={15} />{variant?.available && variant.stock > 0 ? added ? "✓ 담았어요" : "장바구니 추가" : "SOLD OUT"}</button>
+      <div className="catalog-buy"><strong className="catalog-price">{salePrice < regularPrice && <del>₩{regularPrice.toLocaleString("ko-KR")}</del>}<span>{salePrice > 0 ? `₩${salePrice.toLocaleString("ko-KR")}` : "가격 준비 중"}</span>{coffeeBag && salePrice>0 && variant && <small>잔당 ₩{Math.round(salePrice / (variant.size==="5개입"?5:10)).toLocaleString("ko-KR")}</small>}</strong>
+        <button type="button" onClick={addProduct} disabled={!variant?.available || variant.stock < 1 || salePrice <= 0} aria-live="polite" className={added ? "cart-added" : ""}><ShoppingBag size={15} />{variant?.available && variant.stock > 0 ? added ? "✓ 담았어요" : "장바구니 추가" : "SOLD OUT"}</button>
       </div>
     </div>
   </article>;
