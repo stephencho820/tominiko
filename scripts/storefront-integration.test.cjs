@@ -491,3 +491,101 @@ test('Admin auth rejects guests/members and pending orders cannot advance fulfil
  for(const status of ['roasting','preparing','shipped','completed'])assert.equal((await allowed(request({id:ORDER_ID,order_status:status}))).status,409);
  assert.equal((await allowed(request(null))).status,400);
 });
+
+
+test('tasting-room guest history survives a new tab and expires after 30 days', () => {
+  const memory = () => {
+    const values = new Map();
+    return { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key), clear: () => values.clear() };
+  };
+  const oldWindow = global.window, oldLocal = global.localStorage, oldSession = global.sessionStorage;
+  try {
+    global.window = {};
+    global.localStorage = memory();
+    global.sessionStorage = memory();
+    const history = load('lib/tasting-order-history.ts');
+    history.saveTastingOrder(ORDER_ID, TOKEN);
+    assert.equal(history.getSavedTastingOrders().length, 1);
+    global.sessionStorage = memory(); // the user opens a new tab
+    assert.equal(history.getSavedTastingOrders()[0].id, ORDER_ID);
+    const expired = [{ id: ORDER_ID, token: TOKEN, savedAt: Date.now() - 31 * 86400000 }];
+    global.localStorage.setItem(history.TASTING_HISTORY_KEY, JSON.stringify(expired));
+    assert.deepEqual(history.getSavedTastingOrders(), []);
+    history.saveTastingOrder(ORDER_ID, TOKEN);
+    history.clearSavedTastingOrders();
+    assert.deepEqual(history.getSavedTastingOrders(), []);
+  } finally {
+    if (oldWindow === undefined) delete global.window; else global.window = oldWindow;
+    if (oldLocal === undefined) delete global.localStorage; else global.localStorage = oldLocal;
+    if (oldSession === undefined) delete global.sessionStorage; else global.sessionStorage = oldSession;
+  }
+});
+
+test('product service distinguishes a genuine empty catalog from a DB failure', async () => {
+  let failed = false, missing = false;
+  const query = {
+    select() { return this; }, eq() { return this; }, in() { return this; },
+    order() { return this; },
+    abortSignal() { return this; },
+    async maybeSingle() { return failed ? { data: null, error: { code: '42501' } } : { data: missing ? null : product(), error: null }; },
+    then(resolve) { return Promise.resolve(failed ? { data: null, error: { code: '42501' } } : { data: [], error: null }).then(resolve); },
+  };
+  const svc = load('services/products.ts', {
+    '@/lib/supabase/config': { hasSupabaseEnv: true },
+    '@/lib/supabase/server': { createClient: async () => ({ from: () => query }) },
+    '@/lib/supabase/query': { runSupabaseQuery: fn => fn(new AbortController().signal) },
+    '@/services/reviews': { attachReviewSummaries: async records => records },
+  });
+  assert.deepEqual(await svc.getProducts(), []);
+  missing = true;
+  assert.equal(await svc.getProduct('no-such-coffee'), null);
+  failed = true;
+  const oldError = console.error;
+  console.error = () => {};
+  try {
+    await assert.rejects(svc.getProducts(), /temporarily unavailable/);
+    await assert.rejects(svc.getProduct('coffee'), /temporarily unavailable/);
+  } finally { console.error = oldError; }
+});
+
+test('inactive product preview requires server-side admin authorization', () => {
+  const source = fs.readFileSync(path.join(root, 'app/shop/[slug]/page.tsx'), 'utf8');
+  assert.match(source, /if \(preview && !\(await getAdminClient\(\)\)\) notFound\(\)/);
+});
+
+
+test('product details omit stale roast dates on customer pages', () => {
+  const source = fs.readFileSync(path.join(root, 'app/shop/[slug]/page.tsx'), 'utf8');
+  assert.doesNotMatch(source, /roastedDate|ROASTED \{/);
+  assert.doesNotMatch(source, /\["로스팅",/);
+});
+
+
+test('coffee-bag draft uses pack quantities and no invented bean pricing', () => {
+  const format = load('lib/product-contract.ts');
+  const admin = load('lib/admin-product-form.ts');
+  const draft = [
+    { id: 'bag-5', size: '5개입', price: 0, salePrice: null, stock: 0, available: false },
+    { id: 'bag-10', size: '10개입', price: 0, salePrice: null, stock: 0, available: false },
+  ];
+  assert.equal(format.isSize('5개입'), true);
+  assert.equal(format.normalizeGrind('Coffee Bag'), 'Coffee Bag');
+  assert.equal(format.validateVariants(draft, 'coffee_bag', true).length, 2);
+  assert.throws(() => format.validateVariants(draft, 'coffee_bag'), /Invalid/);
+  assert.equal(admin.validateProductForm({ name:'또미 블렌딩 커피백', slug:'tomi-blend-coffee-bag',
+    origin:'Brazil / Colombia', product_type:'blend', product_format:'coffee_bag', status:'draft',
+    variants:draft, todays_roast:false }), null);
+  assert.notEqual(admin.validateProductForm({ name:'또미 블렌딩 커피백', slug:'tomi-blend-coffee-bag',
+    origin:'Brazil / Colombia', product_type:'blend', product_format:'coffee_bag', status:'active',
+    variants:draft, todays_roast:false }), null);
+  const live = { ...product(), product_format:'coffee_bag', variants:[
+    { id:'bag-5', size:'5개입', price:12000, salePrice:null, stock:9, available:true },
+    { id:'bag-10', size:'10개입', price:20000, salePrice:null, stock:8, available:true },
+  ], price_150g:0, price_400g:0 };
+  assert.deepEqual(products.productVariants(live).map(v=>v.size), ['5개입','10개입']);
+  assert.equal(products.productPrice(live), 12000);
+  assert.equal(products.productPricing(live, '5개입', live.variants[0]).price, 12000);
+  assert.equal(products.productPricing(live, '5개입').price, 0);
+  assert.equal(cart.sanitizeCart([{product:live,variantId:'bag-5',weight:'5개입',grind:'Coffee Bag',quantity:1,unitPrice:12000}]).length,1);
+  assert.equal(cart.sanitizeCart([{product:live,variantId:'bag-5',weight:'5개입',grind:'Whole Bean',quantity:1,unitPrice:12000}]).length,0);
+});

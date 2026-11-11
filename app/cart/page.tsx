@@ -50,7 +50,7 @@ export default function CartPage() {
                   </div>
                   <div className="cart-options">
                     <label><span><span className="lang-ko">옵션</span><span className="lang-en">Variant</span></span><select value={item.variantId} onChange={(event) => updateOptions(index, { variantId: event.target.value })}>{productVariants(item.product).map((variant) => <option disabled={!variant.available || variant.stock < 1} key={variant.id} value={variant.id}>{variant.size}{variant.stock < 1 ? " · Sold out" : ""}</option>)}</select></label>
-                    <label>Grind<select value={item.grind} onChange={(event) => updateOptions(index, { grind: event.target.value as typeof item.grind })}>{STANDARD_GRINDS.map((value) => <option key={value} value={value}>{grindLabel(value)}</option>)}</select></label>
+                    {item.product.product_format==="coffee_bag" ? <span className="section-label">커피백 · 분쇄도 선택 없음</span> : <label>Grind<select value={item.grind} onChange={(event) => updateOptions(index, { grind: event.target.value as typeof item.grind })}>{STANDARD_GRINDS.map((value) => <option key={value} value={value}>{grindLabel(value)}</option>)}</select></label>}
                   </div>
                   <div className="cart-item-footer">
                     <div className="quantity-control" aria-label="Quantity selector">

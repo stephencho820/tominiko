@@ -1,0 +1,31 @@
+name: Code quality
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Typecheck and targeted regression tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Check types
+        run: npm run typecheck
+      - name: Build application
+        run: npm run build
+      - name: Run targeted regression tests
+        # The legacy whole-suite fixtures assume discontinued card checkout and need a separate update.
+        run: node --test --test-name-pattern="tasting-room guest history|product service distinguishes|inactive product preview|product details omit stale roast dates|coffee-bag draft" scripts/storefront-integration.test.cjs

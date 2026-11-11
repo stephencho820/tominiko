@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { synchronizeProductPricing } from "@/lib/product-admin";
 
-const allowed = new Set(["name", "korean_name", "subtitle", "slug", "short_description", "product_type", "category", "status", "origin", "region", "producer", "washing_station", "variety", "process", "altitude", "harvest", "grade", "roast_level", "tasting_notes", "description", "about", "why_we_chose_it", "roaster_note", "roasted_date", "price_150g", "price_150g_original", "price_400g_original", "price_400g", "sale_price", "stock_quantity", "active", "featured", "todays_roast", "discovery_tags", "display_order", "image_url", "gallery_images", "acidity", "sweetness", "body", "recommended_brewing_methods", "brewing_dose", "brewing_water", "brewing_temperature", "brewing_grind", "brewing_time", "use_default_recipe", "variants", "sales_channels"]);
+const allowed = new Set(["name", "korean_name", "subtitle", "slug", "short_description", "product_type", "product_format", "category", "status", "origin", "region", "producer", "washing_station", "variety", "process", "altitude", "harvest", "grade", "roast_level", "tasting_notes", "description", "about", "why_we_chose_it", "roaster_note", "roasted_date", "price_150g", "price_150g_original", "price_400g_original", "price_400g", "sale_price", "stock_quantity", "active", "featured", "todays_roast", "discovery_tags", "display_order", "image_url", "gallery_images", "acidity", "sweetness", "body", "recommended_brewing_methods", "brewing_dose", "brewing_water", "brewing_temperature", "brewing_grind", "brewing_time", "use_default_recipe", "variants", "sales_channels"]);
 
 async function payloadFrom(request: Request) {
   const value: unknown = await request.json();
@@ -12,7 +12,7 @@ async function payloadFrom(request: Request) {
 }
 
 const productTypes = new Set(["single-origin", "blend", "decaf"]);
-const discoveryTags = new Set(["todays-roast", "nutty-comforting", "bright-fruity", "decaf", "morning-boost", "something-special", "for-gifting", "easy-brewing", "고소하고 편안한", "화사하고 산뜻한", "디카페인", "블렌드", "특별한 날"]);
+const discoveryTags = new Set(["todays-roast", "nutty-comforting", "bright-fruity", "decaf", "morning-boost", "something-special", "for-gifting", "easy-brewing", "고소하고 편안한", "화사하고 산뜻한", "디카페인", "블렌드", "특별한 날", "커피백"]);
 
 function validate(payload: Record<string, unknown>) {
   if ("status" in payload) {
@@ -24,6 +24,7 @@ function validate(payload: Record<string, unknown>) {
     if (key in payload && (!Number.isInteger(payload[key]) || Number(payload[key]) < 0)) return `${key} must be a positive whole number`;
   }
   if ("product_type" in payload && !productTypes.has(String(payload.product_type))) return "invalid product_type";
+  if ("product_format" in payload && !["beans", "coffee_bag"].includes(String(payload.product_format))) return "invalid product_format";
   for (const key of ["acidity", "sweetness", "body"]) if (key in payload && (Number(payload[key]) < 1 || Number(payload[key]) > 5)) return `${key} must be between 1 and 5`;
   if ("variants" in payload) {
     try { synchronizeProductPricing(payload); } catch (error) { return error instanceof Error ? error.message : "invalid variants"; }
