@@ -192,3 +192,51 @@ html { scroll-behavior: smooth; }
 
 .product-rating-link { display: inline-flex; align-items: center; gap: 4px; min-height: 36px; cursor: pointer; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; }
 .product-rating-link:hover, .product-rating-link:focus-visible { text-decoration-color: currentColor; }
+
+/* Casa di Stefano — editorial product detail refresh */
+.product-detail-new { background: #f9f7f2; color: #272b27; }
+.product-detail-new .pdp-topline { display:flex; justify-content:space-between; gap:16px; align-items:center; padding:18px clamp(22px,5vw,80px); border-bottom:1px solid rgba(38,43,37,.11); font-size:10px; letter-spacing:.15em; color:#6b6b61; }
+.product-detail-new .pdp-topline a { color:inherit; text-decoration:none; }
+.product-detail-new .pdp-topline a:hover { text-decoration:underline; text-underline-offset:5px; }
+.product-detail-new .product-hero { display:grid; grid-template-columns:minmax(0,1.06fr) minmax(0,.94fr); min-height:0; }
+.product-detail-new .product-gallery { position:relative; display:block; min-width:0; overflow:hidden; background:#eae5dc; }
+.product-detail-new .pdp-gallery-track { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; height:100%; }
+.product-detail-new .pdp-gallery-track::-webkit-scrollbar { display:none; }
+.product-detail-new .pdp-gallery-track img { display:block; flex:0 0 100%; width:100%; height:auto; aspect-ratio:4/5; object-fit:cover; scroll-snap-align:start; }
+.product-detail-new .pdp-gallery-hint { position:absolute; bottom:22px; left:22px; background:rgba(249,247,242,.82); backdrop-filter:blur(8px); padding:10px 14px; font-size:10px; letter-spacing:.12em; }
+.product-detail-new .product-intro { padding:clamp(38px,5.5vw,90px) clamp(24px,5vw,88px); justify-content:center; }
+.product-detail-new .pdp-origin-label { color:#82735e; font-size:10px; letter-spacing:.2em; }
+.product-detail-new .product-intro h1 { font-size:clamp(37px,4.6vw,70px); letter-spacing:-.045em; line-height:1.12; margin:16px 0 10px; }
+.product-detail-new .product-english-name { font-size:clamp(15px,1.4vw,20px); letter-spacing:.03em; opacity:.6; }
+.product-detail-new .pdp-tasting { margin-top:30px; padding:21px 0; border-top:1px solid rgba(38,43,37,.16); border-bottom:1px solid rgba(38,43,37,.16); }
+.product-detail-new .pdp-tasting > span { font-size:10px; letter-spacing:.17em; color:#8c7d66; }
+.product-detail-new .product-tasting-lead { font-size:clamp(16px,1.5vw,22px); line-height:1.5; margin:10px 0 0; }
+.product-detail-new .product-hero-meta { margin-top:18px; }
+.product-detail-new .taste-profile-hero { margin-top:25px; }
+.product-detail-new .purchase-panel { margin-top:26px; padding-top:22px; }
+.product-detail-new .purchase-price span { font-size:clamp(25px,2.5vw,35px); }
+.product-detail-new .option-grid button { font-size:12px; transition:background .2s,border-color .2s,color .2s; }
+.product-detail-new .add-to-bag { transition:background .2s,transform .2s; }
+.product-detail-new .add-to-bag:not(:disabled):hover { transform:translateY(-2px); }
+.product-detail-new .pdp-story-heading { padding:clamp(60px,9vw,130px) 24px 38px; text-align:center; }
+.product-detail-new .pdp-story-heading span { font-size:10px; letter-spacing:.22em; color:#8c7d66; }
+.product-detail-new .pdp-story-heading h2 { margin:15px 0; font-family:Georgia,serif; font-weight:400; font-size:clamp(33px,4vw,60px); letter-spacing:-.035em; }
+.product-detail-new .pdp-story-heading p { color:#7b796e; font-size:14px; }
+.product-detail-new .pdp-sections { max-width:1120px; margin:0 auto; padding:0 24px 85px; }
+.product-detail-new .pdp-sections section { border-top:1px solid rgba(38,43,37,.15); padding:42px 10px; }
+.product-detail-new .pdp-sections section:last-child { border-bottom:1px solid rgba(38,43,37,.15); }
+.product-detail-new .pdp-sections .section-label { color:#82735e; font-size:11px; letter-spacing:.15em; }
+.product-detail-new .related-products { padding-top:65px; }
+@media(max-width:800px) {
+  .product-detail-new .pdp-topline { padding:14px 18px; font-size:9px; }
+  .product-detail-new .pdp-topline span { display:none; }
+  .product-detail-new .product-hero { display:block; }
+  .product-detail-new .pdp-gallery-track img { aspect-ratio:1/1.08; }
+  .product-detail-new .product-intro { padding:34px 22px 52px; }
+  .product-detail-new .product-intro h1 { font-size:clamp(35px,8vw,52px); }
+  .product-detail-new .pdp-tasting { margin-top:24px; }
+  .product-detail-new .pdp-sections { padding:0 20px 55px; }
+  .product-detail-new .pdp-sections section { padding:30px 0; }
+  .product-detail-new .pdp-story-heading { padding:66px 20px 28px; }
+  .product-detail-new .option-grid button { font-size:12px; }
+}
