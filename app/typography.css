@@ -1,0 +1,80 @@
+/* CASA DI STEFANO — mobile-first editorial typography.
+   Scoped to the public storefront: admin and QR ordering remain unchanged. */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600&display=swap');
+
+:root {
+  --casa-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --casa-ui: Inter, "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+body:not(:has(.admin-shell)) { font-family: var(--casa-ui); }
+body:not(:has(.admin-shell)) .eyebrow,
+body:not(:has(.admin-shell)) .section-label,
+body:not(:has(.admin-shell)) .catalog-origin,
+body:not(:has(.admin-shell)) .catalog-english,
+body:not(:has(.admin-shell)) .catalog-notes,
+body:not(:has(.admin-shell)) .catalog-price,
+body:not(:has(.admin-shell)) button,
+body:not(:has(.admin-shell)) select,
+body:not(:has(.admin-shell)) input { font-family: var(--casa-ui); }
+body:not(:has(.admin-shell)) .coffee-marquee h2,
+body:not(:has(.admin-shell)) .coffee-discovery h2,
+body:not(:has(.admin-shell)) .shop-heading > p:last-child,
+body:not(:has(.admin-shell)) .product-intro h1,
+body:not(:has(.admin-shell)) .room-visit-details h2,
+body:not(:has(.admin-shell)) .site-footer-brand .eyebrow {
+  font-family: var(--casa-display);
+  font-weight: 500;
+  letter-spacing: -.025em;
+}
+body:not(:has(.admin-shell)) .catalog-card-copy h2 {
+  font-family: var(--casa-ui);
+  font-weight: 500;
+  letter-spacing: -.035em;
+  line-height: 1.35;
+}
+body:not(:has(.admin-shell)) .catalog-english {
+  font-family: var(--casa-display);
+  font-size: clamp(16px, 1.7vw, 20px);
+  line-height: 1.2;
+  letter-spacing: -.015em;
+}
+body:not(:has(.admin-shell)) .catalog-price,
+body:not(:has(.admin-shell)) .purchase-price { font-variant-numeric: tabular-nums; }
+body:not(:has(.admin-shell)) .site-header nav a,
+body:not(:has(.admin-shell)) .home-hero-cta,
+body:not(:has(.admin-shell)) .catalog-buy button,
+body:not(:has(.admin-shell)) .room-intro-actions a { white-space: nowrap; }
+body:not(:has(.admin-shell)) .catalog-card,
+body:not(:has(.admin-shell)) .catalog-card-copy,
+body:not(:has(.admin-shell)) .catalog-buy,
+body:not(:has(.admin-shell)) .catalog-options { min-width: 0; }
+body:not(:has(.admin-shell)) .catalog-card-copy h2,
+body:not(:has(.admin-shell)) .product-intro h1,
+body:not(:has(.admin-shell)) .room-intro h1 { overflow-wrap: break-word; }
+
+@media (max-width: 700px) {
+  /* Short UI labels stay on one line; long product names remain readable. */
+  body:not(:has(.admin-shell)) .site-shell { min-width: 0; }
+  body:not(:has(.admin-shell)) .section-label,
+  body:not(:has(.admin-shell)) .catalog-origin { font-size: clamp(9px, 2.5vw, 11px); letter-spacing: .06em; }
+  body:not(:has(.admin-shell)) .shop-heading > p:last-child { font-size: clamp(25px, 7vw, 34px); line-height: 1.15; }
+  body:not(:has(.admin-shell)) .coffee-marquee h2,
+  body:not(:has(.admin-shell)) .coffee-discovery h2 { font-size: clamp(29px, 8vw, 38px); line-height: 1.12; }
+  body:not(:has(.admin-shell)) .catalog-card-copy h2 { font-size: clamp(17px, 4.8vw, 21px); line-height: 1.28; }
+  body:not(:has(.admin-shell)) .catalog-english { font-size: 17px; }
+  body:not(:has(.admin-shell)) .catalog-buy { gap: 8px; }
+  body:not(:has(.admin-shell)) .catalog-buy button { font-size: clamp(10px, 2.7vw, 12px); letter-spacing: 0; }
+  body:not(:has(.admin-shell)) .catalog-price { white-space: nowrap; }
+  body:not(:has(.admin-shell)) .product-intro h1 { font-size: clamp(34px, 9vw, 48px); line-height: 1.05; }
+  body:not(:has(.admin-shell)) .room-intro h1 { font-size: clamp(29px, 8vw, 36px); line-height: 1.25; }
+  body:not(:has(.admin-shell)) .room-intro-actions { grid-template-columns: minmax(0, 1fr); }
+  body:not(:has(.admin-shell)) .room-intro-actions a { width: max-content; max-width: 100%; }
+  body:not(:has(.admin-shell)) .category-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  body:not(:has(.admin-shell)) .category-tabs::-webkit-scrollbar { display: none; }
+  body:not(:has(.admin-shell)) .category-tabs > * { flex-shrink: 0; white-space: nowrap; }
+}
+@media (max-width: 370px) {
+  body:not(:has(.admin-shell)) .catalog-buy { flex-wrap: wrap; }
+  body:not(:has(.admin-shell)) .catalog-buy button { max-width: 100%; }
+  body:not(:has(.admin-shell)) .catalog-card-copy h2 { font-size: 17px; }
+}
