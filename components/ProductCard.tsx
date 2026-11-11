@@ -7,6 +7,8 @@ export function formatCoffeeText(value: string | null, fallback = "") {
 }
 
 export function ProductCard({ product }: { product: Product }) {
+  const mainImage = productImage(product);
+  const conceptImage = product.gallery_images?.[0] && product.gallery_images[0] !== mainImage ? product.gallery_images[0] : null;
   const tastingNotes = formatCoffeeText(product.tasting_notes)
     || (product.product_format === "coffee_bag" ? "커피백 1개 · 분쇄 원두 10g" : "");
   const coffeeDetails = [formatCoffeeText(product.origin), product.process]
@@ -21,7 +23,8 @@ export function ProductCard({ product }: { product: Product }) {
     <article className="product-card">
       <div className="product-card-link group">
         <Link href={`/shop/${product.slug}`} className="product-card-image grain" aria-label={`${product.name} 상세 보기`}>
-          <img src={productImage(product)} alt={product.name} loading="lazy" />
+          <img src={mainImage} alt={product.name} loading="lazy" />
+          {conceptImage && <img className="product-card-concept-photo" src={conceptImage} alt={`${product.name} 콘셉트사진`} loading="lazy" />}
         </Link>
 
         <div className="product-card-copy">

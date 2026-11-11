@@ -175,3 +175,53 @@
  .product-detail-new .pdp-cross-sell-product > a { flex-basis:75px; }
  .product-detail-new .pdp-cross-sell-product img { width:75px; height:100px; }
 }
+
+
+/* Two-photo gallery controls: swipe on mobile, arrows on desktop. */
+.product-detail-new .pdp-gallery-actions {
+  position: absolute;
+  z-index: 2;
+  right: 18px;
+  bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px;
+  background: rgba(250, 248, 244, .9);
+  backdrop-filter: blur(10px);
+  color: #3b3329;
+  font: 600 11px "Avenir Next", sans-serif;
+}
+.product-detail-new .pdp-gallery-actions button {
+  display: grid;
+  width: 35px;
+  height: 35px;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+.product-detail-new .pdp-gallery-actions button:disabled { opacity: .28; cursor: default; }
+.product-detail-new .pdp-gallery-actions button:focus-visible,
+.product-detail-new .pdp-gallery-dots button:focus-visible { outline: 2px solid #604a38; outline-offset: 2px; }
+.product-detail-new .pdp-gallery-dots {
+  position: absolute;
+  z-index: 2;
+  left: 18px;
+  bottom: 27px;
+  display: flex;
+  gap: 8px;
+}
+.product-detail-new .pdp-gallery-dots button {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 1px solid #5d5147;
+  border-radius: 50%;
+  background: rgba(250, 248, 244, .75);
+}
+.product-detail-new .pdp-gallery-dots button[aria-current="true"] { background: #5d5147; }
+@media (max-width: 700px) {
+  .product-detail-new .pdp-gallery-actions { right: 10px; bottom: 10px; }
+  .product-detail-new .pdp-gallery-dots { left: 12px; bottom: 26px; }
+}
