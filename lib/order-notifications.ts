@@ -130,8 +130,8 @@ export async function notifyAdminsOfNewOrder(order: { id: string }) {
 
     const site = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://tominiko-tominiko.vercel.app";
     const mail = formatAdminOrderEmail(
-      savedOrder as OrderEmailData,
-      items as OrderEmailItem[],
+      savedOrder as unknown as OrderEmailData,
+      items as unknown as OrderEmailItem[],
       site + "/admin/orders/" + encodeURIComponent(order.id),
     );
     await sendGmail(recipients, mail.subject, mail.text);
