@@ -21,8 +21,8 @@ const fields = [
   "brewing_grind", "brewing_time",
 ] as const;
 
-const initialPrices: Record<Weight, number> = { "150g": 19000, "400g": 44000, "1개입": 1800, "5개입": 7900, "10개입": 14900 };
-const initialSalePrices: Record<Weight, number> = { "150g": 13000, "400g": 29000, "1개입": 1800, "5개입": 7900, "10개입": 14900 };
+const initialPrices: Record<Weight, number> = { "150g": 19000, "400g": 44000, "1개입": 1800, "5개입": 7900, "10개입": 14900, "1세트": 19900 };
+const initialSalePrices: Record<Weight, number> = { "150g": 13000, "400g": 29000, "1개입": 1800, "5개입": 7900, "10개입": 14900, "1세트": 17900 };
 const makeVariant = (size: Weight): ProductVariant => ({
   id: crypto.randomUUID(), size, price: initialPrices[size], salePrice: initialSalePrices[size],
   sku: "", stock: 0, available: true,
@@ -46,6 +46,7 @@ function initialVariants(product?: Product): ProductVariant[] {
         stock: old.stock, available: old.available };
     });
   }
+  if (format === "bundle") return expected.map(makeVariant);
   // Preserve legacy pricing if a bean product predates the inventory migration.
   return (["150g", "400g"] as const).map((size) => {
     const base = makeVariant(size);
@@ -224,6 +225,7 @@ export function AdminProductForm({ product }: { product?: Product }) {
             <select value={String(form.product_format)} onChange={(event) => chooseFormat(event.target.value as ProductFormat)}>
               <option value="beans">원두 · 150g / 400g</option>
               <option value="coffee_bag">커피백 · 1개입 / 5개입 / 10개입</option>
+              <option value="bundle">기프트 세트 · 1세트</option>
             </select>
           </label>
           <label className="admin-field">
@@ -266,7 +268,7 @@ export function AdminProductForm({ product }: { product?: Product }) {
         <h2>가격과 재고</h2>
         <p className="admin-panel-help">
           정상가와 실제 판매가가 같으면 할인 표시가 없습니다.
-          재고는 각 {isCoffeeBag ? "구성별" : "용량별"}로 입력하고, 판매하지 않는 옵션은 '판매 가능'을 해제하세요.
+          재고는 각 {form.product_format === "beans" ? "용량별" : "구성별"}로 입력하고, 판매하지 않는 옵션은 '판매 가능'을 해제하세요.
         </p>
         <div className="variant-price-editor">
           {variants.map((variant, index) => (
@@ -363,7 +365,7 @@ export function AdminProductForm({ product }: { product?: Product }) {
             <input
               type="checkbox"
               checked={Boolean(form.todays_roast)}
-              disabled={isCoffeeBag || form.status !== "active" || variants.reduce((sum, variant) => sum + variant.stock, 0) <= 0}
+              disabled={form.product_format !== "beans" || form.status !== "active" || variants.reduce((sum, variant) => sum + variant.stock, 0) <= 0}
               onChange={(event) => change("todays_roast", event.target.checked)}
             />
             <span><strong>오늘의 커피</strong><small>판매 중이며 재고가 있어야 선택 가능</small></span>
