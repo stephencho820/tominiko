@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import {useEffect,useState} from "react";
+import {getSavedTastingOrders} from "@/lib/tasting-order-history";
 
 type Order={order_number:string;order_status:string;payment_status:string;payment_method:string|null;total:number;order_items:{product_name:string;selected_option:string|null;quantity:number;subtotal:number}[]};
 const statusLabel:Record<string,string>={new:"주문 접수",confirmed:"주문 확인",preparing:"준비 중",ready_for_pickup:"픽업 준비 완료",completed:"픽업 완료",cancelled:"주문 취소"};
@@ -11,6 +12,7 @@ export default function PickupStatusPage(){
   const refresh=async()=>{
    let saved:{id:string;token:string}|null=null;
    try{saved=JSON.parse(sessionStorage.getItem("tasting-last-order")||"null")}catch{}
+   if(!saved?.id||!saved.token){const newest=getSavedTastingOrders()[0];if(newest)saved=newest;}
    if(!saved?.id||!saved.token){if(active)setMessage("저장된 주문이 없습니다. 주문 완료 화면에서 주문번호를 확인해 주세요.");return}
    try{
     const res=await fetch("/api/tasting-room/order-status",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({orderId:saved.id,accessToken:saved.token}),cache:"no-store"});
