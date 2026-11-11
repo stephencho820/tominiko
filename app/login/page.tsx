@@ -9,9 +9,13 @@ type AuthMode = "sign-in" | "sign-up";
 export default function Login() {
 	const router = useRouter();
 	const [requestedNext, setRequestedNext] = useState<string | null>(null);
-	useEffect(() => { setRequestedNext(new URLSearchParams(window.location.search).get("next")); }, []);
 	const safeNext = requestedNext?.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : null;
 	const [mode, setMode] = useState<AuthMode>("sign-in");
+	useEffect(() => {
+		const params = new URLSearchParams(window.location.search);
+		setRequestedNext(params.get("next"));
+		if (params.get("mode") === "sign-up") setMode("sign-up");
+	}, []);
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
