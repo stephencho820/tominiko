@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Product, ProductVariant } from "@/types";
+import type { Product, ProductVariant, Weight } from "@/types";
+import { sizesForFormat, type ProductFormat } from "@/lib/product-contract";
 import { SHOP_TAGS } from "@/lib/shop-tags";
 import { inventoryVariants } from "@/lib/products";
 import { validateProductForm } from "@/lib/admin-product-form";
@@ -20,38 +21,39 @@ const fields = [
   "brewing_grind", "brewing_time",
 ] as const;
 
-const makeVariant = (size: "150g" | "400g"): ProductVariant => ({
-  id: crypto.randomUUID(),
-  size,
-  price: size === "400g" ? 44000 : 19000,
-  salePrice: size === "400g" ? 29000 : 13000,
-  sku: "",
-  stock: 0,
-  available: true,
+const initialPrices: Record<Weight, number> = { "150g": 19000, "400g": 44000, "1개입": 1800, "5개입": 7900, "10개입": 14900 };
+const initialSalePrices: Record<Weight, number> = { "150g": 13000, "400g": 29000, "1개입": 1800, "5개입": 7900, "10개입": 14900 };
+const makeVariant = (size: Weight): ProductVariant => ({
+  id: crypto.randomUUID(), size, price: initialPrices[size], salePrice: initialSalePrices[size],
+  sku: "", stock: 0, available: true,
 });
-
 function initialVariants(product?: Product): ProductVariant[] {
-  if (!product) return [makeVariant("150g"), makeVariant("400g")];
+  const format = product?.product_format ?? "beans";
+  const expected = sizesForFormat(format);
+  if (!product) return expected.map(makeVariant);
   const existing = inventoryVariants(product);
-  if (existing.length === 2) {
-    return existing.map((variant) => ({
-      ...variant,
-      // An undiscounted variant is displayed as "selling price = list price".
-      salePrice: variant.salePrice ?? variant.price,
-    }));
+  if (existing.length === expected.length) {
+    return existing.map((variant) => ({ ...variant, salePrice: variant.salePrice ?? variant.price }));
   }
-  // Preserve legacy pricing if a product predates the variants migration.
+  if (format === "coffee_bag") {
+    // Pre-existing draft coffee bags used two zero-priced options.
+    return expected.map((size) => {
+      const old = product.variants?.find((variant) => variant.size === size);
+      const fresh = makeVariant(size);
+      if (!old) return fresh;
+      return { ...fresh, id: old.id, price: old.price > 0 ? old.price : fresh.price,
+        salePrice: old.price > 0 ? (old.salePrice ?? old.price) : fresh.salePrice,
+        stock: old.stock, available: old.available };
+    });
+  }
+  // Preserve legacy pricing if a bean product predates the inventory migration.
   return (["150g", "400g"] as const).map((size) => {
     const base = makeVariant(size);
     const selling = size === "150g" ? product.price_150g : product.price_400g;
     const list = size === "150g" ? product.price_150g_original : product.price_400g_original;
     const salePrice = selling > 0 ? selling : base.salePrice ?? base.price;
-    return {
-      ...base,
-      price: Math.max(list ?? 0, salePrice),
-      salePrice,
-      stock: Math.floor(Math.max(0, product.stock_quantity ?? 0) / 2),
-    };
+    return { ...base, price: Math.max(list ?? 0, salePrice), salePrice,
+      stock: Math.floor(Math.max(0, product.stock_quantity ?? 0) / 2) };
   });
 }
 
@@ -67,6 +69,7 @@ export function AdminProductForm({ product }: { product?: Product }) {
   const [form, setForm] = useState<Record<string, unknown>>(() => ({
     ...Object.fromEntries(fields.map((key) => [key, product?.[key as keyof Product] ?? ""])),
     product_type: product?.product_type ?? "single-origin",
+    product_format: product?.product_format ?? "beans",
     status: product?.status ?? "draft",
     display_order: product?.display_order ?? 0,
     featured: product?.featured ?? false,
@@ -96,6 +99,10 @@ export function AdminProductForm({ product }: { product?: Product }) {
         }
       }
       if (key === "status" && value !== "active") updates.todays_roast = false;
+      if (key === "product_format" && value !== current.product_format) {
+        updates.variants = sizesForFormat(value as ProductFormat).map(makeVariant);
+        updates.todays_roast = false;
+      }
       return { ...current, ...updates };
     });
   }
@@ -126,6 +133,12 @@ export function AdminProductForm({ product }: { product?: Product }) {
   const selectedTags = form.discovery_tags as string[];
   const variants = form.variants as ProductVariant[];
   const channels = form.sales_channels as string[];
+  const isCoffeeBag = form.product_format === "coffee_bag";
+  function chooseFormat(value: ProductFormat) {
+    if (form.product_format === value) return;
+    if (product && !window.confirm("판매 형태를 변경하면 기존 옵션과 재고가 새 형식으로 초기화됩니다. 변경할까요?")) return;
+    change("product_format", value);
+  }
 
   function toggleShopTag(tag: string) {
     change("discovery_tags", selectedTags.includes(tag)
@@ -198,7 +211,14 @@ export function AdminProductForm({ product }: { product?: Product }) {
           {input("name", "상품명 *", "예: Ethiopia Yirgacheffe")}
           {input("korean_name", "한글 상품명", "예: 에티오피아 예가체프")}
           <label className="admin-field">
-            상품 유형
+            판매 형태 *
+            <select value={String(form.product_format)} onChange={(event) => chooseFormat(event.target.value as ProductFormat)}>
+              <option value="beans">원두 · 150g / 400g</option>
+              <option value="coffee_bag">커피백 · 1개입 / 5개입 / 10개입</option>
+            </select>
+          </label>
+          <label className="admin-field">
+            커피 종류
             <select value={String(form.product_type)} onChange={(event) => change("product_type", event.target.value)}>
               <option value="single-origin">싱글 오리진</option>
               <option value="blend">블렌드</option>
@@ -237,7 +257,7 @@ export function AdminProductForm({ product }: { product?: Product }) {
         <h2>가격과 재고</h2>
         <p className="admin-panel-help">
           정상가와 실제 판매가가 같으면 할인 표시가 없습니다.
-          재고는 각 용량별로 입력하고, 판매하지 않는 옵션은 '판매 가능'을 해제하세요.
+          재고는 각 {isCoffeeBag ? "구성별" : "용량별"}로 입력하고, 판매하지 않는 옵션은 '판매 가능'을 해제하세요.
         </p>
         <div className="variant-price-editor">
           {variants.map((variant, index) => (
@@ -257,7 +277,7 @@ export function AdminProductForm({ product }: { product?: Product }) {
               ))}
               <label className="admin-checkbox">
                 <input type="checkbox" checked={variant.available} onChange={(event) => setVariant(index, "available", event.target.checked)} />
-                {" "}이 용량 판매 가능
+                {" "}이 옵션 판매 가능
               </label>
             </div>
           ))}
@@ -334,7 +354,7 @@ export function AdminProductForm({ product }: { product?: Product }) {
             <input
               type="checkbox"
               checked={Boolean(form.todays_roast)}
-              disabled={form.status !== "active" || variants.reduce((sum, variant) => sum + variant.stock, 0) <= 0}
+              disabled={isCoffeeBag || form.status !== "active" || variants.reduce((sum, variant) => sum + variant.stock, 0) <= 0}
               onChange={(event) => change("todays_roast", event.target.checked)}
             />
             <span><strong>오늘의 커피</strong><small>판매 중이며 재고가 있어야 선택 가능</small></span>

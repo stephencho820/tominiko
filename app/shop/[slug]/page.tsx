@@ -3,6 +3,7 @@ import "./product-editorial.css";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ProductPurchase } from "@/components/ProductPurchase";
+import { CoffeeBagCrossSell } from "@/components/CoffeeBagCrossSell";
 import { ProductCard } from "@/components/ProductCard";
 import { productImage, tastingNotes } from "@/lib/products";
 import { getProduct, getProducts } from "@/services/products";
@@ -40,6 +41,9 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
   if (!product) notFound();
   const reviewData = await getProductReviews(product.id);
   const notes = tastingNotes(product);
+  const coffeeBag = product.product_format !== "coffee_bag"
+    ? all.find((item) => item.product_format === "coffee_bag" && item.status === "active" && item.variants?.some((variant) => variant.available && variant.stock > 0))
+    : undefined;
   const displayTitle = product.korean_name || product.name;
   const hasMixedScriptTitle = /[A-Za-z]/.test(displayTitle) && /[가-힣]/.test(displayTitle);
   const images = [productImage(product), ...(product.gallery_images ?? [])].filter((value, index, list) => list.indexOf(value) === index);
@@ -59,7 +63,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
       return a.display_order - b.display_order;
     })
     .slice(0, 3);
-  const brew = product.use_default_recipe ? { brewing_dose:"20g", brewing_water:"300g", brewing_temperature:"92°C", brewing_grind:"Medium", brewing_time:"2:30–3:00" } : product;
+  const brew = product.product_format === "coffee_bag" ? { brewing_dose:"커피백 1개", brewing_water:"160–180ml", brewing_temperature:"92–94°C", brewing_grind:"분쇄 불필요", brewing_time:"3–4분" } : product.use_default_recipe ? { brewing_dose:"20g", brewing_water:"300g", brewing_temperature:"92°C", brewing_grind:"Medium", brewing_time:"2:30–3:00" } : product;
   return <main className="product-detail product-detail-new">
     {preview && <div className="preview-banner">ADMIN PREVIEW · <Link href={`/admin/products/${product.id}`}>Back to editor</Link></div>}
     <div className="pdp-topline"><Link href="/shop">← BACK TO SHOP</Link><span>CASA DI STEFANO / COFFEE COLLECTION</span></div>
@@ -80,6 +84,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
         </div>
         {(product.acidity || product.sweetness || product.body) && <div className="taste-profile taste-profile-hero"><Profile label="ACIDITY" value={product.acidity}/><Profile label="SWEETNESS" value={product.sweetness}/><Profile label="BODY" value={product.body}/></div>}
         <ProductPurchase product={product}/>
+        {coffeeBag && <CoffeeBagCrossSell product={coffeeBag}/>}
       </div></div>
     </section>
     <div className="pdp-editorial">

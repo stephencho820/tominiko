@@ -59,7 +59,7 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
     event.preventDefault();
     event.stopPropagation();
     if (!variant) return;
-    const didAdd = addToCart({ product, variantId: variant.id, weight: variant.size, grind, quantity: 1, unitPrice: salePrice });
+    const didAdd = addToCart({ product, variantId: variant.id, weight: variant.size, grind: product.product_format === "coffee_bag" ? "Filter" : grind, quantity: 1, unitPrice: salePrice });
     if (!didAdd) return;
     setAdded(true);
     if (timer.current) clearTimeout(timer.current);
@@ -76,7 +76,7 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
       {view === "list" && product.short_description && <p className="catalog-description">{product.short_description}</p>}
       <div className="catalog-options" aria-label={`${product.name} options`}>
         <select aria-label="Size" value={size} onChange={(event) => chooseSize(event.target.value)}>{sizes.map((value) => <option key={value} value={value}>{value}</option>)}</select>
-        <select aria-label="Grind" value={grind} onChange={(event) => setGrind(event.target.value as Grind)}>{STANDARD_GRINDS.map((value) => <option key={value} value={value}>{value}</option>)}</select>
+        {product.product_format !== "coffee_bag" && <select aria-label="Grind" value={grind} onChange={(event) => setGrind(event.target.value as Grind)}>{STANDARD_GRINDS.map((value) => <option key={value} value={value}>{value}</option>)}</select>}
       </div>
       <div className="catalog-buy"><strong className="catalog-price">{salePrice < regularPrice && <del>₩{regularPrice.toLocaleString("ko-KR")}</del>}<span>₩{salePrice.toLocaleString("ko-KR")}</span></strong>
         <button type="button" onClick={addProduct} disabled={!variant?.available || variant.stock < 1} aria-live="polite" className={added ? "cart-added" : ""}><ShoppingBag size={15} />{variant?.available && variant.stock > 0 ? added ? "✓ 담았어요" : "장바구니 추가" : "SOLD OUT"}</button>

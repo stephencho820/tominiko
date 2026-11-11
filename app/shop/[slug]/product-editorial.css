@@ -152,3 +152,26 @@
  .product-detail-new .pdp-brew-grid { gap:0 18px; }
  .product-detail-new .pdp-brew-item strong { font-size:23px; }
 }
+
+/* A quiet editorial cross-sell, shown only when the coffee-bag product is purchasable. */
+.product-detail-new .pdp-cross-sell { margin-top:25px; padding:21px 0 24px; border-top:1px solid var(--pdp-line); }
+.product-detail-new .pdp-cross-sell-heading > span { display:block; font:600 10px/1.5 var(--casa-ui); letter-spacing:.12em; color:#8a7861; }
+.product-detail-new .pdp-cross-sell-heading > strong { display:block; margin-top:8px; font:500 17px/1.5 var(--casa-ui); color:#343b31; letter-spacing:-.03em; }
+.product-detail-new .pdp-cross-sell-heading > p { margin:7px 0 15px; max-width:37ch; font:400 12px/1.8 var(--casa-ui); color:#727468; word-break:keep-all; }
+.product-detail-new .pdp-cross-sell-product { display:flex; gap:17px; align-items:stretch; }
+.product-detail-new .pdp-cross-sell-product > a { display:block; flex:0 0 95px; }
+.product-detail-new .pdp-cross-sell-product img { display:block; width:95px; height:115px; object-fit:cover; border-radius:2px; background:#ede8de; }
+.product-detail-new .pdp-cross-sell-content { flex:1; min-width:0; display:flex; flex-direction:column; justify-content:space-between; gap:9px; }
+.product-detail-new .pdp-cross-sell-name { font:500 13px/1.5 var(--casa-ui); color:#343b31; text-decoration:none; }
+.product-detail-new .pdp-cross-sell-options { display:flex; gap:6px; flex-wrap:wrap; }
+.product-detail-new .pdp-cross-sell-options button { min-height:31px; padding:5px 9px; border:1px solid #c8c6be; background:transparent; color:#56574e; font:500 11px/1.4 var(--casa-ui); cursor:pointer; }
+.product-detail-new .pdp-cross-sell-options button[aria-pressed="true"] { color:white; background:#343b31; border-color:#343b31; }
+.product-detail-new .pdp-cross-sell-add { display:flex; justify-content:space-between; align-items:center; gap:12px; width:100%; padding:9px 12px; border:1px solid #343b31; background:transparent; color:#343b31; font:500 12px/1.5 var(--casa-ui); cursor:pointer; }
+.product-detail-new .pdp-cross-sell-add:hover { background:#343b31; color:#fff; }
+.product-detail-new .pdp-cross-sell-feedback { margin:12px 0 0; color:#4c604b; font:400 12px/1.6 var(--casa-ui); }
+.product-detail-new .pdp-cross-sell-feedback a { color:inherit; font-weight:600; text-underline-offset:3px; }
+@media (max-width:400px) {
+ .product-detail-new .pdp-cross-sell-product { gap:12px; }
+ .product-detail-new .pdp-cross-sell-product > a { flex-basis:75px; }
+ .product-detail-new .pdp-cross-sell-product img { width:75px; height:100px; }
+}

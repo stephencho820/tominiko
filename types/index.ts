@@ -6,6 +6,7 @@ export type Product = {
   region: string | null;
   producer: string | null;
   product_type: "single-origin" | "blend" | "decaf";
+  product_format?: "beans" | "coffee_bag";
   variety: string | null;
   process: string | null;
   roast_level: string | null;
@@ -62,7 +63,7 @@ export type ReviewStats = { average: number; count: number; distribution: Record
 
 export type ProductCategory = "comfortable" | "bright" | "decaf" | "blend" | "special";
 export type Grind = "Whole Bean" | "Filter" | "Espresso";
-export type Weight = "150g" | "400g";
+export type Weight = "150g" | "400g" | "1개입" | "5개입" | "10개입";
 export type ProductVariant = { id: string; size: Weight; price: number; salePrice?: number | null; sku?: string; stock: number; available: boolean };
 export type CartItem = { product: Product; variantId?: string; weight: Weight; grind: Grind; quantity: number; unitPrice: number };
 export type OrderItem = { id: string; order_id: string; product_name: string; weight: string; grind: string; selected_option?: string | null; item_kind?: "bean" | "drink" | "food"; quantity: number; unit_price: number; subtotal: number };
