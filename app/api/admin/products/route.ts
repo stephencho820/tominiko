@@ -24,7 +24,7 @@ function validate(payload: Record<string, unknown>) {
     if (key in payload && (!Number.isInteger(payload[key]) || Number(payload[key]) < 0)) return `${key} must be a positive whole number`;
   }
   if ("product_type" in payload && !productTypes.has(String(payload.product_type))) return "invalid product_type";
-  if ("product_format" in payload && !["beans", "coffee_bag"].includes(String(payload.product_format))) return "invalid product_format";
+  if ("product_format" in payload && !["beans", "coffee_bag", "bundle"].includes(String(payload.product_format))) return "invalid product_format";
   if ("product_format" in payload && !("variants" in payload)) return "product_format requires variants";
   for (const key of ["acidity", "sweetness", "body"]) if (key in payload && (Number(payload[key]) < 1 || Number(payload[key]) > 5)) return `${key} must be between 1 and 5`;
   if ("variants" in payload) {
