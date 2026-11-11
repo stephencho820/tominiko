@@ -29,10 +29,10 @@ export function CoffeeBagCrossSell({ product }: { product: Product }) {
       <div className="pdp-cross-sell-heading">
         <span>추천 구성 · PAIR IT WITH COFFEE</span>
         <strong>원두와 함께 커피백도 담아보세요.</strong>
-        <p>일상 속에서 간편하게 즐기는 또미 블렌딩. 언제 어디서나 뜨거운 물만 있으면 한 잔의 커피가 완성됩니다.</p>
+        <p>로스터가 선택한 커피를 한 팩에 10g씩 담았습니다. 원두와 함께, 간편한 한 잔도 준비해 보세요.</p>
       </div>
       <div className="pdp-cross-sell-product">
-        <Link href={`/shop/${product.slug}`} aria-label="또미 블렌딩 커피백 상세 보기">
+        <Link href={`/shop/${product.slug}`} aria-label={`${product.name} 상세 보기`}>
           <img src={productImage(product)} alt={product.korean_name || product.name} />
         </Link>
         <div className="pdp-cross-sell-content">
