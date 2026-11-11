@@ -1,5 +1,6 @@
 import tls from "node:tls";
 import { createServiceClient } from "@/lib/supabase/service";
+import { formatAdminOrderEmail, type OrderEmailData, type OrderEmailItem } from "@/lib/order-email-content";
 
 type Reply = { code: number; message: string };
 type Connection = {
@@ -87,34 +88,55 @@ async function sendGmail(to: string[], subject: string, body: string) {
   } finally { conn.close(); }
 }
 
-/** Non-blocking notification failure: never reject a valid customer order. */
-export async function notifyAdminsOfNewOrder(order: {
-  number: string; name: string; amount: number; method: string;
-}) {
+/**
+ * Sends a full order receipt to admin-role users only.
+ * Reads the committed order and order_items with the server-side service client,
+ * avoiding customer-controlled prices or an untrusted checkout payload.
+ *
+ * Best effort: notification failures must not undo a valid order.
+ */
+export async function notifyAdminsOfNewOrder(order: { id: string }) {
   if (!process.env.GMAIL_SMTP_USER || !process.env.GMAIL_APP_PASSWORD) {
     console.warn("Admin order email disabled: configure Gmail SMTP environment variables.");
     return;
   }
   try {
     const supabase = createServiceClient();
+    const [{ data: savedOrder, error: orderError }, { data: items, error: itemsError }] = await Promise.all([
+      supabase.from("orders").select(
+        "id,order_number,created_at,order_source,table_label,customer_name,email,phone," +
+        "recipient_name,recipient_phone,delivery_method,shipping_zonecode,shipping_road_address," +
+        "shipping_jibun_address,shipping_detail_address,shipping_building_name," +
+        "shipping_memo_type,shipping_memo_text,postal_code,address,address_detail,delivery_message," +
+        "product_subtotal,subtotal,discount_amount,shipping_fee,final_amount,total," +
+        "payment_status,payment_method,order_status"
+      ).eq("id", order.id).single(),
+      supabase.from("order_items").select(
+        "product_name,weight,grind,selected_option,item_kind,quantity,unit_price,subtotal"
+      ).eq("order_id", order.id),
+    ]);
+    // Never send a misleading order notification with a missing product list.
+    if (orderError || itemsError || !savedOrder || !items?.length) {
+      throw new Error("Could not load complete order details for admin email");
+    }
+
     const { data: admins, error } = await supabase.from("profiles").select("id").eq("role", "admin");
-    if (error) throw error;
+    if (error) throw new Error("Could not load admin email recipients");
     const recipients = [...new Set((await Promise.all((admins ?? []).map(async (admin) => {
       const { data } = await supabase.auth.admin.getUserById(admin.id);
       return data.user?.email?.trim().toLowerCase();
     }))).filter((email): email is string => Boolean(email)))];
     if (!recipients.length) { console.warn("No admin email recipients configured"); return; }
+
     const site = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://tominiko-tominiko.vercel.app";
-    await sendGmail(recipients, "[CASA] 새 주문 접수 · " + order.number, [
-      "CASA DI STEFANO 새 주문이 접수되었습니다.",
-      "주문번호: " + order.number,
-      "주문자: " + order.name,
-      "주문금액: ₩" + order.amount.toLocaleString("ko-KR"),
-      "수령방법: " + order.method,
-      "결제상태: 입금 대기 (결제 완료 아님)",
-      "관리자 확인: " + site + "/admin/orders",
-    ].join("\n"));
+    const mail = formatAdminOrderEmail(
+      savedOrder as unknown as OrderEmailData,
+      items as unknown as OrderEmailItem[],
+      site + "/admin/orders/" + encodeURIComponent(order.id),
+    );
+    await sendGmail(recipients, mail.subject, mail.text);
   } catch (error) {
-    console.error("Admin Gmail notification failed:", error);
+    // Avoid logging order contents or customer PII from a failed notification.
+    console.error("Admin Gmail notification failed:", error instanceof Error ? error.message : "Unknown error");
   }
 }
