@@ -5,6 +5,7 @@ import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { CartProvider } from "@/components/CartProvider";
 import { BUSINESS_INFO, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, siteUrl } from "@/lib/site";
 import "./globals.css";
+import "./typography.css";
 
 const baseUrl = siteUrl();
 
