@@ -71,7 +71,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
           {displayTags.length > 0 && <div className="product-tag-list">{displayTags.map((tag) => <span key={tag}>{tag}</span>)}</div>}
           <div className="product-freshness">
             {roastedDate && <span>ROASTED {roastedDate}</span>}
-            {Boolean(product.review_count) && <a href="#reviews">★ {product.review_average?.toFixed(1)} · 리뷰 {product.review_count}개</a>}
+            <a href="#reviews" className="product-review-jump" aria-label={`리뷰 ${reviewData.stats.count}개 보기`}>★ {reviewData.stats.count > 0 ? `${reviewData.stats.average.toFixed(1)} · 리뷰 ${reviewData.stats.count}개` : "리뷰 보기 · 첫 리뷰 남기기"} <span aria-hidden="true">↗</span></a>
           </div>
         </div>
         {(product.acidity || product.sweetness || product.body) && <div className="taste-profile taste-profile-hero"><Profile label="ACIDITY" value={product.acidity}/><Profile label="SWEETNESS" value={product.sweetness}/><Profile label="BODY" value={product.body}/></div>}
