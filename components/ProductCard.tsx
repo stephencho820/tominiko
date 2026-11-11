@@ -7,7 +7,8 @@ export function formatCoffeeText(value: string | null, fallback = "") {
 }
 
 export function ProductCard({ product }: { product: Product }) {
-  const tastingNotes = formatCoffeeText(product.tasting_notes);
+  const tastingNotes = formatCoffeeText(product.tasting_notes)
+    || (product.product_format === "coffee_bag" ? "커피백 1개 · 분쇄 원두 10g" : "");
   const coffeeDetails = [formatCoffeeText(product.origin), product.process]
     .filter(Boolean)
     .join(" · ");
