@@ -189,3 +189,6 @@ html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
   .catalog-reveal-rule, .catalog-reveal-notes { transition: none; }
 }
+
+.product-rating-link { display: inline-flex; align-items: center; gap: 4px; min-height: 36px; cursor: pointer; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; }
+.product-rating-link:hover, .product-rating-link:focus-visible { text-decoration-color: currentColor; }
