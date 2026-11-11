@@ -102,6 +102,11 @@ export function AdminProductForm({ product }: { product?: Product }) {
       if (key === "product_format" && value !== current.product_format) {
         updates.variants = sizesForFormat(value as ProductFormat).map(makeVariant);
         updates.todays_roast = false;
+        // Keep the format tag in sync without discarding existing taste/SHOP tags.
+        const tags = (current.discovery_tags as string[] | undefined) ?? [];
+        updates.discovery_tags = value === "coffee_bag"
+          ? [...new Set([...tags, "커피백"])]
+          : tags.filter((tag) => tag !== "커피백");
       }
       return { ...current, ...updates };
     });
@@ -165,6 +170,10 @@ export function AdminProductForm({ product }: { product?: Product }) {
     setMessage("");
     const payload = {
       ...form,
+      // The coffee-bag tag is automatic, including when editing older draft records.
+      discovery_tags: isCoffeeBag
+        ? [...new Set([...selectedTags, "커피백"])]
+        : selectedTags.filter((tag) => tag !== "커피백"),
       gallery_images: String(form.gallery_images_text ?? "")
         .split("\n").map((url) => url.trim()).filter(Boolean),
     };
@@ -236,7 +245,7 @@ export function AdminProductForm({ product }: { product?: Product }) {
           </label>
           {area("short_description", "한 줄 소개 · 상품 카드 / 상세 상단", "예: 꽃향기와 시트러스의 산뜻한 여운")}
         </div>
-        <p className="admin-panel-help">SHOP 카테고리 (복수 선택 가능)</p>
+        <p className="admin-panel-help">SHOP 카테고리 (복수 선택 가능){isCoffeeBag ? " · 커피백 분류는 자동으로 적용됩니다." : ""}</p>
         <div className="admin-tag-picker">
           {SHOP_TAGS.map((tag) => (
             <button
