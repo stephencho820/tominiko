@@ -11,7 +11,24 @@ function coffeeArtwork(product: Product) {
   const accent = SAMPLE_PALETTE[index];
   const title = escapeSvg(product.korean_name || product.name);
   const subtitle = escapeSvg((product.origin || "SPECIALTY COFFEE").toUpperCase());
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="960" viewBox="0 0 800 960">
+  const svg = product.product_format === "coffee_bag"
+    ? `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="960" viewBox="0 0 800 960">
+      <rect width="800" height="960" fill="#eeeae2"/>
+      <rect x="38" y="38" width="724" height="884" fill="#e9e2d6"/>
+      <g fill="#faf6ed" stroke="#d1c4b0" stroke-width="3">
+        <rect x="163" y="287" width="280" height="383" rx="6" transform="rotate(-10 303 478)"/>
+        <rect x="342" y="302" width="280" height="383" rx="6" transform="rotate(9 482 493)"/>
+        <rect x="258" y="285" width="285" height="410" rx="6"/>
+      </g>
+      <rect x="294" y="412" width="213" height="167" fill="${accent}"/>
+      <text x="400" y="192" font-family="Georgia,serif" font-size="37" letter-spacing="7" text-anchor="middle" fill="#332c26">TOMINIKO</text>
+      <text x="400" y="232" font-family="Arial,sans-serif" font-size="17" letter-spacing="4" text-anchor="middle" fill="#776e62">COFFEE BAG</text>
+      <text x="400" y="481" font-family="Arial,sans-serif" font-weight="600" font-size="24" text-anchor="middle" fill="#302923" textLength="185" lengthAdjust="spacingAndGlyphs">${title}</text>
+      <text x="400" y="518" font-family="Arial,sans-serif" font-size="12" text-anchor="middle" fill="#433a32" textLength="185" lengthAdjust="spacingAndGlyphs">${subtitle}</text>
+      <text x="400" y="814" font-family="Georgia,serif" font-style="italic" font-size="22" text-anchor="middle" fill="#443a32">A cup, wherever you are.</text>
+      <text x="400" y="889" font-family="Arial,sans-serif" font-size="11" letter-spacing="3" text-anchor="middle" fill="#756b5d">CASA DI STEFANO · SAMPLE</text>
+      </svg>`
+    : `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="960" viewBox="0 0 800 960">
   <rect width="800" height="960" fill="#eeeae2"/>
   <rect x="36" y="36" width="728" height="888" rx="3" fill="#e9e2d6"/>
   <ellipse cx="400" cy="837" rx="225" ry="32" fill="#5c4a3c" opacity=".12"/>
@@ -65,6 +82,12 @@ const legacyPrices = (product: Product, size: string) => {
 
 export function productPricing(product: Product, size: string, variant?: ProductVariant) {
   const normalizedSize = normalizeProductSize(size);
+  if (product.product_format === "coffee_bag") {
+    if (!variant) return { price: 0, salePrice: null };
+    const price = finitePrice(variant.price, 0);
+    const sale = variant.salePrice == null ? price : finitePrice(variant.salePrice, price);
+    return { price, salePrice: price > 0 && sale < price ? sale : null };
+  }
   const fallback = legacyPrices(product, normalizedSize);
   if (!variant) return fallback;
   const price = finitePrice(variant.price, fallback.price);
@@ -74,7 +97,8 @@ export function productPricing(product: Product, size: string, variant?: Product
 
 /** Retain disabled and empty tiers for the admin and sold-out storefront. */
 export function inventoryVariants(product: Product): ProductVariant[] {
-  try { return validateVariants(product.variants); } catch { /* Legacy cart snapshots only. */ }
+  try { return validateVariants(product.variants, product.product_format === "coffee_bag" ? "coffee_bag" : "beans", product.product_format === "coffee_bag" && ["draft", "hidden"].includes(product.status ?? "")); } catch { /* Legacy cart snapshots only. */ }
+  if (product.product_format === "coffee_bag") return [];
   if (!Array.isArray(product.variants) || !product.variants.some((v) => v && "grindType" in v)) return [];
   return PRODUCT_SIZES.map((size) => {
     const legacy = (product.variants ?? []).filter((v) => normalizeProductSize(v.size) === size);
@@ -83,7 +107,7 @@ export function inventoryVariants(product: Product): ProductVariant[] {
   });
 }
 export function productVariants(product: Product): ProductVariant[] {
-  return inventoryVariants(product).map((variant) => ({ ...variant, available: variant.available && product.status === "active" && variant.stock > 0 }));
+  return inventoryVariants(product).map((variant) => ({ ...variant, available: variant.available && product.status === "active" && variant.stock > 0 && variant.price > 0 }));
 }
 export function productIsSoldOut(product: Product) {
   return product.status === "sold-out" || !productVariants(product).some((v) => v.available);
@@ -91,7 +115,7 @@ export function productIsSoldOut(product: Product) {
 
 export function productPrice(product: Product) {
   const prices = productVariants(product).map((variant) => finitePrice(variant.salePrice ?? variant.price)).filter((price) => price > 0);
-  return prices.length ? Math.min(...prices) : finitePrice(product.sale_price ?? product.price_150g);
+  return prices.length ? Math.min(...prices) : product.product_format === "coffee_bag" ? 0 : finitePrice(product.sale_price ?? product.price_150g);
 }
 
 export function defaultProductVariant(product: Product, preferredSize = "150g", _preferredGrind?: string) {
