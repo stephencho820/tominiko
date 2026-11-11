@@ -491,3 +491,64 @@ test('Admin auth rejects guests/members and pending orders cannot advance fulfil
  for(const status of ['roasting','preparing','shipped','completed'])assert.equal((await allowed(request({id:ORDER_ID,order_status:status}))).status,409);
  assert.equal((await allowed(request(null))).status,400);
 });
+
+
+test('tasting-room guest history survives a new tab and expires after 30 days', () => {
+  const memory = () => {
+    const values = new Map();
+    return { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key), clear: () => values.clear() };
+  };
+  const oldWindow = global.window, oldLocal = global.localStorage, oldSession = global.sessionStorage;
+  try {
+    global.window = {};
+    global.localStorage = memory();
+    global.sessionStorage = memory();
+    const history = load('lib/tasting-order-history.ts');
+    history.saveTastingOrder(ORDER_ID, TOKEN);
+    assert.equal(history.getSavedTastingOrders().length, 1);
+    global.sessionStorage = memory(); // the user opens a new tab
+    assert.equal(history.getSavedTastingOrders()[0].id, ORDER_ID);
+    const expired = [{ id: ORDER_ID, token: TOKEN, savedAt: Date.now() - 31 * 86400000 }];
+    global.localStorage.setItem(history.TASTING_HISTORY_KEY, JSON.stringify(expired));
+    assert.deepEqual(history.getSavedTastingOrders(), []);
+    history.saveTastingOrder(ORDER_ID, TOKEN);
+    history.clearSavedTastingOrders();
+    assert.deepEqual(history.getSavedTastingOrders(), []);
+  } finally {
+    if (oldWindow === undefined) delete global.window; else global.window = oldWindow;
+    if (oldLocal === undefined) delete global.localStorage; else global.localStorage = oldLocal;
+    if (oldSession === undefined) delete global.sessionStorage; else global.sessionStorage = oldSession;
+  }
+});
+
+test('product service distinguishes a genuine empty catalog from a DB failure', async () => {
+  let failed = false, missing = false;
+  const query = {
+    select() { return this; }, eq() { return this; }, in() { return this; },
+    order() { return this; },
+    abortSignal() { return this; },
+    async maybeSingle() { return failed ? { data: null, error: { code: '42501' } } : { data: missing ? null : product(), error: null }; },
+    then(resolve) { return Promise.resolve(failed ? { data: null, error: { code: '42501' } } : { data: [], error: null }).then(resolve); },
+  };
+  const svc = load('services/products.ts', {
+    '@/lib/supabase/config': { hasSupabaseEnv: true },
+    '@/lib/supabase/server': { createClient: async () => ({ from: () => query }) },
+    '@/lib/supabase/query': { runSupabaseQuery: fn => fn(new AbortController().signal) },
+    '@/services/reviews': { attachReviewSummaries: async records => records },
+  });
+  assert.deepEqual(await svc.getProducts(), []);
+  missing = true;
+  assert.equal(await svc.getProduct('no-such-coffee'), null);
+  failed = true;
+  const oldError = console.error;
+  console.error = () => {};
+  try {
+    await assert.rejects(svc.getProducts(), /temporarily unavailable/);
+    await assert.rejects(svc.getProduct('coffee'), /temporarily unavailable/);
+  } finally { console.error = oldError; }
+});
+
+test('inactive product preview requires server-side admin authorization', () => {
+  const source = fs.readFileSync(path.join(root, 'app/shop/[slug]/page.tsx'), 'utf8');
+  assert.match(source, /if \(preview && !\(await getAdminClient\(\)\)\) notFound\(\)/);
+});
