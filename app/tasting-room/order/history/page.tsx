@@ -11,10 +11,13 @@ export default function TastingOrderHistory(){
  useEffect(()=>{let active=true;async function load(){
   const saved=getSavedTastingOrders();
   try{
-   const [member,guests]=await Promise.all([
+   const [memberResult,guestResult]=await Promise.allSettled([
     fetch("/api/tasting-room/my-orders",{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("Member order request failed");return r.json()}),
     Promise.all(saved.map(async entry=>{try{const r=await fetch("/api/tasting-room/order-status",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({orderId:entry.id,accessToken:entry.token}),cache:"no-store"});if(!r.ok)return null;const data=await r.json();return {...data.order,id:entry.id,created_at:entry.savedAt?new Date(entry.savedAt).toISOString():undefined} as Order}catch{return null}}))
    ]);
+   const member=memberResult.status==="fulfilled"?memberResult.value:{orders:[]};
+   const guests=guestResult.status==="fulfilled"?guestResult.value:[];
+   if(memberResult.status==="rejected"&&active)setError("회원 주문 내역을 불러오지 못했습니다. 다시 시도해 주세요.");
    const all:Order[]=[...(member.orders||[]),...guests.filter((o):o is Order=>o!==null)];
    const unique=[...new Map(all.map(o=>[o.id||o.order_number,o])).values()].sort((a,b)=>(b.created_at||"").localeCompare(a.created_at||""));
    if(active)setOrders(unique);
