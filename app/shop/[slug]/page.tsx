@@ -41,7 +41,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
   if (!product) notFound();
   const reviewData = await getProductReviews(product.id);
   const notes = tastingNotes(product);
-  const coffeeBag = product.product_format !== "coffee_bag"
+  const coffeeBag = product.product_format === "beans"
     ? all.find((item) => item.product_format === "coffee_bag" && item.status === "active" && item.variants?.some((variant) => variant.available && variant.stock > 0))
     : undefined;
   const displayTitle = product.korean_name || product.name;
