@@ -1,7 +1,7 @@
 import { validateVariants, type ProductFormat } from "@/lib/product-contract";
 
 export function synchronizeProductPricing(payload: Record<string, unknown>) {
-  const format: ProductFormat = payload.product_format === "coffee_bag" ? "coffee_bag" : "beans";
+  const format: ProductFormat = payload.product_format === "coffee_bag" ? "coffee_bag" : payload.product_format === "bundle" ? "bundle" : "beans";
   const variants = validateVariants(payload.variants, format);
   if (format === "beans") {
     for (const variant of variants) {
@@ -10,7 +10,7 @@ export function synchronizeProductPricing(payload: Record<string, unknown>) {
       payload[prefix] = variant.salePrice ?? variant.price;
     }
   } else {
-    // Legacy weight price columns are not used for coffee bags.
+    // Legacy weight price columns are not used for coffee bags or bundles.
     payload.price_150g = 0;
     payload.price_400g = 0;
     payload.price_150g_original = null;
