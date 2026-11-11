@@ -106,9 +106,9 @@ body:not(:has(.admin-shell)) .room-intro h1 { overflow-wrap: break-word; }
 .catalog-image-reveal > span {
   position: relative; z-index: 1;
   font-family: var(--casa-display, Georgia, serif);
-  font-size: clamp(23px, 3vw, 42px);
-  font-weight: 500; letter-spacing: .1em; line-height: 1.1;
-  text-align: center; overflow-wrap: anywhere;
+  font-size: clamp(13px, 2.1vw, 30px);
+  font-weight: 500; letter-spacing: .055em; line-height: 1.1;
+  text-align: center; white-space: nowrap; max-width: 100%;
   opacity: 0; transform: translate3d(14px,8px,0);
   text-shadow: 0 1px 12px rgba(35,25,20,.18);
   transition: opacity 520ms ease 120ms, transform 680ms cubic-bezier(.22,1,.36,1) 90ms;
@@ -127,4 +127,12 @@ body:not(:has(.admin-shell)) .room-intro h1 { overflow-wrap: break-word; }
 }
 @media (prefers-reduced-motion: reduce) {
   .catalog-card-image > img, .catalog-image-reveal, .catalog-image-reveal > span { transition: none; }
+}
+
+/* Keep long origins such as GUATEMALA on one line in narrow product cards. */
+.catalog-image-reveal { padding-inline: 8px; }
+.catalog-products--grid .catalog-image-reveal > span { font-size: clamp(12px, 1.65vw, 25px); letter-spacing: .035em; }
+@media (max-width: 700px) {
+  .catalog-image-reveal > span,
+  .catalog-products--grid .catalog-image-reveal > span { font-size: clamp(11px, 3vw, 17px); letter-spacing: .015em; }
 }
