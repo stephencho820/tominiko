@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ShopCatalog } from "@/components/ShopCatalog";
+import { WelcomeBenefitBanner } from "@/components/WelcomeBenefitBanner";
 import { getProducts } from "@/services/products";
 import { getPageSettings } from "@/lib/page-content";
 
@@ -33,6 +34,7 @@ export default async function Shop() {
   const introEn = content.texts.intro_en?.value || "Find the coffee that fits your taste.";
   return <main className="shop-page shop-page-new">
     <header className="shop-heading"><p className="section-label">TOMINIKO COFFEE SHOP · ROASTED BY ZERO DEGREES AT CASA DI STEFANO</p><p><span className="lang-ko">{introKo}</span><span className="lang-en">{introEn}</span></p></header>
+    <WelcomeBenefitBanner />
     <ShopCatalog products={products} />
   </main>;
 }
