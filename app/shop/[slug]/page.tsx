@@ -45,7 +45,6 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
   const notes = tastingNotes(product);
   const images = [productImage(product), ...(product.gallery_images ?? [])].filter((value, index, list) => list.indexOf(value) === index);
   const displayTags = (product.discovery_tags ?? []).filter(Boolean);
-  const roastedDate = product.roasted_date ? new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(`${product.roasted_date}T00:00:00+09:00`)) : null;
   const productTags = new Set(product.discovery_tags ?? []);
   const related = all
     .filter((item) => item.id !== product.id)
@@ -75,7 +74,6 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
         <div className="product-hero-meta">
           {displayTags.length > 0 && <div className="product-tag-list">{displayTags.map((tag) => <span key={tag}>{tag}</span>)}</div>}
           <div className="product-freshness">
-            {roastedDate && <span>ROASTED {roastedDate}</span>}
             <a href="#reviews" className="product-review-jump" aria-label={`리뷰 ${reviewData.stats.count}개 보기`}>★ {reviewData.stats.count > 0 ? `${reviewData.stats.average.toFixed(1)} · 리뷰 ${reviewData.stats.count}개` : "리뷰 보기 · 첫 리뷰 남기기"} <span aria-hidden="true">↗</span></a>
           </div>
         </div>
@@ -99,7 +97,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
         <div className="pdp-editorial-index"><span>02 / THE PROFILE</span><span>COFFEE DETAILS</span></div>
         <div className="pdp-profile-heading"><span className="pdp-kicker">KNOW YOUR COFFEE</span><h2 id="pdp-profile-title">원두의 기본 정보</h2></div>
         <div className="pdp-profile-grid">
-          {([["원산지",product.origin],["지역",product.region],["가공 방식",product.process],["품종",product.variety],["등급",product.grade],["생산자",product.producer],["워싱 스테이션",product.washing_station],["고도",product.altitude],["수확",product.harvest],["로스팅",roastedDate]] as [string,string | null | undefined][]).filter(([,value])=>Boolean(value)).map(([label,value])=><div className="pdp-profile-item" key={label}><span>{label}</span><strong>{value}</strong></div>)}
+          {([["원산지",product.origin],["지역",product.region],["가공 방식",product.process],["품종",product.variety],["등급",product.grade],["생산자",product.producer],["워싱 스테이션",product.washing_station],["고도",product.altitude],["수확",product.harvest]] as [string,string | null | undefined][]).filter(([,value])=>Boolean(value)).map(([label,value])=><div className="pdp-profile-item" key={label}><span>{label}</span><strong>{value}</strong></div>)}
         </div>
       </section>
       {(product.use_default_recipe || product.brewing_dose || product.brewing_water || product.brewing_temperature || product.brewing_grind || product.brewing_time) && <section className="pdp-brew-block" aria-labelledby="pdp-brew-title">
