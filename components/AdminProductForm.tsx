@@ -21,8 +21,8 @@ const fields = [
   "brewing_grind", "brewing_time",
 ] as const;
 
-const initialPrices: Record<Weight, number> = { "150g": 19000, "400g": 44000, "1개입": 1800, "5개입": 7900, "10개입": 14900 };
-const initialSalePrices: Record<Weight, number> = { "150g": 13000, "400g": 29000, "1개입": 1800, "5개입": 7900, "10개입": 14900 };
+const initialPrices: Record<Weight, number> = { "150g": 19000, "400g": 44000, "1개입": 1800, "5개입": 7900, "10개입": 14900, "1세트": 0 };
+const initialSalePrices: Record<Weight, number> = { "150g": 13000, "400g": 29000, "1개입": 1800, "5개입": 7900, "10개입": 14900, "1세트": 0 };
 const makeVariant = (size: Weight): ProductVariant => ({
   id: crypto.randomUUID(), size, price: initialPrices[size], salePrice: initialSalePrices[size],
   sku: "", stock: 0, available: true,
