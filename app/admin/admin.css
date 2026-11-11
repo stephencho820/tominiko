@@ -390,3 +390,32 @@
 @media (prefers-reduced-motion: reduce) {
   .admin-console .admin-sidebar, .admin-console .admin-nav-link { transition: none; }
 }
+
+
+/* Order search stays visible; advanced filters are optional. */
+.admin-console .admin-order-filters { margin-bottom: 12px; padding: 18px 20px; }
+.admin-console .admin-order-searchbar {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto auto;
+  align-items: end;
+  gap: 10px;
+}
+.admin-console .admin-order-searchbar .admin-field { min-width: 0; }
+.admin-console .admin-order-searchbar input { width: 100%; min-height: 43px; padding: 10px 12px; }
+.admin-console .admin-order-filter-more { margin-top: 14px; }
+.admin-console .admin-order-filter-more summary { width: fit-content; color: #506080; cursor: pointer; font-size: 12px; font-weight: 670; }
+.admin-console .admin-order-filter-more[open] { border-top: 1px solid #edf1f7; padding-top: 13px; }
+.admin-console .admin-order-filter-more > button { margin-top: 10px; }
+.admin-console .admin-order-customer { font-size: 16px; }
+.admin-console .admin-order-page-actions { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; }
+.admin-console .admin-order-page-actions .admin-secondary-button { min-height: 36px; }
+.admin-console .admin-order-top > div:first-child { display: flex; flex-wrap: wrap; align-items: center; column-gap: 12px; }
+.admin-console .admin-order-top > div:first-child > span { flex-basis: 100%; }
+.admin-console .admin-closed-orders .admin-order-list { margin-top: 15px; }
+@media (max-width: 600px) {
+  .admin-console .admin-order-searchbar { grid-template-columns: minmax(0,1fr) auto; }
+  .admin-console .admin-order-searchbar .admin-field { grid-column: 1/-1; }
+  .admin-console .admin-order-searchbar .admin-primary-button { min-width: 95px; }
+  .admin-console .admin-order-filters { padding: 14px; }
+  .admin-console .admin-order-page-actions { width: 100%; justify-content: space-between; }
+}
