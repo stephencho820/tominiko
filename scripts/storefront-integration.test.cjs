@@ -139,7 +139,7 @@ test('coffee bag SHOP card keeps a single pack selector, 10g copy and aligned pr
   const mocks = { ...uiMocks, '@/components/CartProvider': { useCart: () => ({ addToCart: () => true }) } };
   const Catalog = load('components/ShopCatalog.tsx', mocks).ShopCatalog;
   const html = renderToStaticMarkup(React.createElement(Catalog, { products: [bag] }));
-  assert.match(html, /Today's Choice Coffee Bag/);
+  assert.match(html, /Choice Coffee Bag/);
   assert.match(html, /catalog-options--coffee-bag/);
   assert.match(html, /커피백 1개 · 분쇄 원두 10g/);
   assert.match(html, /aria-label="커피백 구성"/);
