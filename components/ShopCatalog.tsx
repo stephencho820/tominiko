@@ -65,7 +65,7 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
     timer.current = setTimeout(() => setAdded(false), 1800);
   };
   return <article className={`catalog-card catalog-card--${view}`}>
-    <Link href={`/shop/${product.slug}`} className={`catalog-card-image${imageRevealed ? " catalog-card-image--revealed" : ""}`} onClick={handleImageClick} onBlur={() => setImageRevealed(false)} aria-label={`${product.name} — 터치하여 원산지 보기, 다시 터치하여 상세 보기`}><img src={productImage(product)} alt={product.name} /><span className="catalog-image-reveal" style={{ backgroundColor: hover.color }} aria-hidden="true"><span>{hover.label}</span></span></Link>
+    <Link href={`/shop/${product.slug}`} className={`catalog-card-image${imageRevealed ? " catalog-card-image--revealed" : ""}`} onClick={handleImageClick} onBlur={() => setImageRevealed(false)} aria-label={`${product.name} — 터치하여 원산지 보기, 다시 터치하여 상세 보기`}><img src={productImage(product)} alt={product.name} /><span className="catalog-image-reveal" style={{ backgroundColor: `${hover.color}B8` }} aria-hidden="true"><span>{hover.label}</span></span></Link>
     <div className="catalog-card-copy">
       <p className="catalog-origin">{product.origin}{product.region ? ` · ${product.region}` : ""}</p>
       <Link href={`/shop/${product.slug}`}><h2>{product.korean_name || product.name}</h2></Link>
