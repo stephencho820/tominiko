@@ -1,4 +1,5 @@
 "use client";
+
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -6,38 +7,382 @@ import type { Product, ProductVariant } from "@/types";
 import { SHOP_TAGS } from "@/lib/shop-tags";
 import { inventoryVariants } from "@/lib/products";
 import { validateProductForm } from "@/lib/admin-product-form";
-import { productContentReadiness } from "@/lib/product-content-readiness";
 import { ImageUpload } from "./ImageUpload";
 
-const fields = ["name","korean_name","subtitle","slug","short_description","product_type","status","origin","region","producer","washing_station","variety","process","altitude","harvest","grade","roast_level","tasting_notes","description","about","why_we_chose_it","roaster_note","stock_quantity","display_order","image_url","brewing_dose","brewing_water","brewing_temperature","brewing_grind","brewing_time"] as const;
-const emptyVariant = (size: "150g" | "400g" = "150g"): ProductVariant => ({ id: crypto.randomUUID(), size, price: size === "400g" ? 44000 : 19000, salePrice: size === "400g" ? 29000 : 13000, sku: "", stock: 0, available: true });
-const newProductVariants = () => (["150g", "400g"] as const).map(size => emptyVariant(size));
+// Keep all persisted fields in state so simplifying the editor never removes
+// existing product details from the database.
+const fields = [
+  "name", "korean_name", "subtitle", "slug", "short_description", "product_type",
+  "status", "origin", "region", "producer", "washing_station", "variety",
+  "process", "altitude", "harvest", "grade", "roast_level", "tasting_notes",
+  "description", "about", "why_we_chose_it", "roaster_note", "display_order",
+  "image_url", "brewing_dose", "brewing_water", "brewing_temperature",
+  "brewing_grind", "brewing_time",
+] as const;
+
+const makeVariant = (size: "150g" | "400g"): ProductVariant => ({
+  id: crypto.randomUUID(),
+  size,
+  price: size === "400g" ? 44000 : 19000,
+  salePrice: size === "400g" ? 29000 : 13000,
+  sku: "",
+  stock: 0,
+  available: true,
+});
+
+function initialVariants(product?: Product): ProductVariant[] {
+  if (!product) return [makeVariant("150g"), makeVariant("400g")];
+  const existing = inventoryVariants(product);
+  if (existing.length === 2) {
+    return existing.map((variant) => ({
+      ...variant,
+      // An undiscounted variant is displayed as "selling price = list price".
+      salePrice: variant.salePrice ?? variant.price,
+    }));
+  }
+  // Preserve legacy pricing if a product predates the variants migration.
+  return (["150g", "400g"] as const).map((size) => {
+    const base = makeVariant(size);
+    const selling = size === "150g" ? product.price_150g : product.price_400g;
+    const list = size === "150g" ? product.price_150g_original : product.price_400g_original;
+    const salePrice = selling > 0 ? selling : base.salePrice ?? base.price;
+    return {
+      ...base,
+      price: Math.max(list ?? 0, salePrice),
+      salePrice,
+      stock: Math.floor(Math.max(0, product.stock_quantity ?? 0) / 2),
+    };
+  });
+}
+
+function makeSlug(value: string) {
+  return value.normalize("NFKC").trim().toLowerCase()
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
+    .replace(/[\s-]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 export function AdminProductForm({ product }: { product?: Product }) {
- const router=useRouter(); const [form,setForm]=useState<Record<string, unknown>>(()=>({...Object.fromEntries(fields.map(k=>[k,product?.[k as keyof Product]??""])),product_type:product?.product_type??"single-origin",status:product?.status??"draft",display_order:product?.display_order??0,stock_quantity:product?.stock_quantity??0,featured:product?.featured??false,todays_roast:product?.status==="active"&&(product?.todays_roast??false),use_default_recipe:product?.use_default_recipe??true,acidity:product?.acidity??3,sweetness:product?.sweetness??3,body:product?.body??3,discovery_tags:product?.discovery_tags??[],gallery_images:product?.gallery_images??[],recommended_brewing_methods:product?.recommended_brewing_methods??[],gallery_images_text:(product?.gallery_images??[]).join("\n"),sales_channels:product?.sales_channels??["online"],variants:product?inventoryVariants(product):newProductVariants()}));
- const savingRef=useRef(false);
- const [message,setMessage]=useState(""); const [saving,setSaving]=useState(false); const change=(key:string,value:unknown)=>setForm(v=>({...v,[key]:value,...(key==="status"&&value!=="active"?{todays_roast:false}:{})}));
- const input=(key:string,label:string,type="text")=><label className="admin-field">{label}<input type={type} value={String(form[key]??"")} onChange={e=>change(key,type==="number"?Number(e.target.value):e.target.value)}/></label>;
- const area=(key:string,label:string)=><label className="admin-field admin-field-wide">{label}<textarea value={String(form[key]??"")} onChange={e=>change(key,e.target.value)}/></label>;
- const selectedTags=form.discovery_tags as string[]; const toggleShopTag=(tag:string)=>change("discovery_tags",selectedTags.includes(tag)?selectedTags.filter(value=>value!==tag):[...selectedTags,tag]);
- const variants=form.variants as ProductVariant[]; const contentReadiness=productContentReadiness(form); const setVariant=(i:number,key:keyof ProductVariant,value:unknown)=>change("variants",variants.map((v,index)=>index===i?{...v,[key]:value}:v));
- async function save(e:React.FormEvent){e.preventDefault();if(savingRef.current)return;if (!(form.sales_channels as string[]).length){setMessage("판매 채널을 하나 이상 선택해 주세요.");return;}const invalid=validateProductForm(form);if(invalid){setMessage(invalid);return;}savingRef.current=true;setSaving(true);setMessage("");const payload={...form,discovery_tags:form.discovery_tags as string[],gallery_images:String(form.gallery_images_text || "").split("\n").map(value => value.trim()).filter(Boolean).length ? String(form.gallery_images_text).split("\n").map(value => value.trim()).filter(Boolean) : (form.gallery_images as string[]).filter(Boolean)};try{const response=await fetch("/api/admin/products",{method:product?"PATCH":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(product?{id:product.id,...payload}:payload)});const result=await response.json();if(!response.ok){setMessage(result.error||"상품을 저장하지 못했습니다.");return;}router.push("/admin/products");router.refresh();}catch{setMessage("상품을 저장하지 못했습니다. 네트워크 연결을 확인하고 다시 시도해 주세요.");}finally{savingRef.current=false;setSaving(false)}}
- return <form noValidate className="admin-product-form" onSubmit={save}>
-  <section className={`admin-content-readiness ${contentReadiness.launchReady ? "is-launch-ready" : ""}`}>
-    <div className="admin-content-readiness-head"><div><p className="eyebrow">CONTENT READINESS</p><h2>{contentReadiness.score}% complete</h2></div><span>{contentReadiness.launchReady ? "필수 콘텐츠 준비 완료" : `필수 ${contentReadiness.requiredMissing.length}개 누락`}</span></div>
-    <div className="admin-content-checks">{contentReadiness.checks.map((check)=><span key={check.key} className={check.complete ? "is-complete" : ""}><i aria-hidden="true">{check.complete ? "✓" : "○"}</i>{check.label}{check.required && <small>필수</small>}</span>)}</div>
-    {!contentReadiness.launchReady && <p>{form.status === "active" && <><b className="admin-content-live-warning">현재 Active 상태입니다.</b>{" "}</>}먼저 <strong>{contentReadiness.requiredMissing.map((item)=>item.label).join(" · ")}</strong>을 채우면 오픈용 핵심 콘텐츠가 갖춰집니다.</p>}
-    {contentReadiness.launchReady && contentReadiness.recommendedMissing.length > 0 && <p>오픈은 가능하지만 <strong>{contentReadiness.recommendedMissing.map((item)=>item.label).join(" · ")}</strong>을 추가하면 PDP 완성도가 올라갑니다.</p>}
-  </section>
-  {product&&<div className="admin-preview"><Link href={`/shop/${product.slug}?preview=1`} target="_blank">PREVIEW PRODUCT ↗</Link></div>}
-  <section className="admin-panel"><p className="eyebrow">A · Basic information</p><h2>Identity & visibility</h2><div className="admin-form-grid">{input("name","Product Name")}{input("korean_name","Korean Name")}{input("subtitle","Subtitle")}{input("slug","Slug")}{area("short_description","Short Description")}<label className="admin-field">Product Type<select value={String(form.product_type)} onChange={e=>change("product_type",e.target.value)}><option value="single-origin">Single Origin</option><option value="blend">Blend</option><option value="decaf">Decaf</option></select></label><label className="admin-field">Status<select value={String(form.status||"draft")} onChange={e=>change("status",e.target.value)}><option value="draft">Draft</option><option value="active">Active</option><option value="sold-out">Sold Out</option><option value="hidden">Hidden</option></select></label>{input("display_order","Display Order","number")}</div><div className="admin-toggle-row">{[["featured","Featured"],["todays_roast","Today's Coffee"]].map(([key,label])=><label key={key}><input type="checkbox" checked={Boolean(form[key])} disabled={key==="todays_roast"&&(form.status!=="active"||variants.reduce((sum,v)=>sum+v.stock,0)<=0)} onChange={e=>change(key,e.target.checked)}/><span><strong>{label}</strong></span></label>)}</div></section>
-  <section className="admin-panel"><p className="eyebrow">SALES CHANNEL</p><h2>Where this coffee is sold</h2><p className="admin-panel-help">온라인 SHOP과 Tasting Room에서 같은 원두/SKU 재고를 공유합니다.</p><div className="admin-toggle-row">{([["online","Online Shop"],["tasting_room","Tasting Room · BEANS"]] as const).map(([value,label])=>{const channels=form.sales_channels as string[];return <label key={value}><input type="checkbox" checked={channels.includes(value)} onChange={e=>change("sales_channels",e.target.checked?[...channels,value]:channels.filter(v=>v!==value))}/><span><strong>{label}</strong></span></label>})}</div></section>
-  <section className="admin-panel"><p className="eyebrow">SHOP TAG</p><h2>Shop filters</h2><p className="admin-panel-help">하나의 상품에 여러 태그를 선택할 수 있습니다. SHOP 필터와 관련 상품 추천에 함께 사용됩니다.</p><div className="admin-tag-picker">{SHOP_TAGS.map(tag=><button type="button" key={tag} aria-pressed={selectedTags.includes(tag)} onClick={()=>toggleShopTag(tag)}><span className="admin-tag-check" aria-hidden="true">{selectedTags.includes(tag)?"✓":""}</span><span><strong>{tag}</strong><small>필터 · 관련 상품 추천</small></span></button>)}</div></section>
-  <section className="admin-panel"><p className="eyebrow">B · Price & variants</p><h2>Sellable options</h2><p className="admin-panel-help">용량별 정상가와 할인가를 한 번만 수정하면 랜딩, SHOP, 상품 상세, 장바구니와 결제에 모두 반영됩니다.</p><div className="variant-editor">{variants.map((v,i)=><div className="admin-form-grid" key={v.id}><strong>{v.size}</strong>{(["price","salePrice","stock"] as const).map(key=><label className="admin-field" key={key}>{key === "price" ? "정상가" : key === "salePrice" ? "판매가" : "재고"}<input type="number" min={key === "stock" ? 0 : 1} value={v[key] ?? v.price} onChange={e=>setVariant(i,key,Number(e.target.value))}/></label>)}<label>판매 가능<input type="checkbox" checked={v.available} onChange={e=>setVariant(i,"available",e.target.checked)}/></label></div>)}</div></section>
-  <section className="admin-panel"><p className="eyebrow">C · Coffee information</p><h2>Core coffee info</h2><p className="admin-panel-help">일반 싱글오리진은 나라 · 등급 · 가공방식 · 맛 정보만 관리하면 충분합니다. 특정 농장이나 스페셜티 로트일 때만 아래 Lot Details를 추가하세요.</p><div className="admin-form-grid">{input("origin","Country / Origin")}{input("grade","Grade")}{input("process","Processing")}</div><details className="admin-form-advanced admin-lot-details"><summary>Specialty / Lot Details</summary><div className="admin-form-grid">{input("region","Region")}{input("producer","Farm / Producer")}{input("washing_station","Washing Station")}{input("variety","Variety")}{input("altitude","Altitude")}{input("harvest","Harvest")}</div></details></section>
-  <section className="admin-panel"><p className="eyebrow">D · Taste profile</p><div className="admin-form-grid">{area("tasting_notes","Tasting Notes (comma separated)")}{["acidity","sweetness","body"].map(key=><label className="admin-field" key={key}>{key} · {String(form[key])}<input type="range" min="1" max="5" value={Number(form[key])} onChange={e=>change(key,Number(e.target.value))}/></label>)}{input("roast_level","Roast Level")}</div></section>
-  <section className="admin-panel"><p className="eyebrow">E · Story / detail</p><div className="admin-form-grid">{area("about","About This Coffee")}{area("why_we_chose_it","Why We Chose It")}{area("roaster_note","Roaster's Note")}</div></section>
-  <section className="admin-panel"><p className="eyebrow">F · Brewing guide</p><label className="admin-checkbox"><input type="checkbox" checked={Boolean(form.use_default_recipe)} onChange={e=>change("use_default_recipe",e.target.checked)}/> Use Default Casa di Stefano Recipe</label><div className="admin-form-grid">{input("brewing_dose","Coffee Dose")}{input("brewing_water","Water")}{input("brewing_temperature","Temperature")}{input("brewing_grind","Grind")}{input("brewing_time","Brew Time")}</div></section>
-  <section className="admin-panel"><p className="eyebrow">G · Product images</p><ImageUpload onUploaded={url=>change("image_url",url)}/><div className="admin-form-grid">{input("image_url","Primary Image URL")}{area("gallery_images_text","Gallery image URLs (one per line)")}</div></section>
-  {message&&<p role="alert" className="admin-form-error">{message}</p>}<div className="admin-form-submit"><button className="admin-primary-button" disabled={saving}>{saving?"Saving…":"Save product"}</button></div>
- </form>;
+  const router = useRouter();
+  const [form, setForm] = useState<Record<string, unknown>>(() => ({
+    ...Object.fromEntries(fields.map((key) => [key, product?.[key as keyof Product] ?? ""])),
+    product_type: product?.product_type ?? "single-origin",
+    status: product?.status ?? "draft",
+    display_order: product?.display_order ?? 0,
+    featured: product?.featured ?? false,
+    todays_roast: product?.status === "active" && (product?.todays_roast ?? false),
+    use_default_recipe: product?.use_default_recipe ?? true,
+    acidity: product?.acidity ?? 3,
+    sweetness: product?.sweetness ?? 3,
+    body: product?.body ?? 3,
+    discovery_tags: product?.discovery_tags ?? [],
+    gallery_images: product?.gallery_images ?? [],
+    gallery_images_text: (product?.gallery_images ?? []).join("\n"),
+    sales_channels: product?.sales_channels?.length ? product.sales_channels : ["online"],
+    variants: initialVariants(product),
+  }));
+  const savingRef = useRef(false);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+
+  function change(key: string, value: unknown) {
+    setForm((current) => {
+      const updates: Record<string, unknown> = { [key]: value };
+      if (key === "name") {
+        const previousName = String(current.name ?? "");
+        const currentSlug = String(current.slug ?? "");
+        if (!currentSlug || currentSlug === makeSlug(previousName)) {
+          updates.slug = makeSlug(String(value));
+        }
+      }
+      if (key === "status" && value !== "active") updates.todays_roast = false;
+      return { ...current, ...updates };
+    });
+  }
+
+  const input = (key: string, label: string, placeholder = "", type = "text") => (
+    <label className="admin-field" key={key}>
+      {label}
+      <input
+        type={type}
+        placeholder={placeholder}
+        min={type === "number" ? 0 : undefined}
+        value={String(form[key] ?? "")}
+        onChange={(event) => change(key, type === "number" ? Number(event.target.value) : event.target.value)}
+      />
+    </label>
+  );
+  const area = (key: string, label: string, placeholder = "") => (
+    <label className="admin-field admin-field-wide" key={key}>
+      {label}
+      <textarea
+        rows={3}
+        placeholder={placeholder}
+        value={String(form[key] ?? "")}
+        onChange={(event) => change(key, event.target.value)}
+      />
+    </label>
+  );
+  const selectedTags = form.discovery_tags as string[];
+  const variants = form.variants as ProductVariant[];
+  const channels = form.sales_channels as string[];
+
+  function toggleShopTag(tag: string) {
+    change("discovery_tags", selectedTags.includes(tag)
+      ? selectedTags.filter((value) => value !== tag)
+      : [...selectedTags, tag]);
+  }
+  function setVariant(index: number, key: keyof ProductVariant, value: unknown) {
+    change("variants", variants.map((variant, currentIndex) =>
+      index === currentIndex ? { ...variant, [key]: value } : variant));
+  }
+
+  async function save(event: React.FormEvent) {
+    event.preventDefault();
+    if (savingRef.current) return;
+    if (!channels.length) {
+      setMessage("판매 채널을 하나 이상 선택해 주세요. (아래 '추가 운영 설정')");
+      return;
+    }
+    const invalid = validateProductForm(form);
+    if (invalid) { setMessage(invalid); return; }
+
+    savingRef.current = true;
+    setSaving(true);
+    setMessage("");
+    const payload = {
+      ...form,
+      gallery_images: String(form.gallery_images_text ?? "")
+        .split("\n").map((url) => url.trim()).filter(Boolean),
+    };
+    try {
+      const response = await fetch("/api/admin/products", {
+        method: product ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(product ? { id: product.id, ...payload } : payload),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        setMessage(result.error || "상품을 저장하지 못했습니다.");
+        return;
+      }
+      router.push("/admin/products");
+      router.refresh();
+    } catch {
+      setMessage("상품을 저장하지 못했습니다. 네트워크 연결을 확인하고 다시 시도해 주세요.");
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form noValidate className="admin-product-form" onSubmit={save}>
+      <p className="admin-panel-help">
+        상품명 → 가격·재고 → 커피 정보 → 사진 순서로 입력하세요.
+        농장·추출법·노출 설정처럼 자주 바꾸지 않는 항목은 맨 아래에 모아두었습니다.
+      </p>
+      {product && (
+        <div className="admin-preview">
+          <Link href={"/shop/" + product.slug + "?preview=1"} target="_blank">
+            상품 상세 미리보기 ↗
+          </Link>
+        </div>
+      )}
+
+      <section className="admin-panel admin-form-priority">
+        <p className="eyebrow">01 · BASIC</p>
+        <h2>상품 기본 정보</h2>
+        <p className="admin-panel-help">상품명과 간단한 소개를 작성하고, SHOP에서 노출할 분류를 선택하세요.</p>
+        <div className="admin-form-grid">
+          {input("name", "상품명 *", "예: Ethiopia Yirgacheffe")}
+          {input("korean_name", "한글 상품명", "예: 에티오피아 예가체프")}
+          <label className="admin-field">
+            상품 유형
+            <select value={String(form.product_type)} onChange={(event) => change("product_type", event.target.value)}>
+              <option value="single-origin">싱글 오리진</option>
+              <option value="blend">블렌드</option>
+              <option value="decaf">디카페인</option>
+            </select>
+          </label>
+          <label className="admin-field">
+            판매 상태
+            <select value={String(form.status ?? "draft")} onChange={(event) => change("status", event.target.value)}>
+              <option value="draft">임시 저장 (고객에게 숨김)</option>
+              <option value="active">판매 중</option>
+              <option value="sold-out">품절</option>
+              <option value="hidden">비공개</option>
+            </select>
+          </label>
+          {area("short_description", "한 줄 소개 · 상품 카드 / 상세 상단", "예: 꽃향기와 시트러스의 산뜻한 여운")}
+        </div>
+        <p className="admin-panel-help">SHOP 카테고리 (복수 선택 가능)</p>
+        <div className="admin-tag-picker">
+          {SHOP_TAGS.map((tag) => (
+            <button
+              type="button"
+              key={tag}
+              aria-pressed={selectedTags.includes(tag)}
+              onClick={() => toggleShopTag(tag)}
+            >
+              <span className="admin-tag-check" aria-hidden="true">{selectedTags.includes(tag) ? "✓" : ""}</span>
+              <span><strong>{tag}</strong></span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="admin-panel">
+        <p className="eyebrow">02 · PRICE & STOCK</p>
+        <h2>가격과 재고</h2>
+        <p className="admin-panel-help">
+          정상가와 실제 판매가가 같으면 할인 표시가 없습니다.
+          재고는 각 용량별로 입력하고, 판매하지 않는 옵션은 '판매 가능'을 해제하세요.
+        </p>
+        <div className="variant-price-editor">
+          {variants.map((variant, index) => (
+            <div className="admin-form-grid" key={variant.id}>
+              <strong className="admin-field-wide">{variant.size}</strong>
+              {(["price", "salePrice", "stock"] as const).map((key) => (
+                <label className="admin-field" key={key}>
+                  {key === "price" ? "정상가 (원)" : key === "salePrice" ? "실제 판매가 (원)" : "재고 (개)"}
+                  <input
+                    type="number"
+                    min={key === "stock" ? 0 : 1}
+                    step={1}
+                    value={variant[key] ?? variant.price}
+                    onChange={(event) => setVariant(index, key, Number(event.target.value))}
+                  />
+                </label>
+              ))}
+              <label className="admin-checkbox">
+                <input type="checkbox" checked={variant.available} onChange={(event) => setVariant(index, "available", event.target.checked)} />
+                {" "}이 용량 판매 가능
+              </label>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="admin-panel">
+        <p className="eyebrow">03 · COFFEE & STORY</p>
+        <h2>커피 정보와 상세 설명</h2>
+        <p className="admin-panel-help">
+          여기 입력한 내용이 상품 상세 페이지의 THE COFFEE, IN THE CUP, OUR NOTE에 표시됩니다.
+        </p>
+        <div className="admin-form-grid">
+          {input("origin", "원산지 (필수) *", "예: Ethiopia / Brazil · Colombia")}
+          {input("grade", "등급", "예: G1 / AA")}
+          {input("process", "가공 방식", "예: Washed / Natural")}
+          {input("roast_level", "로스팅 정도", "예: Medium")}
+          {area("tasting_notes", "IN THE CUP · 맛 노트", "예: 밀크 초콜릿, 구운 아몬드, 캐러멜")}
+          {area("about", "ABOUT THIS COFFEE · 커피 소개", "이 원두의 특징을 자연스럽게 소개해 주세요.")}
+          {area("why_we_chose_it", "WHY WE CHOSE IT · 선택한 이유", "Casa di Stefano가 이 커피를 선택한 이유")}
+          {area("roaster_note", "ROASTER'S NOTE · 로스터의 한마디", "추천하는 맛의 포인트나 여운")}
+        </div>
+        <details className="admin-form-advanced admin-lot-details">
+          <summary>선택 입력 · 농장 / 세부 산지 정보</summary>
+          <p className="admin-panel-help">정보가 있을 때만 작성하세요. 비워두어도 상품 저장에 문제없습니다.</p>
+          <div className="admin-form-grid">
+            {input("region", "세부 지역", "예: Yirgacheffe")}
+            {input("producer", "농장 / 생산자")}
+            {input("washing_station", "워싱 스테이션")}
+            {input("variety", "품종")}
+            {input("altitude", "재배 고도")}
+            {input("harvest", "수확 시기")}
+          </div>
+        </details>
+      </section>
+
+      <section className="admin-panel">
+        <p className="eyebrow">04 · PHOTOS</p>
+        <h2>상품 사진</h2>
+        <p className="admin-panel-help">대표 사진만 올려도 됩니다. 업로드한 이미지는 상품 카드와 상세 페이지에 공통 사용됩니다.</p>
+        <ImageUpload onUploaded={(url) => change("image_url", url)} />
+        {Boolean(form.image_url) && (
+          <div style={{ marginTop: 12 }}>
+            <img
+              src={String(form.image_url)}
+              alt="현재 상품 대표 사진"
+              style={{ width: 132, height: 154, objectFit: "cover", borderRadius: 3, border: "1px solid #d2cabd" }}
+            />
+          </div>
+        )}
+        <details className="admin-form-advanced">
+          <summary>선택 입력 · 사진 URL / 추가 갤러리</summary>
+          <div className="admin-form-grid">
+            {input("image_url", "대표 이미지 URL")}
+            {area("gallery_images_text", "추가 이미지 URL · 한 줄에 하나씩")}
+          </div>
+        </details>
+      </section>
+
+      <details className="admin-form-advanced">
+        <summary>추가 운영 설정 · 노출 / 판매 채널 / 추출 레시피</summary>
+        <p className="admin-panel-help">대부분의 상품은 기본값 그대로 사용해도 됩니다.</p>
+        <div className="admin-form-grid">
+          {input("slug", "상품 주소 (URL)", "상품명 입력 시 자동 생성")}
+          {input("subtitle", "영문 부제목 (선택)")}
+          {input("display_order", "상품 노출 순서", "0", "number")}
+        </div>
+        <div className="admin-toggle-row">
+          <label>
+            <input type="checkbox" checked={Boolean(form.featured)} onChange={(event) => change("featured", event.target.checked)} />
+            <span><strong>추천 상품으로 노출</strong></span>
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={Boolean(form.todays_roast)}
+              disabled={form.status !== "active" || variants.reduce((sum, variant) => sum + variant.stock, 0) <= 0}
+              onChange={(event) => change("todays_roast", event.target.checked)}
+            />
+            <span><strong>오늘의 커피</strong><small>판매 중이며 재고가 있어야 선택 가능</small></span>
+          </label>
+        </div>
+        <p className="admin-panel-help">판매 채널</p>
+        <div className="admin-toggle-row">
+          {([["online", "온라인 SHOP"], ["tasting_room", "테이스팅룸 원두"]] as const).map(([value, label]) => (
+            <label key={value}>
+              <input
+                type="checkbox"
+                checked={channels.includes(value)}
+                onChange={(event) => change("sales_channels", event.target.checked
+                  ? [...channels, value] : channels.filter((channel) => channel !== value))}
+              />
+              <span><strong>{label}</strong></span>
+            </label>
+          ))}
+        </div>
+        <div className="admin-form-grid">
+          {(["acidity", "sweetness", "body"] as const).map((key) => (
+            <label className="admin-field" key={key}>
+              {key === "acidity" ? "산미" : key === "sweetness" ? "단맛" : "바디감"} · {String(form[key])}/5
+              <input type="range" min={1} max={5} value={Number(form[key])} onChange={(event) => change(key, Number(event.target.value))} />
+            </label>
+          ))}
+        </div>
+        <label className="admin-checkbox">
+          <input type="checkbox" checked={Boolean(form.use_default_recipe)} onChange={(event) => change("use_default_recipe", event.target.checked)} />
+          {" "}Casa 기본 추출 레시피 사용
+        </label>
+        {!form.use_default_recipe && (
+          <div className="admin-form-grid">
+            {input("brewing_dose", "원두량")}
+            {input("brewing_water", "물 양")}
+            {input("brewing_temperature", "물 온도")}
+            {input("brewing_grind", "분쇄도")}
+            {input("brewing_time", "추출 시간")}
+          </div>
+        )}
+      </details>
+
+      {message && <p role="alert" className="admin-form-error">{message}</p>}
+      <div className="admin-form-submit">
+        <button className="admin-primary-button" type="submit" disabled={saving}>
+          {saving ? "저장 중…" : product ? "변경사항 저장" : "상품 등록"}
+        </button>
+      </div>
+    </form>
+  );
 }
