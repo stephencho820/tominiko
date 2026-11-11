@@ -42,7 +42,12 @@ export function getSavedTastingOrders(): SavedTastingOrder[] {
     if (last && typeof last === "object") {
       const record = last as Partial<SavedTastingOrder>;
       if (typeof record.id === "string" && uuid.test(record.id) && typeof record.token === "string" && record.token.length >= 32 && record.token.length <= 256) {
-        session.push({ id: record.id, token: record.token, savedAt: now });
+        const savedAt = typeof record.savedAt === "number" ? record.savedAt : now;
+        if (savedAt > now - RETENTION_MS && savedAt <= now && !local.some((entry) => entry.id === record.id) && !session.some((entry) => entry.id === record.id)) {
+          session.push({ id: record.id, token: record.token, savedAt });
+          // Upgrade old last-order records once; never renew their expiry on reads.
+          try { sessionStorage.setItem(LAST_ORDER_KEY, JSON.stringify({ id: record.id, token: record.token, savedAt })); } catch {}
+        }
       }
     }
   } catch {}
@@ -54,11 +59,12 @@ export function getSavedTastingOrders(): SavedTastingOrder[] {
 
 export function saveTastingOrder(id: string, token: string) {
   if (typeof window === "undefined" || !uuid.test(id) || token.length < 32 || token.length > 256) return;
-  const next = remember([{ id, token, savedAt: Date.now() }, ...getSavedTastingOrders()]);
+  const savedAt = Date.now();
+  const next = remember([{ id, token, savedAt }, ...getSavedTastingOrders()]);
   try { localStorage.setItem(TASTING_HISTORY_KEY, JSON.stringify(next)); } catch {}
   try {
     sessionStorage.setItem(TASTING_HISTORY_KEY, JSON.stringify(next));
-    sessionStorage.setItem(LAST_ORDER_KEY, JSON.stringify({ id, token }));
+    sessionStorage.setItem(LAST_ORDER_KEY, JSON.stringify({ id, token, savedAt }));
   } catch {}
 }
 
