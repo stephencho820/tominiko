@@ -65,7 +65,7 @@ const legacyPrices = (product: Product, size: string) => {
 
 export function productPricing(product: Product, size: string, variant?: ProductVariant) {
   const normalizedSize = normalizeProductSize(size);
-  const fallback = product.product_format === "coffee_bag" ? { price: 0, salePrice: null } : legacyPrices(product, normalizedSize);
+  const fallback = product.product_format !== "beans" ? { price: 0, salePrice: null } : legacyPrices(product, normalizedSize);
   if (!variant) return fallback;
   const price = finitePrice(variant.price, fallback.price);
   const salePrice = variant.salePrice == null ? price : finitePrice(variant.salePrice, fallback.salePrice ?? price);
@@ -75,7 +75,7 @@ export function productPricing(product: Product, size: string, variant?: Product
 /** Retain disabled and empty tiers for the admin and sold-out storefront. */
 export function inventoryVariants(product: Product): ProductVariant[] {
   try { return validateVariants(product.variants, product.product_format ?? "beans"); } catch { /* Legacy cart snapshots only. */ }
-  if (product.product_format === "coffee_bag") return [];
+  if (product.product_format !== "beans") return [];
   if (!Array.isArray(product.variants) || !product.variants.some((v) => v && "grindType" in v)) return [];
   return PRODUCT_SIZES.map((size) => {
     const legacy = (product.variants ?? []).filter((v) => normalizeProductSize(v.size) === size);
@@ -92,11 +92,12 @@ export function productIsSoldOut(product: Product) {
 
 export function productPrice(product: Product) {
   const prices = productVariants(product).map((variant) => finitePrice(variant.salePrice ?? variant.price)).filter((price) => price > 0);
-  return prices.length ? Math.min(...prices) : product.product_format === "coffee_bag" ? 0 : finitePrice(product.sale_price ?? product.price_150g);
+  return prices.length ? Math.min(...prices) : product.product_format !== "beans" ? 0 : finitePrice(product.sale_price ?? product.price_150g);
 }
 
 export function defaultProductVariant(product: Product, preferredSize = "150g", _preferredGrind?: string) {
   if (product.product_format === "coffee_bag" && preferredSize === "150g") preferredSize = "1개입";
+  if (product.product_format === "bundle" && preferredSize === "150g") preferredSize = "1세트";
   const variants = productVariants(product);
   const available = variants.filter((variant) => variant.available && variant.stock > 0);
   return available.find((variant) => variant.size === normalizeProductSize(preferredSize))
