@@ -4,6 +4,7 @@ export const SHOP_TAGS = [
   "디카페인",
   "블렌드",
   "특별한 날",
+  "커피백",
 ] as const;
 
 export type ShopTag = (typeof SHOP_TAGS)[number];
