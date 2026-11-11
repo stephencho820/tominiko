@@ -11,7 +11,8 @@ function productQueryFailed(action: string, cause: unknown): never {
 }
 
 export async function getProducts(options?: { activeOnly?: boolean; todaysRoast?: boolean; featured?: boolean; latestFirst?: boolean }) {
-  if (!hasSupabaseEnv) return productQueryFailed("configuration", "Supabase is not configured");
+  // Preserve build-time rendering when Preview does not have Supabase env configured.
+  if (!hasSupabaseEnv) { console.error("[products] Supabase is not configured"); return [] as Product[]; }
   try {
     const supabase = await createClient();
     let query = supabase.from("products").select("*");
@@ -34,7 +35,7 @@ export async function getTastingRoomProducts() {
 }
 
 export async function getProduct(slug: string, options?: { includeInactive?: boolean }) {
-  if (!hasSupabaseEnv) return productQueryFailed("configuration", "Supabase is not configured");
+  if (!hasSupabaseEnv) { console.error("[products] Supabase is not configured"); return null; }
   try {
     const supabase = await createClient();
     const base = supabase.from("products").select("*").eq("slug", slug);
