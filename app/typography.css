@@ -152,3 +152,40 @@ body:not(:has(.admin-shell)) .room-intro h1 { overflow-wrap: break-word; }
 #reviews { scroll-margin-top: 110px; }
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* Two-stage editorial hover: origin first, then the actual tasting notes. */
+.catalog-image-reveal .catalog-reveal-content {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 100%; min-width: 0; gap: clamp(6px, 1.1vw, 12px);
+}
+.catalog-reveal-origin { display: block; white-space: nowrap; max-width: 100%; }
+.catalog-reveal-rule {
+  display: block; width: 0; height: 1px; background: rgba(255,250,244,.8);
+  transition: width 540ms cubic-bezier(.22,1,.36,1) 180ms;
+}
+.catalog-reveal-notes {
+  display: block; max-width: 100%; text-align: center; color: #fffaf4;
+  font-family: var(--casa-ui, sans-serif); font-size: clamp(9px, 1vw, 13px);
+  font-weight: 500; line-height: 1.5; letter-spacing: .015em;
+  text-wrap: balance; overflow-wrap: break-word;
+  opacity: 0; transform: translateY(9px);
+  transition: opacity 450ms ease 240ms, transform 580ms cubic-bezier(.22,1,.36,1) 210ms;
+}
+@media (hover: hover) and (pointer: fine) {
+  .catalog-card-image:hover .catalog-reveal-rule,
+  .catalog-card-image:focus-visible .catalog-reveal-rule { width: 34px; }
+  .catalog-card-image:hover .catalog-reveal-notes,
+  .catalog-card-image:focus-visible .catalog-reveal-notes { opacity: 1; transform: translateY(0); }
+}
+@media (hover: none), (pointer: coarse) {
+  .catalog-card-image--revealed .catalog-reveal-rule { width: 34px; }
+  .catalog-card-image--revealed .catalog-reveal-notes { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 700px) {
+  .catalog-image-reveal .catalog-reveal-content { gap: 6px; }
+  .catalog-reveal-notes { font-size: 10px; line-height: 1.35; }
+  .catalog-card--list .catalog-reveal-notes { font-size: 9px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .catalog-reveal-rule, .catalog-reveal-notes { transition: none; }
+}
