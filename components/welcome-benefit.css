@@ -1,0 +1,61 @@
+.welcome-benefit {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  margin: 12px 0 22px;
+  padding: 15px 18px;
+  border: 1px solid #ded5c8;
+  border-radius: 4px;
+  background: #f2ede5;
+  color: #342b23;
+  font-family: "Avenir Next", "Helvetica Neue", Arial, "Apple SD Gothic Neo", sans-serif;
+}
+.welcome-benefit-icon {
+  display: grid;
+  flex: 0 0 33px;
+  place-items: center;
+  color: #806b55;
+}
+.welcome-benefit-copy { flex: 1 1 auto; min-width: 0; }
+.welcome-benefit-kicker {
+  display: block;
+  margin-bottom: 4px;
+  color: #806b55;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .15em;
+}
+.welcome-benefit-copy strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: -.015em;
+  line-height: 1.4;
+}
+.welcome-benefit-copy p { margin: 4px 0 0; color: #7a6a5a; font-size: 11px; line-height: 1.4; }
+.welcome-benefit-cta {
+  display: inline-flex;
+  flex: 0 0 auto;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 13px;
+  border: 1px solid #382e25;
+  border-radius: 3px;
+  background: #382e25;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background-color .18s ease;
+}
+.welcome-benefit-cta:hover { background: #655141; }
+.welcome-benefit-cta:focus-visible { outline: 2px solid #655141; outline-offset: 3px; }
+@media (max-width: 560px) {
+  .welcome-benefit { gap: 8px; margin: 8px 0 15px; padding: 12px 10px; }
+  .welcome-benefit-icon { flex-basis: 25px; }
+  .welcome-benefit-copy strong { font-size: 12px; }
+  .welcome-benefit-copy p { font-size: 10px; }
+  .welcome-benefit-cta { min-height: 36px; padding: 0 9px; font-size: 10px; }
+}

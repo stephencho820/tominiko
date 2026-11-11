@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_DELIVERY_SETTINGS, settingsFromRow } from "@/lib/shipping";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
+import { getWelcomeBenefit } from "@/lib/welcome-discount";
 
 export async function GET() {
-  if (!hasSupabaseEnv) return NextResponse.json({ settings: DEFAULT_DELIVERY_SETTINGS, zones: [], user: null, addresses: [] });
+  if (!hasSupabaseEnv) return NextResponse.json({ settings: DEFAULT_DELIVERY_SETTINGS, zones: [], user: null, addresses: [], welcomeDiscount: 0, welcomePromotionActive: false });
   const supabase = await createClient();
   const [{ data: settings, error: settingsError }, { data: zones, error: zonesError }, { data: auth }] = await Promise.all([
     supabase.from("delivery_settings").select("*").eq("id", true).maybeSingle(),
@@ -23,5 +24,8 @@ export async function GET() {
     isVip = Boolean(vipData);
     addresses = addressData ?? [];
   }
-  return NextResponse.json({ settings: settingsFromRow(settings), zones: zones ?? [], user: auth.user ? { ...profile, email: profile?.email || auth.user.email } : null, addresses, isVip }, { headers: { "Cache-Control": "no-store" } });
+  let benefit;
+  try { benefit = await getWelcomeBenefit(auth.user); }
+  catch { return NextResponse.json({ error: "할인 혜택을 확인하지 못했습니다." }, { status: 503 }); }
+  return NextResponse.json({ settings: settingsFromRow(settings), zones: zones ?? [], user: auth.user ? { ...profile, email: profile?.email || auth.user.email } : null, addresses, isVip, welcomeDiscount: benefit.eligible ? benefit.amount : 0, welcomePromotionActive: benefit.enabled }, { headers: { "Cache-Control": "private, no-store" } });
 }

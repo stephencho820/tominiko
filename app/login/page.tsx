@@ -9,9 +9,13 @@ type AuthMode = "sign-in" | "sign-up";
 export default function Login() {
 	const router = useRouter();
 	const [requestedNext, setRequestedNext] = useState<string | null>(null);
-	useEffect(() => { setRequestedNext(new URLSearchParams(window.location.search).get("next")); }, []);
 	const safeNext = requestedNext?.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : null;
 	const [mode, setMode] = useState<AuthMode>("sign-in");
+	useEffect(() => {
+		const params = new URLSearchParams(window.location.search);
+		setRequestedNext(params.get("next"));
+		if (params.get("mode") === "sign-up") setMode("sign-up");
+	}, []);
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
@@ -77,7 +81,7 @@ export default function Login() {
 				: await supabase.auth.signUp({
 						email,
 						password,
-						options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+						options: { emailRedirectTo: `${window.location.origin}/auth/callback${safeNext ? `?next=${encodeURIComponent(safeNext)}` : ""}` },
 					});
 
 			if (result.error) {
@@ -108,7 +112,7 @@ export default function Login() {
 		if (!email.trim() || resending) return;
 		setResending(true); setError(""); setMessage("");
 		try {
-			const { error: resendError } = await createClient().auth.resend({ type: "signup", email: email.trim(), options: { emailRedirectTo: `${window.location.origin}/auth/callback` } });
+			const { error: resendError } = await createClient().auth.resend({ type: "signup", email: email.trim(), options: { emailRedirectTo: `${window.location.origin}/auth/callback${safeNext ? `?next=${encodeURIComponent(safeNext)}` : ""}` } });
 			if (resendError) setError(resendError.status === 429 ? "인증 메일을 연속해서 요청했어요. 잠시 기다린 후 다시 시도해 주세요." : "인증 메일을 재발송하지 못했어요. 잠시 후 다시 시도해 주세요.");
 			else setMessage("인증 메일을 다시 요청했어요. 받은편지함과 스팸함을 확인해 주세요.");
 		} catch { setError("인증 메일 재발송 중 문제가 발생했어요."); }
