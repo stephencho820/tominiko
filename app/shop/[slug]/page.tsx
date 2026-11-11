@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ProductPurchase } from "@/components/ProductPurchase";
 import { CoffeeBagCrossSell } from "@/components/CoffeeBagCrossSell";
 import { ProductCard } from "@/components/ProductCard";
+import { ProductGallery } from "@/components/ProductGallery";
 import { productImage, tastingNotes } from "@/lib/products";
 import { getProduct, getProducts } from "@/services/products";
 import { getProductReviews } from "@/services/reviews";
@@ -74,7 +75,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
     {preview && <div className="preview-banner">ADMIN PREVIEW · <Link href={`/admin/products/${product.id}`}>Back to editor</Link></div>}
     <div className="pdp-topline"><Link href="/shop">← BACK TO SHOP</Link><span>CASA DI STEFANO / COFFEE COLLECTION</span></div>
     <section className="product-hero">
-      <div className="product-gallery"><div className="pdp-gallery-track">{images.map((image, index) => <img src={image} alt={`${product.name}${index ? ` ${index+1}`:""}`} key={image} />)}</div>{images.length > 1 && <span className="pdp-gallery-hint">SWIPE TO EXPLORE · {String(images.length).padStart(2, "0")} PHOTOS</span>}</div>
+      <ProductGallery images={images} productName={product.name} />
       <div className="product-intro"><div className="pdp-intro-inner">
         <p className="section-label pdp-origin-label">COFFEE COLLECTION / {product.origin}{product.region ? ` · ${product.region}`:""}</p>
         <h1 className={hasMixedScriptTitle ? "pdp-title--mixed" : undefined}>{displayTitle}</h1>

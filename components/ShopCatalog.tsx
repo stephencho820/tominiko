@@ -45,6 +45,8 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
   const notes = tastingNotes(product).join(" · ") || (isCoffeeBag ? "커피백 1개 · 분쇄 원두 10g" : "");
   const hover = isCoffeeBag ? { label: "COFFEE BAG", color: "#8D775E" } : productHoverLabel(product);
   const hoverNotes = tastingNotes(product).filter(Boolean).slice(0, 3).join(" · ");
+  const primaryImage = productImage(product);
+  const conceptImage = product.gallery_images?.[0] && product.gallery_images[0] !== primaryImage ? product.gallery_images[0] : null;
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
   const chooseSize = (nextSize: string) => {
     setSize(nextSize);
@@ -67,7 +69,11 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
     timer.current = setTimeout(() => setAdded(false), 1800);
   };
   return <article className={`catalog-card catalog-card--${view}`}>
-    <Link href={`/shop/${product.slug}`} className={`catalog-card-image${imageRevealed ? " catalog-card-image--revealed" : ""}`} onClick={handleImageClick} onBlur={() => setImageRevealed(false)} aria-label={`${product.name}${hoverNotes ? ` — ${hoverNotes}` : ""} — 상품 상세 보기`}><img src={productImage(product)} alt={product.name} /><span className="catalog-image-reveal" style={{ backgroundColor: `${hover.color}B8` }} aria-hidden="true"><span className="catalog-reveal-content"><span className="catalog-reveal-origin">{hover.label}</span>{hoverNotes && <><span className="catalog-reveal-rule" /><span className="catalog-reveal-notes">{hoverNotes}</span></>}</span></span></Link>
+    <Link href={`/shop/${product.slug}`} className={`catalog-card-image${imageRevealed ? " catalog-card-image--revealed" : ""}${conceptImage ? " catalog-card-image--with-concept" : ""}`} onClick={handleImageClick} onBlur={() => setImageRevealed(false)} aria-label={`${product.name}${hoverNotes ? ` — ${hoverNotes}` : ""} — 상품 상세 보기`}>
+      <img className="catalog-primary-photo" src={primaryImage} alt={product.name} />
+      {conceptImage && <img className="catalog-concept-photo" src={conceptImage} alt={`${product.name} 콘셉트사진`} loading="lazy" />}
+      {!conceptImage && <span className="catalog-image-reveal" style={{ backgroundColor: `${hover.color}B8` }} aria-hidden="true"><span className="catalog-reveal-content"><span className="catalog-reveal-origin">{hover.label}</span>{hoverNotes && <><span className="catalog-reveal-rule" /><span className="catalog-reveal-notes">{hoverNotes}</span></>}</span></span>}
+    </Link>
     <div className="catalog-card-copy">
       <p className="catalog-origin">{product.origin}{product.region ? ` · ${product.region}` : ""}</p>
       <Link href={`/shop/${product.slug}`}><h2>{product.korean_name || product.name}</h2></Link>

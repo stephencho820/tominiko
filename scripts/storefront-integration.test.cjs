@@ -151,6 +151,59 @@ test('coffee bag SHOP card keeps a single pack selector, 10g copy and aligned pr
   assert.match(css, /\.catalog-products--grid \.catalog-options\s*\{[\s\S]*?margin-top:\s*auto/);
 });
 
+test('two-photo product admin shows separate uploads and the catalog/PDP render the concept second', () => {
+  const p = product({
+    name: 'Test Coffee',
+    product_type: 'blend',
+    product_format: 'beans',
+    image_url: 'https://example.com/primary.jpg',
+    gallery_images: ['https://example.com/concept.jpg'],
+  });
+  const Gallery = load('components/ProductGallery.tsx').ProductGallery;
+  const gallery = renderToStaticMarkup(React.createElement(Gallery, { images: [p.image_url, ...p.gallery_images], productName: p.name }));
+  assert.match(gallery, /대표사진/);
+  assert.match(gallery, /콘셉트사진/);
+  assert.match(gallery, /이전 사진/);
+  assert.match(gallery, /다음 사진/);
+
+  const cartMocks = { ...uiMocks, '@/components/CartProvider': { useCart: () => ({ addToCart: () => true }) } };
+  const Shop = load('components/ShopCatalog.tsx', cartMocks).ShopCatalog;
+  const html = renderToStaticMarkup(React.createElement(Shop, { products: [p] }));
+  assert.match(html, /catalog-concept-photo/);
+  assert.ok(html.indexOf('primary.jpg') < html.indexOf('concept.jpg'));
+
+  const Card = load('components/ProductCard.tsx', uiMocks).ProductCard;
+  const card = renderToStaticMarkup(React.createElement(Card, { product: p }));
+  assert.match(card, /product-card-concept-photo/);
+
+  const adminMocks = {
+    ...uiMocks,
+    'next/navigation': { useRouter: () => ({ push(){}, refresh(){} }) },
+    '@/components/ImageUpload': { ImageUpload: ({ label }) => React.createElement('span', {}, label) },
+  };
+  const Form = load('components/AdminProductForm.tsx', adminMocks).AdminProductForm;
+  const form = renderToStaticMarkup(React.createElement(Form, { product: p }));
+  assert.match(form, /01 · 대표사진/);
+  assert.match(form, /02 · 콘셉트사진/);
+  assert.match(form, /대표사진 교체/);
+  assert.match(form, /콘셉트사진 교체/);
+
+  const validate = load('lib/admin-product-form.ts').validateProductForm;
+  const validForm = { ...p, variants: p.variants, gallery_images: p.gallery_images };
+  assert.equal(validate(validForm), null);
+  assert.match(validate({ ...validForm, gallery_images: ['a.jpg','b.jpg'] }), /1장/);
+});
+
+test('two-photo product API rejects more than one additional photo', async () => {
+  const route = load('app/api/admin/products/route.ts', {
+    '@/lib/supabase/admin': { getAdminClient: async () => ({}) },
+  });
+  const response = await route.POST(request({ gallery_images: ['a.jpg', 'b.jpg'] }));
+  assert.equal(response.status, 400);
+  const data = await response.json();
+  assert.match(data.error, /1장/);
+});
+
 test('cart refresh drops invisible/sold-out/empty lines, reprices and clamps combined size quantities', () => {
   const old=product(); const items=[line(old,'150g','Whole Bean',2),line(old,'150g','Filter',2)];
   const fresh=product(); fresh.variants[0].salePrice=14000;

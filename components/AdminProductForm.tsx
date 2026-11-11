@@ -21,8 +21,8 @@ const fields = [
   "brewing_grind", "brewing_time",
 ] as const;
 
-const initialPrices: Record<Weight, number> = { "150g": 19000, "400g": 44000, "1개입": 1800, "5개입": 7900, "10개입": 14900, "1세트": 19900 };
-const initialSalePrices: Record<Weight, number> = { "150g": 13000, "400g": 29000, "1개입": 1800, "5개입": 7900, "10개입": 14900, "1세트": 17900 };
+const initialPrices: Record<Weight, number> = { "150g": 19000, "400g": 44000, "1개입": 1800, "5개입": 7900, "10개입": 14900, "1세트": 0 };
+const initialSalePrices: Record<Weight, number> = { "150g": 13000, "400g": 29000, "1개입": 1800, "5개입": 7900, "10개입": 14900, "1세트": 0 };
 const makeVariant = (size: Weight): ProductVariant => ({
   id: crypto.randomUUID(), size, price: initialPrices[size], salePrice: initialSalePrices[size],
   sku: "", stock: 0, available: true,
@@ -46,7 +46,6 @@ function initialVariants(product?: Product): ProductVariant[] {
         stock: old.stock, available: old.available };
     });
   }
-  if (format === "bundle") return expected.map(makeVariant);
   // Preserve legacy pricing if a bean product predates the inventory migration.
   return (["150g", "400g"] as const).map((size) => {
     const base = makeVariant(size);
@@ -80,14 +79,17 @@ export function AdminProductForm({ product }: { product?: Product }) {
     sweetness: product?.sweetness ?? 3,
     body: product?.body ?? 3,
     discovery_tags: product?.discovery_tags ?? [],
-    gallery_images: product?.gallery_images ?? [],
-    gallery_images_text: (product?.gallery_images ?? []).join("\n"),
+    gallery_images: (product?.gallery_images ?? []).slice(0, 1),
     sales_channels: product?.sales_channels?.length ? product.sales_channels : ["online"],
     variants: initialVariants(product),
   }));
   const savingRef = useRef(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [uploadingCount, setUploadingCount] = useState(0);
+  function onUploadingChange(uploading: boolean) {
+    setUploadingCount((count) => Math.max(0, count + (uploading ? 1 : -1)));
+  }
 
   function change(key: string, value: unknown) {
     setForm((current) => {
@@ -140,6 +142,7 @@ export function AdminProductForm({ product }: { product?: Product }) {
   const variants = form.variants as ProductVariant[];
   const channels = form.sales_channels as string[];
   const isCoffeeBag = form.product_format === "coffee_bag";
+  const conceptImage = ((form.gallery_images as string[] | undefined) ?? [])[0] ?? "";
   function chooseFormat(value: ProductFormat) {
     if (form.product_format === value) return;
     if (product && !window.confirm("판매 형태를 변경하면 기존 옵션과 재고가 새 형식으로 초기화됩니다. 변경할까요?")) return;
@@ -163,6 +166,10 @@ export function AdminProductForm({ product }: { product?: Product }) {
       setMessage("판매 채널을 하나 이상 선택해 주세요. (아래 '추가 운영 설정')");
       return;
     }
+    if (uploadingCount > 0) {
+      setMessage("사진 업로드가 완료된 후 상품을 저장해 주세요.");
+      return;
+    }
     const invalid = validateProductForm(form);
     if (invalid) { setMessage(invalid); return; }
 
@@ -175,8 +182,7 @@ export function AdminProductForm({ product }: { product?: Product }) {
       discovery_tags: isCoffeeBag
         ? [...new Set([...selectedTags, "커피백"])]
         : selectedTags.filter((tag) => tag !== "커피백"),
-      gallery_images: String(form.gallery_images_text ?? "")
-        .split("\n").map((url) => url.trim()).filter(Boolean),
+      gallery_images: conceptImage ? [conceptImage.trim()] : [],
     };
     try {
       const response = await fetch("/api/admin/products", {
@@ -225,7 +231,6 @@ export function AdminProductForm({ product }: { product?: Product }) {
             <select value={String(form.product_format)} onChange={(event) => chooseFormat(event.target.value as ProductFormat)}>
               <option value="beans">원두 · 150g / 400g</option>
               <option value="coffee_bag">커피백 · 1개입 / 5개입 / 10개입</option>
-              <option value="bundle">기프트 세트 · 1세트</option>
             </select>
           </label>
           <label className="admin-field">
@@ -268,7 +273,7 @@ export function AdminProductForm({ product }: { product?: Product }) {
         <h2>가격과 재고</h2>
         <p className="admin-panel-help">
           정상가와 실제 판매가가 같으면 할인 표시가 없습니다.
-          재고는 각 {form.product_format === "beans" ? "용량별" : "구성별"}로 입력하고, 판매하지 않는 옵션은 '판매 가능'을 해제하세요.
+          재고는 각 {isCoffeeBag ? "구성별" : "용량별"}로 입력하고, 판매하지 않는 옵션은 '판매 가능'을 해제하세요.
         </p>
         <div className="variant-price-editor">
           {variants.map((variant, index) => (
@@ -327,23 +332,37 @@ export function AdminProductForm({ product }: { product?: Product }) {
 
       <section className="admin-panel">
         <p className="eyebrow">04 · PHOTOS</p>
-        <h2>상품 사진</h2>
-        <p className="admin-panel-help">대표 사진만 올려도 됩니다. 업로드한 이미지는 상품 카드와 상세 페이지에 공통 사용됩니다.</p>
-        <ImageUpload onUploaded={(url) => change("image_url", url)} />
-        {Boolean(form.image_url) && (
-          <div style={{ marginTop: 12 }}>
-            <img
-              src={String(form.image_url)}
-              alt="현재 상품 대표 사진"
-              style={{ width: 132, height: 154, objectFit: "cover", borderRadius: 3, border: "1px solid #d2cabd" }}
-            />
+        <h2>상품 사진 (최대 2장)</h2>
+        <p className="admin-panel-help">
+          대표사진은 SHOP의 첫 화면에, 콘셉트사진은 상품 상세의 두 번째 사진에 표시됩니다.
+          PC에서는 상품 카드에 마우스를 올리면 콘셉트사진을 보여줍니다.
+        </p>
+        <div className="admin-product-photos-grid">
+          <div className="admin-product-photo-slot">
+            <strong>01 · 대표사진</strong>
+            <div className="admin-product-photo-preview">
+              {form.image_url ? <img src={String(form.image_url)} alt="현재 대표사진" /> : <span>첫 번째 사진</span>}
+            </div>
+            <ImageUpload label={form.image_url ? "대표사진 교체" : "대표사진 업로드"} onUploaded={(url) => change("image_url", url)} onUploadingChange={onUploadingChange} />
+            {Boolean(form.image_url) && <button type="button" className="admin-photo-remove" onClick={() => change("image_url", "")}>대표사진 제거</button>}
           </div>
-        )}
+          <div className="admin-product-photo-slot">
+            <strong>02 · 콘셉트사진 (선택)</strong>
+            <div className="admin-product-photo-preview">
+              {conceptImage ? <img src={conceptImage} alt="현재 콘셉트사진" /> : <span>두 번째 사진</span>}
+            </div>
+            <ImageUpload label={conceptImage ? "콘셉트사진 교체" : "콘셉트사진 업로드"} onUploaded={(url) => change("gallery_images", [url])} onUploadingChange={onUploadingChange} />
+            {Boolean(conceptImage) && <button type="button" className="admin-photo-remove" onClick={() => change("gallery_images", [])}>콘셉트사진 제거</button>}
+          </div>
+        </div>
         <details className="admin-form-advanced">
-          <summary>선택 입력 · 사진 URL / 추가 갤러리</summary>
+          <summary>선택 입력 · 사진 URL 직접 입력</summary>
           <div className="admin-form-grid">
-            {input("image_url", "대표 이미지 URL")}
-            {area("gallery_images_text", "추가 이미지 URL · 한 줄에 하나씩")}
+            {input("image_url", "대표사진 URL")}
+            <label className="admin-field">
+              콘셉트사진 URL
+              <input type="url" value={conceptImage} placeholder="https://..." onChange={(event) => change("gallery_images", event.target.value.trim() ? [event.target.value] : [])} />
+            </label>
           </div>
         </details>
       </section>
@@ -365,7 +384,7 @@ export function AdminProductForm({ product }: { product?: Product }) {
             <input
               type="checkbox"
               checked={Boolean(form.todays_roast)}
-              disabled={form.product_format !== "beans" || form.status !== "active" || variants.reduce((sum, variant) => sum + variant.stock, 0) <= 0}
+              disabled={isCoffeeBag || form.status !== "active" || variants.reduce((sum, variant) => sum + variant.stock, 0) <= 0}
               onChange={(event) => change("todays_roast", event.target.checked)}
             />
             <span><strong>오늘의 커피</strong><small>판매 중이며 재고가 있어야 선택 가능</small></span>
@@ -410,8 +429,8 @@ export function AdminProductForm({ product }: { product?: Product }) {
 
       {message && <p role="alert" className="admin-form-error">{message}</p>}
       <div className="admin-form-submit">
-        <button className="admin-primary-button" type="submit" disabled={saving}>
-          {saving ? "저장 중…" : product ? "변경사항 저장" : "상품 등록"}
+        <button className="admin-primary-button" type="submit" disabled={saving || uploadingCount > 0}>
+          {uploadingCount > 0 ? "사진 업로드 중…" : saving ? "저장 중…" : product ? "변경사항 저장" : "상품 등록"}
         </button>
       </div>
     </form>

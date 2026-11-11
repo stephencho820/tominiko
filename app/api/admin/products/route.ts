@@ -24,13 +24,15 @@ function validate(payload: Record<string, unknown>) {
     if (key in payload && (!Number.isInteger(payload[key]) || Number(payload[key]) < 0)) return `${key} must be a positive whole number`;
   }
   if ("product_type" in payload && !productTypes.has(String(payload.product_type))) return "invalid product_type";
-  if ("product_format" in payload && !["beans", "coffee_bag", "bundle"].includes(String(payload.product_format))) return "invalid product_format";
+  if ("product_format" in payload && !["beans", "coffee_bag"].includes(String(payload.product_format))) return "invalid product_format";
   if ("product_format" in payload && !("variants" in payload)) return "product_format requires variants";
   for (const key of ["acidity", "sweetness", "body"]) if (key in payload && (Number(payload[key]) < 1 || Number(payload[key]) > 5)) return `${key} must be between 1 and 5`;
   if ("variants" in payload) {
     try { synchronizeProductPricing(payload); } catch (error) { return error instanceof Error ? error.message : "invalid variants"; }
   }
   if ("sales_channels" in payload && (!Array.isArray(payload.sales_channels) || payload.sales_channels.length < 1 || payload.sales_channels.some((channel) => !["online", "tasting_room"].includes(String(channel))))) return "invalid sales_channels";
+  if ("gallery_images" in payload && (!Array.isArray(payload.gallery_images) || payload.gallery_images.length > 1 || payload.gallery_images.some((url) => typeof url !== "string" || !url.trim()))) return "콘셉트사진은 1장만 등록할 수 있습니다.";
+  if (Array.isArray(payload.gallery_images) && payload.gallery_images[0] && payload.gallery_images[0] === payload.image_url) return "대표사진과 콘셉트사진에 서로 다른 사진을 선택해 주세요.";
   if ("discovery_tags" in payload && (!Array.isArray(payload.discovery_tags) || payload.discovery_tags.some((tag) => typeof tag !== "string" || !discoveryTags.has(tag)))) return "discovery_tags contains an invalid tag";
   return null;
 }
