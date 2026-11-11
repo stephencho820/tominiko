@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import "./product-editorial.css";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ProductPurchase } from "@/components/ProductPurchase";
@@ -62,8 +63,8 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
     <div className="pdp-topline"><Link href="/shop">← BACK TO SHOP</Link><span>CASA DI STEFANO / COFFEE COLLECTION</span></div>
     <section className="product-hero">
       <div className="product-gallery"><div className="pdp-gallery-track">{images.map((image, index) => <img src={image} alt={`${product.name}${index ? ` ${index+1}`:""}`} key={image} />)}</div>{images.length > 1 && <span className="pdp-gallery-hint">SWIPE TO EXPLORE · {String(images.length).padStart(2, "0")} PHOTOS</span>}</div>
-      <div className="product-intro">
-        <p className="section-label pdp-origin-label">SINGLE ORIGIN / {product.origin}{product.region ? ` · ${product.region}`:""}</p>
+      <div className="product-intro"><div className="pdp-intro-inner">
+        <p className="section-label pdp-origin-label">COFFEE COLLECTION / {product.origin}{product.region ? ` · ${product.region}`:""}</p>
         <h1>{product.korean_name || product.name}</h1>
         {product.korean_name && <p className="product-english-name">{product.name}</p>}
         {product.subtitle && <p className="product-subtitle">{product.subtitle}</p>}
@@ -77,9 +78,9 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
         </div>
         {(product.acidity || product.sweetness || product.body) && <div className="taste-profile taste-profile-hero"><Profile label="ACIDITY" value={product.acidity}/><Profile label="SWEETNESS" value={product.sweetness}/><Profile label="BODY" value={product.body}/></div>}
         <ProductPurchase product={product}/>
-      </div>
+      </div></div>
     </section>
-    <div className="pdp-story-heading"><span>DISCOVER THE COFFEE</span><h2>Every cup has a story.</h2><p>From its origin to your daily ritual.</p></div>
+    <div className="pdp-story-heading"><span>FROM OUR ROASTERY</span><h2>Every cup has a story.</h2><p>한 잔의 커피에 담긴 산지의 이야기와 로스터의 선택.</p></div>
     <div className="pdp-sections">
       <section><p className="section-label">THE COFFEE</p><Facts rows={[["Origin",product.origin],["Grade",product.grade],["Process",product.process],["Roasted",roastedDate]]}/></section>{(product.region || product.producer || product.washing_station || product.variety || product.altitude || product.harvest) && <section><p className="section-label">LOT DETAILS</p><Facts rows={[["Region",product.region],["Farm / Producer",product.producer],["Washing station",product.washing_station],["Variety",product.variety],["Altitude",product.altitude],["Harvest",product.harvest]]}/></section>}
       {(product.about || product.why_we_chose_it || product.description) && <section><p className="section-label">OUR NOTE</p><h2>About this coffee</h2><p>{product.about || product.description}</p>{product.why_we_chose_it && <><h3>Why we chose it</h3><p>{product.why_we_chose_it}</p></>}</section>}
