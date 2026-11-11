@@ -5,6 +5,10 @@ import { Header } from "@/components/Header";
 
 export function SiteChrome({ children, footer }: { children: React.ReactNode; footer: React.ReactNode }) {
   const pathname = usePathname();
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    // Admin has a standalone workspace, with no storefront header, footer or site-shell.
+    return <>{children}</>;
+  }
   const kiosk = pathname === "/tasting-room/qr" || pathname.startsWith("/tasting-room/order/");
   if (kiosk) {
     return <div className="min-h-screen bg-[var(--ivory)]">
