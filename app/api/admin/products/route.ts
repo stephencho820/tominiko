@@ -12,7 +12,7 @@ async function payloadFrom(request: Request) {
 }
 
 const productTypes = new Set(["single-origin", "blend", "decaf"]);
-const discoveryTags = new Set(["todays-roast", "nutty-comforting", "bright-fruity", "decaf", "morning-boost", "something-special", "for-gifting", "easy-brewing", "고소하고 편안한", "화사하고 산뜻한", "디카페인", "블렌드", "특별한 날"]);
+const discoveryTags = new Set(["todays-roast", "nutty-comforting", "bright-fruity", "decaf", "morning-boost", "something-special", "for-gifting", "easy-brewing", "커피백", "고소하고 편안한", "화사하고 산뜻한", "디카페인", "블렌드", "특별한 날"]);
 
 function validate(payload: Record<string, unknown>) {
   if ("status" in payload) {
