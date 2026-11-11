@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { notifyAdminsOfNewOrder } from "@/lib/order-notifications";
 import { hashAccessToken } from "@/lib/order-access";
 import { createClient } from "@/lib/supabase/server";
 
@@ -21,11 +22,14 @@ export async function POST(request:Request){
  if(error||!data?.[0])return NextResponse.json({error:error?.message?.includes("stock")||error?.message?.includes("unavailable")?"품절되었거나 주문할 수 없는 메뉴가 있습니다.":"주문을 만들지 못했습니다. 다시 시도해 주세요."},{status:409});
  const o=data[0];if(o.token_matches===false)return NextResponse.json({error:"이미 처리된 주문입니다."},{status:409});
  if(user?.id){const {error:ownerError}=await supabase.from("orders").update({user_id:user.id}).eq("id",o.order_id).eq("guest_access_token_hash",tokenHash).is("user_id",null);if(ownerError)return NextResponse.json({error:"회원 주문 연결에 실패했습니다."},{status:503});}
+ let newlyRegisteredBankOrder = false;
  if(manual){
   const {data:bank}=await supabase.from("manual_transfer_settings").select("id").eq("id",true).maybeSingle();
   if(!bank)return NextResponse.json({error:"계좌이체가 아직 준비되지 않았습니다."},{status:503});
   const {data:marked,error:markError}=await supabase.from("orders").update({payment_method:"BANK_TRANSFER"}).eq("id",o.order_id).eq("guest_access_token_hash",tokenHash).eq("payment_status","pending").is("payment_method",null).select("id");
+  newlyRegisteredBankOrder = !markError && Boolean(marked?.length);
   if(markError||!marked?.length){const {data:existing}=await supabase.from("orders").select("payment_method").eq("id",o.order_id).maybeSingle();if(existing?.payment_method!=="BANK_TRANSFER")return NextResponse.json({error:"계좌이체 주문을 등록하지 못했습니다."},{status:409});}
  }
+ if(newlyRegisteredBankOrder) await notifyAdminsOfNewOrder({ id: String(o.order_id) });
  return NextResponse.json({orderId:o.order_id,orderNumber:o.order_number,amount:o.total,orderName:o.order_name,clientKey:process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY});
 }
