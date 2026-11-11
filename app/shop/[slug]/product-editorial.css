@@ -19,6 +19,8 @@
 .product-detail-new .pdp-intro-inner { width:100%; max-width:510px; margin:0 auto; }
 .product-detail-new .pdp-origin-label { margin:0; color:#85745f; font:600 10px/1.6 var(--casa-ui); letter-spacing:.17em; text-transform:uppercase; }
 .product-detail-new .product-intro h1 { margin:18px 0 0; max-width:100%; font-family:var(--casa-ui); font-size:clamp(31px,3.35vw,52px); font-weight:500; line-height:1.24; letter-spacing:-.055em; word-break:keep-all; overflow-wrap:break-word; text-wrap:pretty; }
+/* Mixed English/Korean product names (e.g. Decaf - 고소) need a calmer, unified heading. */
+.product-detail-new .product-intro h1.pdp-title--mixed { font-family:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",Arial,sans-serif; font-size:clamp(28px,2.8vw,40px); line-height:1.32; font-weight:500; letter-spacing:-.03em; }
 .product-detail-new .product-english-name { margin:10px 0 0; color:#77776d; font:400 clamp(19px,2vw,27px)/1.2 var(--casa-display,Georgia,serif); letter-spacing:0; }
 .product-detail-new .product-subtitle { margin:15px 0 0; color:#6b6a5e; font:400 14px/1.65 var(--casa-ui); }
 .product-detail-new .pdp-tasting { margin:30px 0 0; padding:21px 0 20px; border-top:1px solid var(--pdp-line); border-bottom:1px solid var(--pdp-line); }
@@ -84,6 +86,7 @@
  .product-detail-new .product-intro { padding:32px 21px 55px; }
  .product-detail-new .pdp-intro-inner { max-width:560px; }
  .product-detail-new .product-intro h1 { margin-top:12px; font-size:clamp(30px,7.8vw,42px); line-height:1.3; }
+ .product-detail-new .product-intro h1.pdp-title--mixed { font-size:clamp(28px,7.3vw,35px); line-height:1.32; }
  .product-detail-new .product-english-name { font-size:21px; }
  .product-detail-new .pdp-tasting { margin-top:23px; }
  .product-detail-new .product-tasting-lead { font-size:17px; }
