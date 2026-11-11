@@ -127,6 +127,30 @@ test('Shop/PDP default to available 400g; ProductCard price and size match, incl
   for (const status of ['hidden','draft']) assert.ok(products.productVariants(product({status})).every((v)=>!v.available));
 });
 
+test('coffee bag SHOP card keeps a single pack selector, 10g copy and aligned price region', () => {
+  const bag = product({
+    name: "Today's Choice Coffee Bag", product_format: 'coffee_bag', origin: "Today's Choice", tasting_notes: null,
+    variants: [
+      { id: 'bag-1', size: '1개입', price: 2200, salePrice: 1800, stock: 0, available: false },
+      { id: 'bag-5', size: '5개입', price: 9900, salePrice: 7900, stock: 0, available: false },
+      { id: 'bag-10', size: '10개입', price: 18900, salePrice: 14900, stock: 0, available: false },
+    ],
+  });
+  const mocks = { ...uiMocks, '@/components/CartProvider': { useCart: () => ({ addToCart: () => true }) } };
+  const Catalog = load('components/ShopCatalog.tsx', mocks).ShopCatalog;
+  const html = renderToStaticMarkup(React.createElement(Catalog, { products: [bag] }));
+  assert.match(html, /Choice Coffee Bag/);
+  assert.match(html, /catalog-options--coffee-bag/);
+  assert.match(html, /커피백 1개 · 분쇄 원두 10g/);
+  assert.match(html, /aria-label="커피백 구성"/);
+  assert.doesNotMatch(html, /aria-label="Grind"/);
+  assert.match(html, /2,200/); assert.match(html, /1,800/);
+  assert.match(html, /SOLD OUT/);
+  const css = fs.readFileSync(path.join(root, 'app/globals.css'), 'utf8');
+  assert.match(css, /\.catalog-products--grid \.catalog-card-copy\s*\{[\s\S]*?flex-direction:\s*column/);
+  assert.match(css, /\.catalog-products--grid \.catalog-options\s*\{[\s\S]*?margin-top:\s*auto/);
+});
+
 test('cart refresh drops invisible/sold-out/empty lines, reprices and clamps combined size quantities', () => {
   const old=product(); const items=[line(old,'150g','Whole Bean',2),line(old,'150g','Filter',2)];
   const fresh=product(); fresh.variants[0].salePrice=14000;

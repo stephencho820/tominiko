@@ -9,6 +9,7 @@ on:
       - "services/**"
       - "package.json"
       - "package-lock.json"
+      - "scripts/storefront-integration.test.cjs"
       - ".github/workflows/product-variants-typecheck.yml"
 jobs:
   typecheck:
@@ -21,3 +22,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
+      # The historical full integration suite contains unrelated stale fixtures.
+      # Guard this change with the dedicated SHOP coffee-bag regression.
+      - run: node --test --test-name-pattern="coffee bag SHOP card" scripts/storefront-integration.test.cjs

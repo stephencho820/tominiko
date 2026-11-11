@@ -41,8 +41,9 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
   const [added, setAdded] = useState(false);
   const [imageRevealed, setImageRevealed] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const notes = tastingNotes(product).join(" · ");
-  const hover = productHoverLabel(product);
+  const isCoffeeBag = product.product_format === "coffee_bag";
+  const notes = tastingNotes(product).join(" · ") || (isCoffeeBag ? "커피백 1개 · 분쇄 원두 10g" : "");
+  const hover = isCoffeeBag ? { label: "COFFEE BAG", color: "#8D775E" } : productHoverLabel(product);
   const hoverNotes = tastingNotes(product).filter(Boolean).slice(0, 3).join(" · ");
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
   const chooseSize = (nextSize: string) => {
@@ -74,9 +75,11 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
       {notes && <p className="catalog-notes">{notes}</p>}
       {Boolean(product.review_count) && <Link href={`/shop/${product.slug}#reviews`} className="product-rating product-rating-link" aria-label={`${product.name} 리뷰 ${product.review_count}개 보기`}>★★★★★ <b>{product.review_average?.toFixed(1)}</b> ({product.review_count})</Link>}
       {view === "list" && product.short_description && <p className="catalog-description">{product.short_description}</p>}
-      <div className="catalog-options" aria-label={`${product.name} options`}>
-        <select aria-label="Size" value={size} onChange={(event) => chooseSize(event.target.value)}>{sizes.map((value) => <option key={value} value={value}>{value}</option>)}</select>
-        {product.product_format !== "coffee_bag" && <select aria-label="Grind" value={grind} onChange={(event) => setGrind(event.target.value as Grind)}>{STANDARD_GRINDS.map((value) => <option key={value} value={value}>{value}</option>)}</select>}
+      <div className={`catalog-options${isCoffeeBag ? " catalog-options--coffee-bag" : ""}`} aria-label={`${product.name} options`}>
+        <select aria-label={isCoffeeBag ? "커피백 구성" : "Size"} value={size} onChange={(event) => chooseSize(event.target.value)}>{sizes.map((value) => <option key={value} value={value}>{value}</option>)}</select>
+        {isCoffeeBag
+          ? <span className="catalog-bag-info" aria-label="커피백 이용 안내">분쇄 선택 없이 간편하게</span>
+          : <select aria-label="Grind" value={grind} onChange={(event) => setGrind(event.target.value as Grind)}>{STANDARD_GRINDS.map((value) => <option key={value} value={value}>{value}</option>)}</select>}
       </div>
       <div className="catalog-buy"><strong className="catalog-price">{salePrice < regularPrice && <del>₩{regularPrice.toLocaleString("ko-KR")}</del>}<span>₩{salePrice.toLocaleString("ko-KR")}</span></strong>
         <button type="button" onClick={addProduct} disabled={!variant?.available || variant.stock < 1} aria-live="polite" className={added ? "cart-added" : ""}><ShoppingBag size={15} />{variant?.available && variant.stock > 0 ? added ? "✓ 담았어요" : "장바구니 추가" : "SOLD OUT"}</button>
