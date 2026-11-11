@@ -4,11 +4,11 @@ export const PRODUCT_SIZES = ["150g", "400g"] as const;
 export const COFFEE_BAG_SIZES = ["5개입", "10개입"] as const;
 export const STANDARD_GRINDS = ["Whole Bean", "Filter", "Espresso"] as const;
 export const normalizeProductSize = (value: string) => value.trim().toLowerCase().replace(/\s+/g, "");
-export const isSize = (value: unknown): value is Weight => [...PRODUCT_SIZES, ...COFFEE_BAG_SIZES].includes(value as "150g" & "5개입");
+export const isSize = (value: unknown): value is Weight => typeof value === "string" && [...PRODUCT_SIZES, ...COFFEE_BAG_SIZES].some((size) => size === value);
 export const validVariantId = (value: unknown): value is string => typeof value === "string" && /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(value);
 export function normalizeGrind(value: unknown): Grind | undefined {
   const grind = value === "Pour Over" ? "Filter" : value;
-  return [...STANDARD_GRINDS, "Coffee Bag"].includes(grind as "Whole Bean") ? grind as Grind : undefined;
+  return typeof grind === "string" && (grind === "Coffee Bag" || STANDARD_GRINDS.some((value) => value === grind)) ? grind as Grind : undefined;
 }
 export function validateVariants(value: unknown, format: "beans" | "coffee_bag" = "beans", draft = false): ProductVariant[] {
   const expected = format === "coffee_bag" ? COFFEE_BAG_SIZES : PRODUCT_SIZES;
