@@ -2,12 +2,92 @@ import Link from "next/link";
 import { loadAdminProducts } from "@/services/admin-products";
 import { ProductDeleteButton } from "@/components/ProductDeleteButton";
 import { ProductQuickActions } from "@/components/ProductQuickActions";
-import { StatusBadge } from "@/components/AdminStatusBadge";
-import { stockState } from "@/lib/admin";
+import { inventoryVariants, productImage } from "@/lib/products";
 import { productContentReadiness } from "@/lib/product-content-readiness";
+
+const statusLabel: Record<string, string> = {
+  active: "판매 중", draft: "임시 저장", "sold-out": "품절", hidden: "비공개",
+};
 
 export default async function AdminProducts() {
   const { products, failed } = await loadAdminProducts();
-  if (failed) return <main className="admin-main"><h1>Products</h1><p role="alert">상품 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p></main>;
-  return <main className="admin-main"><div className="admin-page-heading"><div><p className="eyebrow">Coffee & inventory</p><h1>Products</h1><p>Update the details that change from batch to batch.</p></div><Link href="/admin/products/new" className="admin-primary-button">New product</Link></div><div className="admin-product-list">{products.map((product) => { const stock = stockState(product); const content = productContentReadiness(product); return <article className="admin-product-card" key={product.id}><div className="admin-product-image">{product.image_url ? <img src={product.image_url} alt="" /> : <span>{product.name.charAt(0)}</span>}</div><div className="admin-product-copy"><div className="admin-product-title"><div><Link href={`/admin/products/${product.id}`}>{product.name}</Link><p>{product.origin}{product.roasted_date ? ` · Roasted ${product.roasted_date}` : " · Roast date not set"}</p></div><div className="admin-product-badges">{product.todays_roast && <span className="admin-badge admin-badge-feature">Today’s roast</span>}<StatusBadge type="stock" value={stock.label} /><span className={`admin-badge ${content.launchReady ? "admin-badge-content-ready" : "admin-badge-content-missing"}`}>Content {content.score}%</span><span className="admin-badge">{product.status}</span></div></div><div className="admin-product-meta"><span>150g <strong>₩{product.price_150g.toLocaleString()}</strong></span><span>400g <strong>₩{product.price_400g.toLocaleString()}</strong></span></div>{(!content.launchReady || content.recommendedMissing.length > 0) && <p className="admin-product-content-note"><strong>{content.launchReady ? "권장 보강" : "필수 누락"}</strong> {(content.launchReady ? content.recommendedMissing : content.requiredMissing).map((item) => item.label).join(" · ")}</p>}<ProductQuickActions id={product.id} name={product.name} stock={product.stock_quantity} status={product.status} todaysRoast={product.todays_roast} /></div><div className="admin-product-menu"><Link href={`/admin/products/${product.id}`}>Edit details</Link><ProductDeleteButton id={product.id} name={product.name} /></div></article>; })}</div></main>;
+  if (failed) {
+    return (
+      <main className="admin-main">
+        <h1>상품 관리</h1>
+        <p role="alert">상품 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>
+      </main>
+    );
+  }
+
+  return (
+    <main className="admin-main">
+      <div className="admin-page-heading">
+        <div>
+          <p className="eyebrow">PRODUCTS</p>
+          <h1>상품 관리</h1>
+          <p>상품명이나 수정하기를 누르면 가격, 재고, 설명을 변경할 수 있습니다.</p>
+        </div>
+        <Link href="/admin/products/new" className="admin-primary-button">+ 새 상품 등록</Link>
+      </div>
+      <p className="admin-panel-help" style={{ marginBottom: 14 }}>
+        전체 {products.length}개 상품 · 평소에는 수정하기만 사용하세요. 공개 상태나 오늘의 커피 설정은 각 상품의 '추가 관리'에 있습니다.
+      </p>
+      <div className="admin-product-list">
+        {products.map((product) => {
+          const content = productContentReadiness(product);
+          const sizes = inventoryVariants(product);
+          return (
+            <article className="admin-product-card" key={product.id}>
+              <div className="admin-product-image">
+                <img src={productImage(product)} alt="" />
+              </div>
+              <div className="admin-product-copy">
+                <div className="admin-product-title">
+                  <div>
+                    <Link href={"/admin/products/" + product.id}>
+                      {product.korean_name || product.name}
+                    </Link>
+                    <p>{product.name}{product.origin ? " · " + product.origin : ""}</p>
+                  </div>
+                  <div className="admin-product-badges">
+                    <span className="admin-badge">{statusLabel[product.status ?? "active"] ?? "상태 확인"}</span>
+                    {product.todays_roast && <span className="admin-badge admin-badge-feature">오늘의 커피</span>}
+                  </div>
+                </div>
+                <div className="admin-product-meta">
+                  {sizes.map((variant) => (
+                    <span key={variant.size}>
+                      {variant.size} <strong>₩{(variant.salePrice ?? variant.price).toLocaleString("ko-KR")}</strong>
+                      {" · "}재고 {variant.stock}
+                    </span>
+                  ))}
+                </div>
+                {!content.launchReady && (
+                  <p className="admin-product-content-note">
+                    필수 정보: {content.requiredMissing.map((item) => item.label).join(" · ")}
+                  </p>
+                )}
+                <details className="admin-product-advanced">
+                  <summary>추가 관리 · 판매 상태 / 오늘의 커피 / 삭제</summary>
+                  <ProductQuickActions
+                    id={product.id}
+                    name={product.name}
+                    stock={product.stock_quantity}
+                    status={product.status}
+                    todaysRoast={product.todays_roast}
+                  />
+                  <ProductDeleteButton id={product.id} name={product.name} />
+                </details>
+              </div>
+              <div className="admin-product-menu">
+                <Link href={"/admin/products/" + product.id}>수정하기</Link>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+      {!products.length && <div className="admin-orders-empty"><strong>등록된 상품이 없습니다.</strong><span>새 상품 등록을 눌러 첫 원두를 추가하세요.</span></div>}
+    </main>
+  );
 }
