@@ -8,6 +8,7 @@ import { productImage, tastingNotes } from "@/lib/products";
 import { getProduct, getProducts } from "@/services/products";
 import { getProductReviews } from "@/services/reviews";
 import { ProductReviews } from "@/components/ProductReviews";
+import { getAdminClient } from "@/lib/supabase/admin";
 
 function Facts({ rows }: { rows: [string, string | null | undefined][] }) {
   const visible = rows.filter((row): row is [string, string] => Boolean(row[1]));
@@ -36,6 +37,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 export default async function ProductPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ preview?: string }> }) {
   const slug = (await params).slug; const preview = (await searchParams).preview === "1";
+  // Preview must not expose inactive products to a public query parameter.
+  if (preview && !(await getAdminClient())) notFound();
   const [product, all] = await Promise.all([getProduct(slug, { includeInactive: preview }), getProducts({ activeOnly: true })]);
   if (!product) notFound();
   const reviewData = await getProductReviews(product.id);
@@ -77,7 +80,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
           </div>
         </div>
         {(product.acidity || product.sweetness || product.body) && <div className="taste-profile taste-profile-hero"><Profile label="ACIDITY" value={product.acidity}/><Profile label="SWEETNESS" value={product.sweetness}/><Profile label="BODY" value={product.body}/></div>}
-        <ProductPurchase product={product}/>
+        {preview && product.status !== "active" ? <p className="preview-banner">미공개 상품 미리보기 · 구매할 수 없습니다.</p> : <ProductPurchase product={product}/>}
       </div></div>
     </section>
     <div className="pdp-editorial">
