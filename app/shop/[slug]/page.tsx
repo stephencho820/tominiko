@@ -80,12 +80,30 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
         <ProductPurchase product={product}/>
       </div></div>
     </section>
-    <div className="pdp-story-heading"><span>FROM OUR ROASTERY</span><h2>Every cup has a story.</h2><p>한 잔의 커피에 담긴 산지의 이야기와 로스터의 선택.</p></div>
-    <div className="pdp-sections">
-      <section><p className="section-label">THE COFFEE</p><Facts rows={[["Origin",product.origin],["Grade",product.grade],["Process",product.process],["Roasted",roastedDate]]}/></section>{(product.region || product.producer || product.washing_station || product.variety || product.altitude || product.harvest) && <section><p className="section-label">LOT DETAILS</p><Facts rows={[["Region",product.region],["Farm / Producer",product.producer],["Washing station",product.washing_station],["Variety",product.variety],["Altitude",product.altitude],["Harvest",product.harvest]]}/></section>}
-      {(product.about || product.why_we_chose_it || product.description) && <section><p className="section-label">OUR NOTE</p><h2>About this coffee</h2><p>{product.about || product.description}</p>{product.why_we_chose_it && <><h3>Why we chose it</h3><p>{product.why_we_chose_it}</p></>}</section>}
-      {product.roaster_note && <section><p className="section-label">ROASTER&apos;S NOTE</p><p>{product.roaster_note}</p></section>}
-      {(product.use_default_recipe || product.brewing_dose || product.brewing_water || product.brewing_temperature || product.brewing_grind || product.brewing_time) && <section><p className="section-label">BREWING GUIDE</p><Facts rows={[["Coffee",brew.brewing_dose],["Water",brew.brewing_water],["Temperature",brew.brewing_temperature],["Grind",brew.brewing_grind],["Brew time",brew.brewing_time]]}/></section>}
+    <div className="pdp-editorial">
+      {(product.about || product.description || product.why_we_chose_it || product.roaster_note) && <section className="pdp-narrative" aria-labelledby="pdp-story-title">
+        <div className="pdp-editorial-index"><span>01 / THE STORY</span><span>CASA DI STEFANO</span></div>
+        <div className="pdp-narrative-grid">
+          <div className="pdp-narrative-title"><span className="pdp-kicker">OUR COFFEE, OUR POINT OF VIEW</span><h2 id="pdp-story-title">좋은 커피는<br/>매일의 순간에<br/>스며듭니다.</h2></div>
+          <div className="pdp-narrative-copy">
+            {(product.about || product.description) && <p className="pdp-story-lead">{product.about || product.description}</p>}
+            {product.why_we_chose_it && <p>{product.why_we_chose_it}</p>}
+            {product.roaster_note && <div className="pdp-roaster-aside"><span>FROM THE ROASTER</span><p>{product.roaster_note}</p></div>}
+          </div>
+        </div>
+      </section>}
+      <section className="pdp-profile-block" aria-labelledby="pdp-profile-title">
+        <div className="pdp-editorial-index"><span>02 / THE PROFILE</span><span>COFFEE DETAILS</span></div>
+        <div className="pdp-profile-heading"><span className="pdp-kicker">KNOW YOUR COFFEE</span><h2 id="pdp-profile-title">원두의 기본 정보</h2></div>
+        <div className="pdp-profile-grid">
+          {([["원산지",product.origin],["지역",product.region],["가공 방식",product.process],["품종",product.variety],["등급",product.grade],["생산자",product.producer],["워싱 스테이션",product.washing_station],["고도",product.altitude],["수확",product.harvest],["로스팅",roastedDate]] as [string,string | null | undefined][]).filter(([,value])=>Boolean(value)).map(([label,value])=><div className="pdp-profile-item" key={label}><span>{label}</span><strong>{value}</strong></div>)}
+        </div>
+      </section>
+      {(product.use_default_recipe || product.brewing_dose || product.brewing_water || product.brewing_temperature || product.brewing_grind || product.brewing_time) && <section className="pdp-brew-block" aria-labelledby="pdp-brew-title">
+        <div className="pdp-editorial-index"><span>03 / BREWING RITUAL</span><span>OUR RECOMMENDATION</span></div>
+        <div className="pdp-brew-layout"><div><span className="pdp-kicker">A BETTER DAILY RITUAL</span><h2 id="pdp-brew-title">한 잔을 위한<br/>작은 레시피.</h2><p>가장 편안한 균형을 찾기 위한 추천 추출 가이드입니다.</p></div>
+        <div className="pdp-brew-grid">{([["원두",brew.brewing_dose],["물",brew.brewing_water],["온도",brew.brewing_temperature],["분쇄도",brew.brewing_grind],["추출 시간",brew.brewing_time]] as [string,string | null | undefined][]).filter(([,value])=>Boolean(value)).map(([label,value])=><div className="pdp-brew-item" key={label}><span>{label}</span><strong>{value}</strong></div>)}</div></div>
+      </section>}
     </div>
     <ProductReviews productId={product.id} initialReviews={reviewData.reviews} stats={reviewData.stats} allowGuests={reviewData.allowGuests} user={reviewData.user}/>
     {related.length > 0 && <section className="related-products"><p className="section-label">YOU MAY ALSO LIKE</p><div>{related.map((item) => <ProductCard product={item} key={item.id}/>)}</div></section>}
