@@ -1,36 +1,19 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { AccountSignOutButton } from "@/components/AccountSignOutButton";
+import { AdminWorkspaceChrome } from "@/components/AdminWorkspaceChrome";
+import "./admin.css";
+
+export const metadata = {
+  title: "운영 관리 | CASA ADMIN",
+  robots: { index: false, follow: false },
+};
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   if (!(await getAdminClient())) redirect("/login?next=%2Fadmin");
-  return <div className="admin-shell">
-    <header className="admin-header">
-      <Link href="/admin" className="admin-brand">
-        <span>Casa di Stefano</span>
-        <small>ADMIN</small>
-      </Link>
-      <nav aria-label="Admin navigation">
-        <Link href="/admin">대시보드</Link>
-        <Link href="/admin/analytics">고객 행동 분석</Link>
-        <Link href="/admin/orders">주문</Link>
-        <Link href="/admin/customers">고객</Link>
-        <Link href="/admin/members">회원 관리</Link>
-        <Link href="/admin/vip">VIP</Link>
-        <Link href="/admin/subscriptions">정기구독</Link>
-        <Link href="/admin/products">상품</Link>
-        <Link href="/admin/tasting-menu">Tasting Menu</Link>
-        <Link href="/admin/tasting-orders">Tasting Orders</Link>
-        <Link href="/admin/reviews">리뷰</Link>
-        <Link href="/admin/pages">페이지</Link>
-        <Link href="/admin/delivery">배송</Link>
-      </nav>
-      <div className="admin-header-actions">
-        <Link href="/" className="admin-store-link">사이트 보기 ↗</Link>
-        <AccountSignOutButton compact />
-      </div>
-    </header>
-    {children}
-  </div>;
+  return (
+    <AdminWorkspaceChrome signOut={<AccountSignOutButton compact />}>
+      {children}
+    </AdminWorkspaceChrome>
+  );
 }
