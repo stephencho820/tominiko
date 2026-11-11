@@ -39,12 +39,20 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
   const regularPrice = pricing.price;
   const salePrice = pricing.salePrice ?? pricing.price;
   const [added, setAdded] = useState(false);
+  const [imageRevealed, setImageRevealed] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const notes = tastingNotes(product).join(" · ");
   const hover = productHoverLabel(product);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
   const chooseSize = (nextSize: string) => {
     setSize(nextSize);
+  };
+  const handleImageClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (typeof window === "undefined" || window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    if (!imageRevealed) {
+      event.preventDefault();
+      setImageRevealed(true);
+    }
   };
   const addProduct = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -57,7 +65,7 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
     timer.current = setTimeout(() => setAdded(false), 1800);
   };
   return <article className={`catalog-card catalog-card--${view}`}>
-    <Link href={`/shop/${product.slug}`} className="catalog-card-image"><img src={productImage(product)} alt={product.name} /><span className="catalog-image-reveal" style={{ backgroundColor: hover.color }} aria-hidden="true"><span>{hover.label}</span></span></Link>
+    <Link href={`/shop/${product.slug}`} className={`catalog-card-image${imageRevealed ? " catalog-card-image--revealed" : ""}`} onClick={handleImageClick} onBlur={() => setImageRevealed(false)} aria-label={`${product.name} — 터치하여 원산지 보기, 다시 터치하여 상세 보기`}><img src={productImage(product)} alt={product.name} /><span className="catalog-image-reveal" style={{ backgroundColor: hover.color }} aria-hidden="true"><span>{hover.label}</span></span></Link>
     <div className="catalog-card-copy">
       <p className="catalog-origin">{product.origin}{product.region ? ` · ${product.region}` : ""}</p>
       <Link href={`/shop/${product.slug}`}><h2>{product.korean_name || product.name}</h2></Link>

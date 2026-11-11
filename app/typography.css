@@ -106,3 +106,9 @@ body:not(:has(.admin-shell)) .room-intro h1 { overflow-wrap: break-word; }
 @media (prefers-reduced-motion: reduce) {
   .catalog-image-reveal, .catalog-image-reveal > span { transition: none; }
 }
+
+/* Touch: first tap reveals the color panel, second tap follows the product link. */
+@media (hover: none), (pointer: coarse) {
+  .catalog-card-image--revealed .catalog-image-reveal { transform: translateX(0); }
+  .catalog-card-image--revealed .catalog-image-reveal > span { opacity: 1; transform: translateX(0); transition-delay: 110ms; }
+}
