@@ -559,3 +559,33 @@ test('product details omit stale roast dates on customer pages', () => {
   assert.doesNotMatch(source, /roastedDate|ROASTED \{/);
   assert.doesNotMatch(source, /\["로스팅",/);
 });
+
+
+test('coffee-bag draft uses pack quantities and no invented bean pricing', () => {
+  const format = load('lib/product-contract.ts');
+  const admin = load('lib/admin-product-form.ts');
+  const draft = [
+    { id: 'bag-5', size: '5개입', price: 0, salePrice: null, stock: 0, available: false },
+    { id: 'bag-10', size: '10개입', price: 0, salePrice: null, stock: 0, available: false },
+  ];
+  assert.equal(format.isSize('5개입'), true);
+  assert.equal(format.normalizeGrind('Coffee Bag'), 'Coffee Bag');
+  assert.equal(format.validateVariants(draft, 'coffee_bag', true).length, 2);
+  assert.throws(() => format.validateVariants(draft, 'coffee_bag'), /Invalid/);
+  assert.equal(admin.validateProductForm({ name:'또미 블렌딩 커피백', slug:'tomi-blend-coffee-bag',
+    origin:'Brazil / Colombia', product_type:'blend', product_format:'coffee_bag', status:'draft',
+    variants:draft, todays_roast:false }), null);
+  assert.notEqual(admin.validateProductForm({ name:'또미 블렌딩 커피백', slug:'tomi-blend-coffee-bag',
+    origin:'Brazil / Colombia', product_type:'blend', product_format:'coffee_bag', status:'active',
+    variants:draft, todays_roast:false }), null);
+  const live = { ...product(), product_format:'coffee_bag', variants:[
+    { id:'bag-5', size:'5개입', price:12000, salePrice:null, stock:9, available:true },
+    { id:'bag-10', size:'10개입', price:20000, salePrice:null, stock:8, available:true },
+  ], price_150g:0, price_400g:0 };
+  assert.deepEqual(products.productVariants(live).map(v=>v.size), ['5개입','10개입']);
+  assert.equal(products.productPrice(live), 12000);
+  assert.equal(products.productPricing(live, '5개입', live.variants[0]).price, 12000);
+  assert.equal(products.productPricing(live, '5개입').price, 0);
+  assert.equal(cart.sanitizeCart([{product:live,variantId:'bag-5',weight:'5개입',grind:'Coffee Bag',quantity:1,unitPrice:12000}]).length,1);
+  assert.equal(cart.sanitizeCart([{product:live,variantId:'bag-5',weight:'5개입',grind:'Whole Bean',quantity:1,unitPrice:12000}]).length,0);
+});
