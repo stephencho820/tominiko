@@ -78,3 +78,31 @@ body:not(:has(.admin-shell)) .room-intro h1 { overflow-wrap: break-word; }
   body:not(:has(.admin-shell)) .catalog-buy button { max-width: 100%; }
   body:not(:has(.admin-shell)) .catalog-card-copy h2 { font-size: 17px; }
 }
+
+/* Editorial origin reveal — image-only, does not block product navigation. */
+.catalog-card-image { position: relative; isolation: isolate; }
+.catalog-image-reveal {
+  position: absolute; inset: 0 0 0 auto; z-index: 1;
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; padding: 18px;
+  color: #fffaf4; pointer-events: none;
+  transform: translateX(101%);
+  transition: transform 480ms cubic-bezier(.22,1,.36,1);
+}
+.catalog-image-reveal > span {
+  font-family: var(--casa-display, Georgia, serif);
+  font-size: clamp(23px, 3vw, 42px);
+  font-weight: 500; letter-spacing: .08em; line-height: 1.1;
+  text-align: center; overflow-wrap: anywhere;
+  opacity: 0; transform: translateX(16px);
+  transition: opacity 250ms ease, transform 400ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .catalog-card-image:hover .catalog-image-reveal,
+  .catalog-card-image:focus-visible .catalog-image-reveal { transform: translateX(0); }
+  .catalog-card-image:hover .catalog-image-reveal > span,
+  .catalog-card-image:focus-visible .catalog-image-reveal > span { opacity: 1; transform: translateX(0); transition-delay: 110ms; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .catalog-image-reveal, .catalog-image-reveal > span { transition: none; }
+}

@@ -9,6 +9,25 @@ import { isShopTag, SHOP_TAGS, type ShopTag } from "@/lib/shop-tags";
 import type { Product, Grind } from "@/types";
 
 type View = "grid" | "list" | "large";
+function productHoverLabel(product: Product): { label: string; color: string } {
+  const source = [product.name, product.korean_name, product.origin, product.region].filter(Boolean).join(" ").toLowerCase();
+  if (/decaf|디카페인/.test(source)) {
+    return /fruity|프루티|산미/.test(source)
+      ? { label: "DECAF · FRUITY", color: "#A66D70" }
+      : { label: "DECAF · NUTTY", color: "#777052" };
+  }
+  if (/tominiko|또미|blend|블렌드/.test(source)) return { label: "TOMINIKO", color: "#80765A" };
+  if (/ethiopia|에티오피아|예가체프|시다모/.test(source)) return { label: "ETHIOPIA", color: "#AD795C" };
+  if (/kenya|케냐/.test(source)) return { label: "KENYA", color: "#774854" };
+  if (/guatemala|과테말라/.test(source)) return { label: "GUATEMALA", color: "#727A60" };
+  if (/brazil|브라질/.test(source)) return { label: "BRAZIL", color: "#A77951" };
+  if (/colombia|콜롬비아/.test(source)) return { label: "COLOMBIA", color: "#B57762" };
+  if (/costa rica|코스타리카/.test(source)) return { label: "COSTA RICA", color: "#738F80" };
+  if (/panama|파나마/.test(source)) return { label: "PANAMA", color: "#B5A899" };
+  if (/mandheling|만델링|indonesia|인도네시아/.test(source)) return { label: "MANDHELING", color: "#655047" };
+  return { label: product.origin?.toUpperCase() || product.name.toUpperCase(), color: "#807362" };
+}
+
 function CatalogCard({ product, view }: { product: Product; view: View }) {
   const { addToCart } = useCart();
   const variants = useMemo(() => productVariants(product), [product]);
@@ -22,6 +41,7 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
   const [added, setAdded] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const notes = tastingNotes(product).join(" · ");
+  const hover = productHoverLabel(product);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
   const chooseSize = (nextSize: string) => {
     setSize(nextSize);
@@ -37,7 +57,7 @@ function CatalogCard({ product, view }: { product: Product; view: View }) {
     timer.current = setTimeout(() => setAdded(false), 1800);
   };
   return <article className={`catalog-card catalog-card--${view}`}>
-    <Link href={`/shop/${product.slug}`} className="catalog-card-image"><img src={productImage(product)} alt={product.name} /></Link>
+    <Link href={`/shop/${product.slug}`} className="catalog-card-image"><img src={productImage(product)} alt={product.name} /><span className="catalog-image-reveal" style={{ backgroundColor: hover.color }} aria-hidden="true"><span>{hover.label}</span></span></Link>
     <div className="catalog-card-copy">
       <p className="catalog-origin">{product.origin}{product.region ? ` · ${product.region}` : ""}</p>
       <Link href={`/shop/${product.slug}`}><h2>{product.korean_name || product.name}</h2></Link>
