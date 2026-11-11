@@ -24,6 +24,8 @@ jobs:
         run: npm ci
       - name: Check types
         run: npm run typecheck
+      - name: Build application
+        run: npm run build
       - name: Run targeted regression tests
         # The legacy whole-suite fixtures assume discontinued card checkout and need a separate update.
         run: node --test --test-name-pattern="tasting-room guest history|product service distinguishes|inactive product preview|product details omit stale roast dates" scripts/storefront-integration.test.cjs
