@@ -145,3 +145,10 @@ body:not(:has(.admin-shell)) .room-intro h1 { overflow-wrap: break-word; }
   .catalog-card--grid .catalog-image-reveal > span { font-size: clamp(10px, 2.8vw, 15px); letter-spacing: .015em; }
   .catalog-card--list .catalog-image-reveal > span { font-size: 12px; letter-spacing: 0; }
 }
+
+/* Product review navigation: visible and accessible even with zero reviews. */
+.product-review-jump { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; cursor: pointer; font-size: 12px; font-weight: 600; letter-spacing: 0; text-decoration: underline; text-underline-offset: 4px; }
+.product-review-jump:hover, .product-review-jump:focus-visible { color: var(--ink); }
+#reviews { scroll-margin-top: 110px; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
