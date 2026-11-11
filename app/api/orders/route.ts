@@ -122,7 +122,7 @@ export async function POST(request: Request) {
     if(markError||!marked?.length){const {data:existing}=await supabase.from("orders").select("payment_method").eq("id",order.order_id).maybeSingle();if(existing?.payment_method!=="BANK_TRANSFER")return NextResponse.json({error:"계좌이체 주문을 등록하지 못했습니다."},{status:409});}
   }
   if (newlyRegisteredBankOrder) {
-    await notifyAdminsOfNewOrder({ number: String(order.order_number), name: text(body.customerName, 100), amount: Number(order.total), method: fulfillmentType });
+    await notifyAdminsOfNewOrder({ id: String(order.order_id) });
   }
   return NextResponse.json({
     orderId: order.order_id, orderNumber: order.order_number, amount: finalTotal,
