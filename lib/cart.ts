@@ -16,7 +16,7 @@ function isProduct(value: unknown): value is Product {
 
 export function itemPrice(product: Product, weight: Weight) {
   const variant = productVariants(product).find((item) => normalizeProductSize(item.size) === normalizeProductSize(weight));
-  return variant ? variant.salePrice ?? variant.price : weight === "150g" ? product.price_150g : product.price_400g;
+  return variant ? variant.salePrice ?? variant.price : product.product_format === "coffee_bag" ? 0 : weight === "150g" ? product.price_150g : product.price_400g;
 }
 
 export function cartItemRegularPrice(item: Pick<CartItem, "product" | "variantId" | "weight" | "grind" | "unitPrice">) {
@@ -46,7 +46,7 @@ export function sanitizeCart(value: unknown): CartItem[] {
     if (!isProduct(item.product) || typeof item.weight !== "string" || !item.weight || typeof item.grind !== "string" || !item.grind.trim()) return [];
     const weight = normalizeProductSize(item.weight);
     const grind = normalizeGrind(item.grind);
-    if (!isSize(weight) || !grind) return [];
+    if (!isSize(weight) || !grind || (item.product.product_format === "coffee_bag") !== (grind === "Coffee Bag")) return [];
     const legacySnapshot = item.product.variants?.some((v) => v && "grindType" in v) === true;
     const variant = productVariants(item.product).find((value) => value.size === weight && (value.id === item.variantId || legacySnapshot));
     if (!variant) return [];
@@ -96,7 +96,7 @@ export function updateCartOptions(items: CartItem[], index: number, options: Par
   const variant = productVariants(item.product).find((value) => value.id === options.variantId)
     ?? productVariants(item.product).find((value) => value.size === normalizeProductSize(options.weight ?? item.weight));
   const grind = normalizeGrind(options.grind ?? item.grind);
-  if (!variant?.available || !grind) return items;
+  if (!variant?.available || !grind || (item.product.product_format === "coffee_bag") !== (grind === "Coffee Bag")) return items;
   const others = items.filter((_, i) => i !== index);
   const used = others.filter((value) => value.product.id === item.product.id && value.weight === variant.size)
     .reduce((sum, value) => sum + value.quantity, 0);
