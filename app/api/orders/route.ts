@@ -113,6 +113,19 @@ export async function POST(request: Request) {
     }
   }
 
+  // Atomic server-side welcome discount. Never accept a client-selected amount.
+  if (authData.user?.id) {
+    const { data: welcome, error: welcomeError } = await supabase.rpc("apply_welcome_discount", {
+      p_order_id: order.order_id,
+      p_user_id: authData.user.id,
+      p_guest_token_hash: guestTokenHash,
+    });
+    if (welcomeError || !welcome?.[0]) {
+      return NextResponse.json({ error: "신규 회원 할인 혜택을 확인하지 못했습니다. 다시 시도해 주세요." }, { status: 503 });
+    }
+    finalTotal = Number(welcome[0].final_total);
+  }
+
   let newlyRegisteredBankOrder = false;
   if(manual){
     const {data:bank}=await supabase.from("manual_transfer_settings").select("id").eq("id",true).maybeSingle();
