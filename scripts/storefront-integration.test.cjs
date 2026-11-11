@@ -552,3 +552,10 @@ test('inactive product preview requires server-side admin authorization', () => 
   const source = fs.readFileSync(path.join(root, 'app/shop/[slug]/page.tsx'), 'utf8');
   assert.match(source, /if \(preview && !\(await getAdminClient\(\)\)\) notFound\(\)/);
 });
+
+
+test('product details omit stale roast dates on customer pages', () => {
+  const source = fs.readFileSync(path.join(root, 'app/shop/[slug]/page.tsx'), 'utf8');
+  assert.doesNotMatch(source, /roastedDate|ROASTED \{/);
+  assert.doesNotMatch(source, /\["로스팅",/);
+});
