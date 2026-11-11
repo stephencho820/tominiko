@@ -63,7 +63,13 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
       return a.display_order - b.display_order;
     })
     .slice(0, 3);
-  const brew = product.product_format === "coffee_bag" ? { brewing_dose:"커피백 1개", brewing_water:"160–180ml", brewing_temperature:"92–94°C", brewing_grind:"분쇄 불필요", brewing_time:"3–4분" } : product.use_default_recipe ? { brewing_dose:"20g", brewing_water:"300g", brewing_temperature:"92°C", brewing_grind:"Medium", brewing_time:"2:30–3:00" } : product;
+  const brew = product.product_format === "coffee_bag" ? {
+    brewing_dose: product.brewing_dose || "커피백 1개",
+    brewing_water: product.brewing_water || "160–180ml",
+    brewing_temperature: product.brewing_temperature || "92–94°C",
+    brewing_grind: "분쇄 불필요",
+    brewing_time: product.brewing_time || "3–4분",
+  } : product.use_default_recipe ? { brewing_dose:"20g", brewing_water:"300g", brewing_temperature:"92°C", brewing_grind:"Medium", brewing_time:"2:30–3:00" } : product;
   return <main className="product-detail product-detail-new">
     {preview && <div className="preview-banner">ADMIN PREVIEW · <Link href={`/admin/products/${product.id}`}>Back to editor</Link></div>}
     <div className="pdp-topline"><Link href="/shop">← BACK TO SHOP</Link><span>CASA DI STEFANO / COFFEE COLLECTION</span></div>
