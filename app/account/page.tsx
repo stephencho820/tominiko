@@ -3,6 +3,7 @@ import { AccountSignOutButton } from "@/components/AccountSignOutButton";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 import { getMyOrders } from "@/services/orders";
+import { getWelcomeBenefit } from "@/lib/welcome-discount";
 
 export default async function Account() {
   if (!hasSupabaseEnv) {
@@ -26,6 +27,7 @@ export default async function Account() {
   }
 
   const orders = await getMyOrders();
+  const welcomeBenefit = await getWelcomeBenefit(user).catch(() => null);
   const [{ data: loyalty }, { data: pointHistory }, { data: vip }] = await Promise.all([
     supabase.from("loyalty_accounts").select("balance,lifetime_earned").eq("user_id",user.id).maybeSingle(),
     supabase.from("loyalty_transactions").select("id,kind,points,note,created_at").eq("user_id",user.id).order("created_at",{ascending:false}).limit(5),
@@ -33,17 +35,28 @@ export default async function Account() {
   ]);
   const orderIds = orders.map(order => order.id);
   const { data: coffeeLines } = orderIds.length
-    ? await supabase.from("order_items").select("product_name,quantity,order_id").in("order_id", orderIds)
+    ? await supabase.from("order_items").select("product_name,quantity,order_id,weight").in("order_id", orderIds)
     : { data: [] };
   const favoriteCounts = new Map<string, number>();
+  const orderLines = new Map<string, Array<{ product_name: string; weight: string | null; quantity: number }>>();
   for (const line of coffeeLines ?? []) {
     if (!line.product_name) continue;
-    favoriteCounts.set(line.product_name, (favoriteCounts.get(line.product_name) ?? 0) + Number(line.quantity ?? 0));
+    const quantity = Number(line.quantity ?? 0);
+    favoriteCounts.set(line.product_name, (favoriteCounts.get(line.product_name) ?? 0) + quantity);
+    const existing = orderLines.get(line.order_id) ?? [];
+    existing.push({ product_name: line.product_name, weight: line.weight ?? null, quantity });
+    orderLines.set(line.order_id, existing);
   }
   const favoriteCoffee = [...favoriteCounts].sort((a,b) => b[1] - a[1])[0]?.[0];
   const paidOrders = orders.filter(order => order.payment_status === "paid");
   const totalSpent = paidOrders.reduce((sum, order) => sum + Number(order.final_amount ?? order.total ?? 0), 0);
   const displayName = user.user_metadata?.name ?? user.user_metadata?.full_name ?? user.email?.split("@")[0];
+  const recentOrders = orders.slice(0, 3);
+  const statusLabels: Record<string, string> = {
+    new: "주문 접수", confirmed: "주문 확인", roasting: "로스팅 중",
+    preparing: "준비 중", ready_for_pickup: "픽업 준비 완료",
+    shipped: "배송 중", completed: "완료", cancelled: "취소됨",
+  };
 
   return <main className="mx-auto max-w-4xl px-6 py-14 md:px-12 md:py-20">
     <div className="account-heading">
@@ -64,17 +77,50 @@ export default async function Account() {
       <Link href="/account/orders" className="button-secondary px-5 py-4 text-center">주문 내역 · 다시 주문하기 ↗</Link>
       <Link href="/account/subscriptions" className="button-secondary px-5 py-4 text-center">커피 구독 신청·조회 ↗</Link>
     </nav>
+    {welcomeBenefit?.eligible && (
+      <section className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded border border-[var(--line)] bg-[#f8f5ef] p-5" aria-label="신규 회원 첫 주문 혜택">
+        <div>
+          <p className="section-label">WELCOME BENEFIT</p>
+          <h2 className="mt-2 text-lg font-medium">첫 주문 1,000원 할인 혜택이 준비됐어요.</h2>
+          <p className="mt-1 text-sm text-[var(--muted)]">포인트가 아니라 첫 주문 결제 금액에서 자동으로 차감됩니다.</p>
+        </div>
+        <Link href="/shop" className="button-secondary px-4 py-3 text-sm">커피 고르기 ↗</Link>
+      </section>
+    )}
     {vip && <section className="mb-8 rounded border border-[var(--line)] p-6" aria-label="VIP membership"><p className="section-label">CASA PRIVATE MEMBERSHIP</p><h2 className="mt-3 text-2xl">{vip.tier === "private" ? "PRIVATE" : "VIP"} MEMBER</h2><p className="mt-3 text-[var(--muted)]">{vip.benefit_note || "회원님을 위한 개별 혜택은 매장에서 안내해 드립니다."}</p><p className="mt-2 text-xs text-[var(--muted)]">혜택은 자동 결제 할인으로 적용되지 않습니다.</p></section>}
     <section className="member-points-panel" aria-label="멤버 포인트"><div><p className="section-label">CASA REWARDS</p><h2>My Points</h2><p>로그인 회원의 결제 완료 및 픽업·배송 완료 주문에 2%가 적립됩니다.</p></div><div className="member-points-balance"><strong>{Number(loyalty?.balance??0).toLocaleString("ko-KR")} P</strong><span>누적 적립 {Number(loyalty?.lifetime_earned??0).toLocaleString("ko-KR")} P</span></div></section>
     <div className="member-points-history"><h3>포인트 내역</h3>{pointHistory?.length?pointHistory.map(item=><div key={item.id}><span>{item.note}<small>{new Date(item.created_at).toLocaleDateString("ko-KR")}</small></span><strong>{item.points>0?"+":""}{item.points.toLocaleString("ko-KR")} P</strong></div>):<p>아직 적립된 포인트가 없습니다.</p>}<p className="member-points-policy">1P = 1원 상당 · 현재는 적립 및 조회만 제공하며 결제 시 사용 기능은 준비 중입니다. 취소·환불 시 적립이 회수됩니다.</p></div>
-    <div className="mt-16 flex items-center justify-between border-b border-[var(--line)] pb-4">
-      <h2 className="text-3xl"><span className="lang-ko">최근 주문</span><span className="lang-en">Recent orders</span></h2>
-      <Link href="/tasting-room/order/history" className="eyebrow">TASTING ROOM ORDERS ↗</Link><Link href="/account/orders" className="eyebrow"><span className="lang-ko">전체 보기</span><span className="lang-en">View all</span> ↗</Link>
-    </div>
-    {orders.length ? orders.map((order) => <div className="flex justify-between border-b border-[var(--line)] py-5" key={order.id}>
-      <span>{order.order_number}</span>
-      <span className="sans text-xs uppercase">{order.order_status}</span>
-      <span>₩{Number(order.total).toLocaleString()}</span>
-    </div>) : <p className="py-10 text-[var(--muted)]"><span className="lang-ko">아직 주문 내역이 없습니다.</span><span className="lang-en">No orders yet.</span></p>}
+    <section className="mt-16" aria-label="최근 주문">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-4">
+        <h2 className="text-3xl"><span className="lang-ko">최근 주문</span><span className="lang-en">Recent orders</span></h2>
+        <div className="flex flex-wrap items-center gap-4">
+          <Link href="/tasting-room/order/history" className="eyebrow">TASTING ROOM ORDERS ↗</Link>
+          <Link href="/account/orders" className="eyebrow"><span className="lang-ko">전체 보기</span><span className="lang-en">View all</span> ↗</Link>
+        </div>
+      </div>
+      {recentOrders.length ? <div className="divide-y divide-[var(--line)]">
+        {recentOrders.map((order) => {
+          const lines = orderLines.get(order.id) ?? [];
+          const first = lines[0];
+          const title = first ? first.product_name + (lines.length > 1 ? ` 외 ${lines.length - 1}종` : "") : "주문 상품 확인하기";
+          const totalQuantity = lines.reduce((sum, item) => sum + item.quantity, 0);
+          const status = order.payment_status === "pending" ? "입금 대기" : statusLabels[order.order_status] ?? "주문 확인";
+          return <Link href="/account/orders" key={order.id} className="group flex flex-col gap-3 py-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <h3 className="font-medium leading-relaxed">{title}</h3>
+              <p className="mt-1 text-sm text-[var(--muted)]">
+                {new Date(order.created_at).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" })}
+                {first && ` · ${first.weight ? `${first.weight} · ` : ""}총 ${totalQuantity}개`}
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-3 sm:gap-5">
+              <span className="text-xs text-[var(--muted)]">{status}</span>
+              <strong className="font-medium">₩{Number(order.final_amount ?? order.total).toLocaleString("ko-KR")}</strong>
+              <span className="text-sm text-[var(--muted)] group-hover:text-[var(--ink)]" aria-hidden="true">↗</span>
+            </div>
+          </Link>;
+        })}
+      </div> : <p className="py-10 text-[var(--muted)]"><span className="lang-ko">아직 주문 내역이 없습니다.</span><span className="lang-en">No orders yet.</span></p>}
+    </section>
   </main>;
 }
