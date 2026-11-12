@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AccountSignOutButton } from "@/components/AccountSignOutButton";
-import { MEMBERSHIP_TIERS, membershipDisplay, normalizeMembershipTier, hasMemberFreeShipping } from "@/lib/membership";
+import { MEMBERSHIP_TIERS, hasMemberFreeShipping } from "@/lib/membership";
+import { getMemberStatus } from "@/lib/member-status";
 import { getWelcomeBenefit } from "@/lib/welcome-discount";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
@@ -22,10 +23,10 @@ export default async function Account() {
     </main>;
   }
 
-  const [allOrders, { data: loyalty }, { data: membership }, welcomeBenefit] = await Promise.all([
+  const [allOrders, { data: loyalty }, memberStatus, welcomeBenefit] = await Promise.all([
     getMyOrders(),
     supabase.from("loyalty_accounts").select("balance").eq("user_id", user.id).maybeSingle(),
-    supabase.from("vip_customers").select("tier").eq("user_id", user.id).maybeSingle(),
+    getMemberStatus(user.id),
     getWelcomeBenefit(user).catch(() => null),
   ]);
   const orders = allOrders.filter((order) => order.order_source !== "tasting_room");
@@ -43,10 +44,10 @@ export default async function Account() {
   }
 
   const displayName = user.user_metadata?.name ?? user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "회원";
-  const tier = normalizeMembershipTier(membership?.tier);
-  const current = membershipDisplay(tier);
+  const tier = memberStatus.tier;
+  const current = memberStatus;
   const hasFreeShipping = hasMemberFreeShipping(tier);
-  const activeBenefit = hasFreeShipping ? "주문금액 관계없이 무료배송" : "구매 시 포인트 2% 적립";
+  const activeBenefit = hasFreeShipping ? "전 주문 무료배송" : "포인트 2% 적립";
   const statusLabels: Record<string, string> = {
     new: "주문 접수", confirmed: "주문 확인", roasting: "로스팅 중",
     preparing: "준비 중", ready_for_pickup: "픽업 준비", shipped: "배송 중",
@@ -72,6 +73,19 @@ export default async function Account() {
         <h2>{current.name}</h2>
         <p>{activeBenefit}</p>
       </div>
+      {memberStatus.nextTier && <div className="mycasa-tier-progress" aria-label="다음 멤버십 등급까지 구매 실적">
+        <div className="mycasa-progress-label">
+          <strong>{memberStatus.zeroBlackEligibleForReview ? "ZERO BLACK · 승인 검토 대상" : `NEXT · ${MEMBERSHIP_TIERS.find((t) => t.id === memberStatus.nextTier)?.shortName}`}</strong>
+          <span>{memberStatus.zeroBlackEligibleForReview ? "운영자 승인 후 승급" : `₩${memberStatus.remaining.toLocaleString("ko-KR")} 남음`}</span>
+        </div>
+        <div className="mycasa-progress-track" role="progressbar" aria-label="다음 등급 진행률" aria-valuemin={0} aria-valuemax={100} aria-valuenow={memberStatus.progress}>
+          <div style={{ width: `${memberStatus.progress}%` }} />
+        </div>
+        <p>최근 12개월 구매 ₩{memberStatus.spent12Months.toLocaleString("ko-KR")}{memberStatus.nextThreshold ? ` / ₩${memberStatus.nextThreshold.toLocaleString("ko-KR")}` : ""}</p>
+      </div>}
+      {memberStatus.monthlyGift && <p className="mycasa-gift-note">
+        이번 달 커피백 {memberStatus.monthlyGift.quantity}개 · {memberStatus.monthlyGift.status === "packed" ? "동봉 준비 완료" : "동봉 예정"}
+      </p>}
       <ol className="mycasa-tier-track" aria-label="멤버십 등급 단계">
         {MEMBERSHIP_TIERS.map((item) =>
           <li className={item.id === tier ? "is-current" : ""} key={item.id} aria-current={item.id === tier ? "step" : undefined}>

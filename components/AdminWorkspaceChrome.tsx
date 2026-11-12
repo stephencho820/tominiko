@@ -24,6 +24,7 @@ const secondary = [
   { href: "/admin/customers", label: "구매 고객", icon: Users },
   { href: "/admin/members", label: "회원 관리", icon: UserRound },
   { href: "/admin/vip", label: "등급 관리", icon: Crown },
+  { href: "/admin/membership-gifts", label: "커피백 증정", icon: Coffee },
   { href: "/admin/subscriptions", label: "정기구독", icon: Repeat2 },
   { href: "/admin/reviews", label: "리뷰 관리", icon: MessageSquareText },
   { href: "/admin/pages", label: "홈페이지 콘텐츠", icon: Home },
