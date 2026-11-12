@@ -17,10 +17,13 @@ export const BUSINESS_INFO = {
   roaster: "Zero Degrees",
   address: "경기 수원시 장안구 연무동 238-38",
   contactUrl: "https://open.kakao.com/o/sDj2GOzi",
+  administratorName: "정주혜",
+  kakaoId: "tominiko",
+  contactPhone: "010-4861-3883", // 관리자용. 일반 쇼핑몰에는 전화번호를 노출하지 않습니다.
   representative: "",
   businessRegistrationNumber: "",
   mailOrderRegistrationNumber: "",
-  email: "",
+  email: "tominiko.bean@gmail.com",
 } as const;
 
 export const POLICY_EFFECTIVE_DATE = "2026-10-08";

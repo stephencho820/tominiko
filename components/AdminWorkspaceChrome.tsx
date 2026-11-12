@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { BUSINESS_INFO } from "@/lib/site";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import {
@@ -134,7 +135,7 @@ export function AdminWorkspaceChrome({
           )}
         </nav>
         <div className="admin-sidebar-bottom">
-          <span className="admin-sidebar-bottom-label">CASA DI STEFANO</span>
+          <span className="admin-sidebar-bottom-label">운영 담당 · {BUSINESS_INFO.administratorName}</span>
           <Link href="/" target="_blank" rel="noopener noreferrer">
             쇼핑몰 확인 <ArrowUpRight size={15} aria-hidden="true" />
           </Link>
