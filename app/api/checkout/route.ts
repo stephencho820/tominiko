@@ -4,6 +4,7 @@ import { DEFAULT_DELIVERY_SETTINGS, settingsFromRow } from "@/lib/shipping";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { getWelcomeBenefit } from "@/lib/welcome-discount";
 import { hasMemberFreeShipping } from "@/lib/membership";
+import { getMemberStatus } from "@/lib/member-status";
 
 export async function GET() {
   if (!hasSupabaseEnv) return NextResponse.json({ settings: DEFAULT_DELIVERY_SETTINGS, zones: [], user: null, addresses: [], welcomeDiscount: 0, welcomePromotionActive: false });
@@ -16,13 +17,13 @@ export async function GET() {
   if (settingsError || zonesError || !settings) return NextResponse.json({ error: "Could not load delivery settings" }, { status: 503 });
   let profile = null; let addresses: unknown[] = []; let isVip = false;
   if (auth.user) {
-    const [{ data: profileData }, { data: addressData }, { data: vipData }] = await Promise.all([
+    const [{ data: profileData }, { data: addressData }, memberData] = await Promise.all([
       supabase.from("profiles").select("name,email,phone").eq("id", auth.user.id).maybeSingle(),
       supabase.from("user_addresses").select("*").order("is_default", { ascending: false }).order("created_at"),
-      supabase.from("vip_customers").select("tier").eq("user_id", auth.user.id).maybeSingle(),
+      getMemberStatus(auth.user.id),
     ]);
     profile = profileData;
-    isVip = hasMemberFreeShipping(vipData?.tier);
+    isVip = hasMemberFreeShipping(memberData.tier);
     addresses = addressData ?? [];
   }
   let benefit;
