@@ -37,10 +37,10 @@ export async function getMemberStatus(userId: string): Promise<MemberStatus> {
       .select("product_subtotal,subtotal,discount_amount")
       .eq("user_id", userId).eq("payment_status", "paid")
       .neq("order_status", "cancelled").gte("created_at", start.toISOString()),
-    db.from("membership_coffee_bag_gifts").select("quantity,status,created_at")
+    db.from("membership_coffee_bag_gifts").select("quantity,status")
       .eq("user_id", userId).eq("gift_kind", "monthly")
-      .gte("created_at", new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth()-1, 1)).toISOString())
-      .order("created_at", { ascending: false }).limit(2),
+      .eq("gift_month", new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit" }).format(new Date()) + "-01")
+      .limit(1),
   ]);
   if (manualResult.error || awardResult.error || ordersResult.error || giftsResult.error)
     throw new Error("멤버십 정보를 확인하지 못했습니다.");
@@ -66,11 +66,7 @@ export async function getMemberStatus(userId: string): Promise<MemberStatus> {
     : 100;
   const remaining = nextThreshold ? Math.max(0, nextThreshold-spent) : 0;
 
-  const todayMonth = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit" }).format(new Date());
-  const gift = (giftsResult.data ?? []).find(g => {
-    const giftMonth = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit" }).format(new Date(g.created_at));
-    return giftMonth === todayMonth;
-  });
+  const gift = giftsResult.data?.[0];
   return {
     tier, name: membershipDisplay(tier).name, spent12Months: spent,
     nextTier, nextThreshold, remaining, progress,
