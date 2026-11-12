@@ -1,46 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingBag } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import type { Product } from "@/types";
-import { productImage, productPricing, productVariants } from "@/lib/products";
-import { useCart } from "./CartProvider";
+import { productImage, productPrice, productVariants } from "@/lib/products";
 
 const won = new Intl.NumberFormat("ko-KR");
 
-function CoffeeCard({ product, size, duplicate = false }: { product: Product; size: string; duplicate?: boolean }) {
+function CoffeeCard({ product, duplicate = false }: { product: Product; duplicate?: boolean }) {
   const image = productImage(product);
-  const sizeVariants = productVariants(product).filter((item) => item.size === size);
-  const variant = sizeVariants[0];
-  const pricing = productPricing(product, size, variant);
-  const regularPrice = pricing.price;
-  const salePrice = pricing.salePrice ?? pricing.price;
-  const { addToCart } = useCart();
-  const [added, setAdded] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
-  function addProduct(event: React.MouseEvent<HTMLButtonElement>) {
-    event.preventDefault();
-    event.stopPropagation();
-    if (!variant) return;
-    const didAdd = addToCart({ product, variantId: variant.id, weight: variant.size, grind: "Whole Bean", quantity: 1, unitPrice: variant.salePrice ?? variant.price });
-    if (!didAdd) return;
-    setAdded(true);
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => setAdded(false), 1800);
-  }
+  const price = productPrice(product);
+  const name = product.korean_name || product.name;
   return <article className="marquee-coffee-card">
-    <Link href={`/shop/${product.slug}`} className="marquee-coffee-link" draggable={false} tabIndex={duplicate ? -1 : undefined}>
+    <Link href={`/shop/${product.slug}`} className="marquee-coffee-link" draggable={false}
+      aria-label={`${name} 상품 자세히 보기`} tabIndex={duplicate ? -1 : undefined}>
       <div className="marquee-coffee-image">
-      <img src={image} alt={product.image_url || product.primary_image_url || product.thumbnail_url ? product.name : "Casa di Stefano coffee"} draggable={false} />
+        <img src={image} alt={product.image_url || product.primary_image_url || product.thumbnail_url ? product.name : "Casa di Stefano coffee"} draggable={false} />
       </div>
       <div className="marquee-coffee-copy">
-        <p>{product.origin}</p><h3>{product.korean_name || product.name} · {size}</h3>
-        <div><span>{product.tasting_notes || product.process || "Small batch roast"}</span><strong className="product-price-pair">{salePrice < regularPrice && <del>₩{won.format(regularPrice)}</del>}<ins>₩{won.format(salePrice)}</ins></strong></div>
+        <p>{product.origin}</p>
+        <h3>{name}</h3>
+        <div className="marquee-coffee-meta">
+          <span>{product.tasting_notes || product.process || "Small batch roast"}</span>
+          {price > 0 && <strong className="marquee-coffee-start-price">₩{won.format(price)}<small>부터</small></strong>}
+        </div>
       </div>
+      <span className="marquee-coffee-learn">LEARN MORE <span aria-hidden="true">↗</span></span>
     </Link>
-    <button className="marquee-add" type="button" onPointerDown={(event) => event.stopPropagation()} onClick={addProduct} disabled={!variant?.available} tabIndex={duplicate ? -1 : undefined} aria-live="polite"><ShoppingBag size={13} />{variant?.available ? added ? "ADDED" : "ADD TO CART" : "SOLD OUT"}</button>
   </article>;
 }
 
@@ -107,21 +93,21 @@ export function CoffeeMarquee({ products }: { products: Product[] }) {
     };
   }, [products.length]);
 
-  if (!products.length) return <section id="coffee-list" className="coffee-marquee coffee-marquee-empty"><p className="section-label">COFFEE LIST</p><Link href="/shop">모든 원두 보기 →</Link></section>;
-  const products150g = products
-    .filter((product) => productVariants(product).some((variant) => variant.size === "150g"))
-    .map((product) => ({ product, size: "150g" }));
-  const segmentProducts = Array.from({ length: Math.max(1, Math.ceil(6 / products150g.length)) }, () => products150g).flat();
+  const featuredProducts = products.filter((product) => productVariants(product).some((variant) => variant.size === "150g"));
+  if (!featuredProducts.length) return <section id="coffee-list" className="coffee-marquee coffee-marquee-empty"><p className="section-label">COFFEE LIST</p><Link href="/shop">모든 원두 보기 →</Link></section>;
+  const segmentProducts = Array.from({ length: Math.max(1, Math.ceil(6 / featuredProducts.length)) }, () => featuredProducts).flat();
   return <section id="coffee-list" className="coffee-marquee" aria-labelledby="coffee-list-title">
-    <header><p className="section-label" id="coffee-list-title">COFFEE LIST · 150G</p><Link href="/shop"><span className="lang-ko">모든 원두 보기</span><span className="lang-en">View all beans</span> →</Link></header>
+    <header><p className="section-label" id="coffee-list-title">COFFEE LIST</p><Link href="/shop"><span className="lang-ko">모든 원두 보기</span><span className="lang-en">View all beans</span> →</Link></header>
     <div className="coffee-marquee-viewport" ref={rail}
       onWheel={() => { pauseUntil.current = performance.now() + 1500; }}
-      onPointerDown={(event) => { dragging.current = true; draggedDistance.current = 0; lastX.current = event.clientX; pauseUntil.current = Number.POSITIVE_INFINITY; event.currentTarget.setPointerCapture(event.pointerId); }}
-      onPointerMove={(event) => { if (!dragging.current || !rail.current) return; const delta = event.clientX - lastX.current; rail.current.scrollLeft -= delta; draggedDistance.current += Math.abs(delta); lastX.current = event.clientX; }}
+      onPointerDown={(event) => { dragging.current = true; draggedDistance.current = 0; lastX.current = event.clientX; pauseUntil.current = Number.POSITIVE_INFINITY; }}
+      onPointerMove={(event) => { if (!dragging.current || !rail.current) return; const delta = event.clientX - lastX.current; rail.current.scrollLeft -= delta; draggedDistance.current += Math.abs(delta); lastX.current = event.clientX;
+        // Capture only after an actual drag; ordinary taps must reach the product link.
+        if (draggedDistance.current > 8 && !event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.setPointerCapture(event.pointerId); }}
       onPointerUp={() => { dragging.current = false; pauseUntil.current = performance.now() + 1500; }}
       onPointerCancel={() => { dragging.current = false; pauseUntil.current = performance.now() + 1500; }}
       onClickCapture={(event) => { if (draggedDistance.current > 8) { event.preventDefault(); event.stopPropagation(); } }}>
-      <div className="coffee-marquee-track">{[0, 1].map((groupIndex) => <div className="coffee-marquee-group" ref={groupIndex === 0 ? firstGroup : undefined} aria-hidden={groupIndex !== 0} key={groupIndex}>{segmentProducts.map(({ product, size }, index) => <CoffeeCard key={`${product.id}-${size}-${groupIndex}-${index}`} product={product} size={size} duplicate={groupIndex !== 0} />)}</div>)}</div>
+      <div className="coffee-marquee-track">{[0, 1].map((groupIndex) => <div className="coffee-marquee-group" ref={groupIndex === 0 ? firstGroup : undefined} aria-hidden={groupIndex !== 0} key={groupIndex}>{segmentProducts.map((product, index) => <CoffeeCard key={`${product.id}-${groupIndex}-${index}`} product={product} duplicate={groupIndex !== 0} />)}</div>)}</div>
     </div>
   </section>;
 }
