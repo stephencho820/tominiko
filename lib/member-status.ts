@@ -30,6 +30,10 @@ export async function getMemberStatus(userId: string): Promise<MemberStatus> {
   const db = createServiceClient();
   const start = new Date();
   start.setUTCFullYear(start.getUTCFullYear() - 1);
+  const monthParts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit" }).formatToParts(new Date());
+  const month = monthParts.find(p => p.type === "month")?.value ?? "01";
+  const year = monthParts.find(p => p.type === "year")?.value ?? "2026";
+  const monthKey = `${year}-${month}-01`;
   const [manualResult, awardResult, ordersResult, giftsResult] = await Promise.all([
     db.from("vip_customers").select("tier").eq("user_id", userId).maybeSingle(),
     db.from("membership_auto_awards").select("tier,protected_until").eq("user_id", userId).maybeSingle(),
@@ -39,7 +43,7 @@ export async function getMemberStatus(userId: string): Promise<MemberStatus> {
       .neq("order_status", "cancelled").gte("created_at", start.toISOString()),
     db.from("membership_coffee_bag_gifts").select("quantity,status")
       .eq("user_id", userId).eq("gift_kind", "monthly")
-      .eq("gift_month", new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit" }).format(new Date()) + "-01")
+      .eq("gift_month", monthKey)
       .limit(1),
   ]);
   if (manualResult.error || awardResult.error || ordersResult.error || giftsResult.error)
