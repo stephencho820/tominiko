@@ -1,0 +1,228 @@
+/* Compact, product-first MY CASA dashboard. All rules are scoped to this page. */
+.mycasa-page {
+  width: min(1040px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: clamp(24px, 4vw, 44px) 0 54px;
+  color: var(--ink);
+}
+.mycasa-page a { text-decoration: none; }
+.mycasa-eyebrow {
+  margin: 0 0 8px;
+  font: 700 10px/1.35 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: .16em;
+  color: var(--muted);
+}
+.mycasa-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+.mycasa-identity { min-width: 0; }
+.mycasa-identity h1 {
+  margin: 0;
+  font-size: clamp(23px, 3vw, 31px);
+  font-weight: 450;
+  line-height: 1.3;
+  letter-spacing: -.045em;
+}
+.mycasa-email {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font: 400 12px/1.4 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  overflow-wrap: anywhere;
+}
+.mycasa-page .account-signout-compact button {
+  border: 0;
+  padding: 0 0 0 12px;
+  min-height: 36px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.mycasa-membership {
+  --tier-light: #f7f2e7;
+  --tier-muted: #d6c5ad;
+  --tier-line: rgba(255,255,255,.24);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 220px;
+  padding: 26px 32px 24px;
+  background: #342d26;
+  color: var(--tier-light);
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 24px;
+}
+.mycasa-membership--general { background: #e8e1d6; --tier-light: #3b352e; --tier-muted: #776c5e; --tier-line: rgba(55,45,33,.2); }
+.mycasa-membership--bronze { background: linear-gradient(125deg, #30281f, #75533a); }
+.mycasa-membership--silver { background: linear-gradient(125deg, #252e34, #586671); }
+.mycasa-membership--gold { background: linear-gradient(118deg, #2e261c 4%, #685235 74%, #4b3824 100%); }
+.mycasa-membership--zero_black { background: linear-gradient(120deg, #0e1113 5%, #28292a 80%); }
+.mycasa-membership::after {
+  content: "";
+  position: absolute;
+  right: -60px;
+  top: -170px;
+  width: 410px;
+  height: 410px;
+  border: 1px solid var(--tier-line);
+  border-radius: 50%;
+  opacity: .6;
+  pointer-events: none;
+  z-index: -1;
+}
+.mycasa-membership-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--tier-muted);
+  font: 600 10px/1.4 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: .13em;
+}
+.mycasa-membership h2 {
+  margin: 15px 0 4px;
+  font: 500 clamp(29px, 5.5vw, 53px)/1.12 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: -.04em;
+}
+.mycasa-membership-copy > p {
+  margin: 0;
+  color: var(--tier-muted);
+  font-size: 14px;
+  letter-spacing: -.02em;
+}
+.mycasa-tier-track {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0,1fr));
+  gap: 10px;
+}
+.mycasa-tier-track li {
+  min-width: 0;
+  padding-top: 8px;
+  display: grid;
+  gap: 7px;
+  border-top: 1px solid var(--tier-line);
+  color: var(--tier-muted);
+  font: 650 10px/1.3 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: .05em;
+  white-space: nowrap;
+}
+.mycasa-tier-track .mycasa-tier-mark { width: 5px; height: 5px; background: currentColor; border-radius: 50%; opacity: .6; }
+.mycasa-tier-track li.is-current { border-top: 2px solid var(--tier-light); color: var(--tier-light); padding-top: 7px; }
+.mycasa-tier-track li.is-current .mycasa-tier-mark { width: 7px; height: 7px; opacity: 1; }
+.mycasa-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  border: 1px solid var(--line);
+  border-top: 0;
+}
+.mycasa-summary-item {
+  min-width: 0;
+  padding: 16px 24px 15px;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+}
+.mycasa-summary-item + .mycasa-summary-item { border-left: 1px solid var(--line); }
+.mycasa-summary-item > span {
+  color: var(--muted);
+  font: 700 10px/1.3 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: .11em;
+}
+.mycasa-summary-item > strong {
+  font: 550 25px/1.2 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: -.035em;
+}
+.mycasa-summary-item > strong small { font-size: 13px; }
+.mycasa-summary-item > p { margin: 0; font-size: 11px; color: var(--muted); }
+.mycasa-summary-link:hover { background: #f9f5ed; }
+.mycasa-summary-link:focus-visible, .mycasa-order-row:focus-visible, .mycasa-actions a:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.mycasa-section-heading {
+  margin-top: 28px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 12px;
+}
+.mycasa-section-heading h2 { margin: 0; font-size: 19px; font-weight: 550; letter-spacing: -.025em; }
+.mycasa-section-heading a { font-size: 12px; color: var(--muted); }
+.mycasa-order-row {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto auto 12px;
+  align-items: center;
+  gap: 22px;
+  min-height: 66px;
+  padding: 11px 5px;
+  border-bottom: 1px solid var(--line);
+}
+.mycasa-order-row:hover { background: #faf8f3; }
+.mycasa-order-main { display: grid; gap: 3px; min-width: 0; }
+.mycasa-order-main strong {
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 550;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mycasa-order-main span, .mycasa-order-status {
+  font: 400 11px/1.5 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  color: var(--muted);
+}
+.mycasa-order-status { white-space: nowrap; }
+.mycasa-order-price { font: 600 15px/1.4 "Avenir Next", "Helvetica Neue", Arial, sans-serif; white-space: nowrap; }
+.mycasa-order-chevron { color: var(--muted); font-size: 13px; }
+.mycasa-no-orders { margin: 0; padding: 22px 4px; font-size: 13px; color: var(--muted); }
+.mycasa-no-orders a { margin-left: 8px; text-decoration: underline; color: var(--ink); }
+.mycasa-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 10px;
+  margin-top: 20px;
+}
+.mycasa-actions a {
+  border: 1px solid var(--line);
+  min-height: 42px;
+  display: grid;
+  place-items: center;
+  padding: 8px 10px;
+  font: 500 12px/1.35 "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  text-align: center;
+}
+.mycasa-actions a:hover { border-color: var(--ink); }
+.mycasa-empty { min-height: 46vh; display: grid; align-content: center; justify-items: start; gap: 14px; }
+.mycasa-empty h1 { font-size: 36px; font-weight: 500; margin: 0; }
+.mycasa-empty p { margin: 0; color: var(--muted); }
+.mycasa-action-primary { padding: 12px 22px; background: var(--ink); color: #fff; margin-top: 8px; }
+@media (max-width: 700px) {
+  .mycasa-page { width: calc(100% - 32px); padding: 22px 0 44px; }
+  .mycasa-header { margin-bottom: 18px; }
+  .mycasa-identity h1 { font-size: 24px; }
+  .mycasa-membership { min-height: 206px; padding: 22px 19px 20px; gap: 23px; }
+  .mycasa-membership::after { width: 300px; height: 300px; top: -120px; right: -130px; }
+  .mycasa-membership-top { font-size: 8px; letter-spacing: .08em; }
+  .mycasa-membership h2 { font-size: clamp(27px, 7vw, 39px); margin-top: 16px; }
+  .mycasa-membership-copy > p { font-size: 12px; }
+  .mycasa-tier-track { gap: 5px; }
+  .mycasa-tier-track li { font-size: clamp(7px, 2.05vw, 10px); letter-spacing: -.01em; }
+  .mycasa-summary-item { padding: 14px 12px; gap: 5px; }
+  .mycasa-summary-item > strong { font-size: 20px; }
+  .mycasa-summary-item > span { font-size: 8px; }
+  .mycasa-summary-item > p { font-size: 10px; line-height: 1.3; }
+  .mycasa-section-heading { margin-top: 23px; }
+  .mycasa-order-row { gap: 7px 10px; grid-template-columns: minmax(0,1fr) auto; min-height: 60px; }
+  .mycasa-order-status { grid-column: 1; grid-row: 2; font-size: 10px; }
+  .mycasa-order-price { font-size: 13px; grid-column: 2; grid-row: 1 / 3; }
+  .mycasa-order-chevron { display: none; }
+  .mycasa-actions { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+  .mycasa-actions a { min-height: 40px; font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) { .mycasa-page * { scroll-behavior: auto; } }

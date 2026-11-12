@@ -1,126 +1,135 @@
 import Link from "next/link";
 import { AccountSignOutButton } from "@/components/AccountSignOutButton";
+import { MEMBERSHIP_TIERS, membershipDisplay, normalizeMembershipTier, hasMemberFreeShipping } from "@/lib/membership";
+import { getWelcomeBenefit } from "@/lib/welcome-discount";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 import { getMyOrders } from "@/services/orders";
-import { getWelcomeBenefit } from "@/lib/welcome-discount";
+import "./account.css";
 
 export default async function Account() {
   if (!hasSupabaseEnv) {
-    return <main className="mx-auto max-w-xl px-6 py-24 text-center">
-      <p className="section-label">Casa di Stefano</p>
-      <h1 className="mt-5 text-5xl"><span className="lang-ko">계정 준비 중</span><span className="lang-en">Account unavailable</span></h1>
-      <p className="mt-5 text-[var(--muted)]"><span className="lang-ko">로그인을 사용하려면 Supabase 환경 변수를 먼저 설정해 주세요.</span><span className="lang-en">Add the Supabase environment variables to enable sign in.</span></p>
-      <Link href="/shop" className="button-secondary eyebrow mt-8 inline-block px-5 py-3"><span className="lang-ko">커피 보러가기 ↗</span><span className="lang-en">Browse coffee ↗</span></Link>
-    </main>;
+    return <main className="mycasa-page mycasa-empty"><h1>내 계정</h1><p>회원 서비스를 준비하고 있습니다.</p><Link href="/shop">커피 보러가기 ↗</Link></main>;
   }
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-
   if (!user) {
-    return <main className="mx-auto max-w-xl px-6 py-24 text-center">
-      <p className="section-label">Casa di Stefano</p>
-      <h1 className="mt-5 text-5xl"><span className="lang-ko">나의 계정</span><span className="lang-en">Your account</span></h1>
-      <Link href="/login" className="button-primary eyebrow mt-8 inline-block px-5 py-4"><span className="lang-ko">로그인하기 ↗</span><span className="lang-en">Continue with login ↗</span></Link>
+    return <main className="mycasa-page mycasa-empty">
+      <p className="mycasa-eyebrow">MY CASA</p>
+      <h1>내 계정</h1>
+      <Link href="/login?next=%2Faccount" className="mycasa-action-primary">로그인하기 ↗</Link>
     </main>;
   }
 
-  const orders = await getMyOrders();
-  const welcomeBenefit = await getWelcomeBenefit(user).catch(() => null);
-  const [{ data: loyalty }, { data: pointHistory }, { data: vip }] = await Promise.all([
-    supabase.from("loyalty_accounts").select("balance,lifetime_earned").eq("user_id",user.id).maybeSingle(),
-    supabase.from("loyalty_transactions").select("id,kind,points,note,created_at").eq("user_id",user.id).order("created_at",{ascending:false}).limit(5),
-    supabase.from("vip_customers").select("tier,benefit_note").eq("user_id",user.id).maybeSingle(),
+  const [allOrders, { data: loyalty }, { data: membership }, welcomeBenefit] = await Promise.all([
+    getMyOrders(),
+    supabase.from("loyalty_accounts").select("balance").eq("user_id", user.id).maybeSingle(),
+    supabase.from("vip_customers").select("tier").eq("user_id", user.id).maybeSingle(),
+    getWelcomeBenefit(user).catch(() => null),
   ]);
-  const orderIds = orders.map(order => order.id);
-  const { data: coffeeLines } = orderIds.length
-    ? await supabase.from("order_items").select("product_name,quantity,order_id,weight").in("order_id", orderIds)
+  const orders = allOrders.filter((order) => order.order_source !== "tasting_room");
+  const recentOrders = orders.slice(0, 2);
+  const orderIds = recentOrders.map((order) => order.id);
+  const { data: purchasedLines } = orderIds.length
+    ? await supabase.from("order_items").select("order_id,product_name,weight,quantity").in("order_id", orderIds)
     : { data: [] };
-  const favoriteCounts = new Map<string, number>();
-  const orderLines = new Map<string, Array<{ product_name: string; weight: string | null; quantity: number }>>();
-  for (const line of coffeeLines ?? []) {
-    if (!line.product_name) continue;
-    const quantity = Number(line.quantity ?? 0);
-    favoriteCounts.set(line.product_name, (favoriteCounts.get(line.product_name) ?? 0) + quantity);
-    const existing = orderLines.get(line.order_id) ?? [];
-    existing.push({ product_name: line.product_name, weight: line.weight ?? null, quantity });
-    orderLines.set(line.order_id, existing);
+  const itemByOrder = new Map<string, Array<{ name: string; weight: string; quantity: number }>>();
+  for (const item of purchasedLines ?? []) {
+    if (!item.product_name) continue;
+    const lines = itemByOrder.get(item.order_id) ?? [];
+    lines.push({ name: item.product_name, weight: item.weight ?? "", quantity: Number(item.quantity) || 0 });
+    itemByOrder.set(item.order_id, lines);
   }
-  const favoriteCoffee = [...favoriteCounts].sort((a,b) => b[1] - a[1])[0]?.[0];
-  const paidOrders = orders.filter(order => order.payment_status === "paid");
-  const totalSpent = paidOrders.reduce((sum, order) => sum + Number(order.final_amount ?? order.total ?? 0), 0);
-  const displayName = user.user_metadata?.name ?? user.user_metadata?.full_name ?? user.email?.split("@")[0];
-  const recentOrders = orders.slice(0, 3);
+
+  const displayName = user.user_metadata?.name ?? user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "회원";
+  const tier = normalizeMembershipTier(membership?.tier);
+  const current = membershipDisplay(tier);
+  const hasFreeShipping = hasMemberFreeShipping(tier);
+  const activeBenefit = hasFreeShipping ? "주문금액 관계없이 무료배송" : "구매 시 포인트 2% 적립";
   const statusLabels: Record<string, string> = {
     new: "주문 접수", confirmed: "주문 확인", roasting: "로스팅 중",
-    preparing: "준비 중", ready_for_pickup: "픽업 준비 완료",
-    shipped: "배송 중", completed: "완료", cancelled: "취소됨",
+    preparing: "준비 중", ready_for_pickup: "픽업 준비", shipped: "배송 중",
+    completed: "완료", cancelled: "취소",
   };
 
-  return <main className="mx-auto max-w-4xl px-6 py-14 md:px-12 md:py-20">
-    <div className="account-heading">
-      <div>
-        <p className="section-label"><span className="lang-ko">내 계정</span><span className="lang-en">My account</span></p>
-        <h1 className="account-greeting"><span className="lang-ko">안녕하세요.<br />{displayName}님.</span><span className="lang-en">Hello.<br />{displayName}.</span></h1>
-        <p className="mt-4 text-[var(--muted)]">{user.email}</p>
+  return <main className="mycasa-page">
+    <header className="mycasa-header">
+      <div className="mycasa-identity">
+        <p className="mycasa-eyebrow">MY CASA</p>
+        <h1>{displayName}님, 안녕하세요.</h1>
+        <p className="mycasa-email">{user.email}</p>
       </div>
-      <AccountSignOutButton />
-    </div>
+      <AccountSignOutButton compact />
+    </header>
 
-    <section className="mb-10 grid gap-4 sm:grid-cols-3" aria-label="MY CASA overview">
-      <article className="rounded border border-[var(--line)] p-5"><p className="section-label">MY ORDERS</p><strong className="mt-3 block text-3xl">{orders.length}</strong><p className="mt-2 text-sm text-[var(--muted)]">온라인 주문 내역</p></article>
-      <article className="rounded border border-[var(--line)] p-5"><p className="section-label">TOTAL PURCHASES</p><strong className="mt-3 block text-3xl">₩{totalSpent.toLocaleString("ko-KR")}</strong><p className="mt-2 text-sm text-[var(--muted)]">결제 완료 주문 기준</p></article>
-      <article className="rounded border border-[var(--line)] p-5"><p className="section-label">YOUR FAVORITE</p><strong className="mt-3 block text-xl">{favoriteCoffee ?? "첫 커피를 만나보세요"}</strong><p className="mt-2 text-sm text-[var(--muted)]">가장 많이 주문한 커피</p></article>
-    </section>
-    <nav className="mb-10 grid gap-3 sm:grid-cols-2" aria-label="MY CASA quick actions">
-      <Link href="/account/orders" className="button-secondary px-5 py-4 text-center">주문 내역 · 다시 주문하기 ↗</Link>
-      <Link href="/account/subscriptions" className="button-secondary px-5 py-4 text-center">커피 구독 신청·조회 ↗</Link>
-    </nav>
-    {welcomeBenefit?.eligible && (
-      <section className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded border border-[var(--line)] bg-[#f8f5ef] p-5" aria-label="신규 회원 첫 주문 혜택">
-        <div>
-          <p className="section-label">WELCOME BENEFIT</p>
-          <h2 className="mt-2 text-lg font-medium">첫 주문 1,000원 할인 혜택이 준비됐어요.</h2>
-          <p className="mt-1 text-sm text-[var(--muted)]">포인트가 아니라 첫 주문 결제 금액에서 자동으로 차감됩니다.</p>
+    <section className={`mycasa-membership mycasa-membership--${tier}`} aria-label="나의 멤버십 등급">
+      <div className="mycasa-membership-copy">
+        <div className="mycasa-membership-top">
+          <span>CASA DI STEFANO · MEMBERSHIP</span>
+          <span>YOUR TIER</span>
         </div>
-        <Link href="/shop" className="button-secondary px-4 py-3 text-sm">커피 고르기 ↗</Link>
-      </section>
-    )}
-    {vip && <section className="mb-8 rounded border border-[var(--line)] p-6" aria-label="VIP membership"><p className="section-label">CASA PRIVATE MEMBERSHIP</p><h2 className="mt-3 text-2xl">{vip.tier === "private" ? "PRIVATE" : "VIP"} MEMBER</h2><p className="mt-3 text-[var(--muted)]">{vip.benefit_note || "회원님을 위한 개별 혜택은 매장에서 안내해 드립니다."}</p><p className="mt-2 text-xs text-[var(--muted)]">혜택은 자동 결제 할인으로 적용되지 않습니다.</p></section>}
-    <section className="member-points-panel" aria-label="멤버 포인트"><div><p className="section-label">CASA REWARDS</p><h2>My Points</h2><p>로그인 회원의 결제 완료 및 픽업·배송 완료 주문에 2%가 적립됩니다.</p></div><div className="member-points-balance"><strong>{Number(loyalty?.balance??0).toLocaleString("ko-KR")} P</strong><span>누적 적립 {Number(loyalty?.lifetime_earned??0).toLocaleString("ko-KR")} P</span></div></section>
-    <div className="member-points-history"><h3>포인트 내역</h3>{pointHistory?.length?pointHistory.map(item=><div key={item.id}><span>{item.note}<small>{new Date(item.created_at).toLocaleDateString("ko-KR")}</small></span><strong>{item.points>0?"+":""}{item.points.toLocaleString("ko-KR")} P</strong></div>):<p>아직 적립된 포인트가 없습니다.</p>}<p className="member-points-policy">1P = 1원 상당 · 현재는 적립 및 조회만 제공하며 결제 시 사용 기능은 준비 중입니다. 취소·환불 시 적립이 회수됩니다.</p></div>
-    <section className="mt-16" aria-label="최근 주문">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-4">
-        <h2 className="text-3xl"><span className="lang-ko">최근 주문</span><span className="lang-en">Recent orders</span></h2>
-        <div className="flex flex-wrap items-center gap-4">
-          <Link href="/tasting-room/order/history" className="eyebrow">TASTING ROOM ORDERS ↗</Link>
-          <Link href="/account/orders" className="eyebrow"><span className="lang-ko">전체 보기</span><span className="lang-en">View all</span> ↗</Link>
-        </div>
+        <h2>{current.name}</h2>
+        <p>{activeBenefit}</p>
       </div>
-      {recentOrders.length ? <div className="divide-y divide-[var(--line)]">
+      <ol className="mycasa-tier-track" aria-label="멤버십 등급 단계">
+        {MEMBERSHIP_TIERS.map((item) =>
+          <li className={item.id === tier ? "is-current" : ""} key={item.id} aria-current={item.id === tier ? "step" : undefined}>
+            <span className="mycasa-tier-mark" aria-hidden="true" />
+            <span>{item.shortName}</span>
+          </li>
+        )}
+      </ol>
+    </section>
+
+    <section className="mycasa-summary" aria-label="나의 혜택과 주문">
+      <div className="mycasa-summary-item">
+        <span>CASA POINTS</span>
+        <strong>{Number(loyalty?.balance ?? 0).toLocaleString("ko-KR")} <small>P</small></strong>
+        <p>적립 중 · 사용 준비</p>
+      </div>
+      <Link className="mycasa-summary-item mycasa-summary-link" href="/account/orders">
+        <span>MY ORDERS</span>
+        <strong>{orders.length.toLocaleString("ko-KR")} <small>건</small></strong>
+        <p>주문 내역 보기 ↗</p>
+      </Link>
+      <div className="mycasa-summary-item mycasa-summary-benefit">
+        <span>MY BENEFIT</span>
+        <strong>{welcomeBenefit?.eligible ? "1,000원" : hasFreeShipping ? "FREE" : "2%"}</strong>
+        <p>{welcomeBenefit?.eligible ? "첫 주문 자동 할인" : hasFreeShipping ? "택배 무료배송" : "기본 포인트 적립"}</p>
+      </div>
+    </section>
+
+    <section className="mycasa-orders" aria-label="최근 주문">
+      <div className="mycasa-section-heading">
+        <h2>최근 주문</h2>
+        <Link href="/account/orders">전체 보기 ↗</Link>
+      </div>
+      {recentOrders.length ? <div className="mycasa-order-list">
         {recentOrders.map((order) => {
-          const lines = orderLines.get(order.id) ?? [];
+          const lines = itemByOrder.get(order.id) ?? [];
           const first = lines[0];
-          const title = first ? first.product_name + (lines.length > 1 ? ` 외 ${lines.length - 1}종` : "") : "주문 상품 확인하기";
-          const totalQuantity = lines.reduce((sum, item) => sum + item.quantity, 0);
-          const status = order.payment_status === "pending" ? "입금 대기" : statusLabels[order.order_status] ?? "주문 확인";
-          return <Link href="/account/orders" key={order.id} className="group flex flex-col gap-3 py-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-w-0">
-              <h3 className="font-medium leading-relaxed">{title}</h3>
-              <p className="mt-1 text-sm text-[var(--muted)]">
-                {new Date(order.created_at).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" })}
-                {first && ` · ${first.weight ? `${first.weight} · ` : ""}총 ${totalQuantity}개`}
-              </p>
+          const name = first ? first.name + (lines.length > 1 ? ` 외 ${lines.length - 1}종` : "") : "주문 상품";
+          const quantity = lines.reduce((sum, item) => sum + item.quantity, 0);
+          const state = order.order_status === "cancelled" ? "취소" : order.payment_status === "pending" ? "입금 대기" : statusLabels[order.order_status] ?? "진행 중";
+          return <Link href="/account/orders" key={order.id} className="mycasa-order-row">
+            <div className="mycasa-order-main">
+              <strong>{name}</strong>
+              <span>{new Date(order.created_at).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" })}{quantity > 0 ? ` · ${quantity}개` : ""}</span>
             </div>
-            <div className="flex shrink-0 items-center gap-3 sm:gap-5">
-              <span className="text-xs text-[var(--muted)]">{status}</span>
-              <strong className="font-medium">₩{Number(order.final_amount ?? order.total).toLocaleString("ko-KR")}</strong>
-              <span className="text-sm text-[var(--muted)] group-hover:text-[var(--ink)]" aria-hidden="true">↗</span>
-            </div>
+            <span className="mycasa-order-status">{state}</span>
+            <strong className="mycasa-order-price">₩{Number(order.final_amount ?? order.total).toLocaleString("ko-KR")}</strong>
+            <span className="mycasa-order-chevron" aria-hidden="true">↗</span>
           </Link>;
         })}
-      </div> : <p className="py-10 text-[var(--muted)]"><span className="lang-ko">아직 주문 내역이 없습니다.</span><span className="lang-en">No orders yet.</span></p>}
+      </div> : <p className="mycasa-no-orders">아직 주문이 없어요. <Link href="/shop">첫 커피 만나보기 ↗</Link></p>}
     </section>
+
+    <nav className="mycasa-actions" aria-label="계정 바로가기">
+      <Link href="/account/orders">주문 내역 ↗</Link>
+      <Link href="/account/subscriptions">구독 관리 ↗</Link>
+      <Link href="/tasting-room/order/history">테이스팅룸 주문 ↗</Link>
+      <Link href="/shop">SHOP ↗</Link>
+    </nav>
   </main>;
 }

@@ -1,4 +1,5 @@
 import { isSize, normalizeGrind, validVariantId } from "@/lib/product-contract";
+import { hasMemberFreeShipping } from "@/lib/membership";
 import { NextResponse } from "next/server";
 import { hashAccessToken } from "@/lib/order-access";
 import { notifyAdminsOfNewOrder } from "@/lib/order-notifications";
@@ -94,9 +95,9 @@ export async function POST(request: Request) {
   // Server-verified VIP membership: never trust a client-supplied discount.
   let finalTotal = Number(order.total);
   if (authData.user?.id && fulfillmentType === "shipping") {
-    const { data: vip, error: vipError } = await supabase.from("vip_customers").select("user_id").eq("user_id", authData.user.id).maybeSingle();
+    const { data: vip, error: vipError } = await supabase.from("vip_customers").select("tier").eq("user_id", authData.user.id).maybeSingle();
     if (vipError) return NextResponse.json({ error: "VIP 배송 혜택을 확인하지 못했습니다. 다시 시도해 주세요." }, { status: 503 });
-    if (vip) {
+    if (hasMemberFreeShipping(vip?.tier)) {
       const { data: currentOrder, error: readError } = await supabase.from("orders")
         .select("shipping_fee,total,payment_status").eq("id", order.order_id).eq("user_id", authData.user.id)
         .eq("guest_access_token_hash", guestTokenHash).maybeSingle();

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_DELIVERY_SETTINGS, settingsFromRow } from "@/lib/shipping";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { getWelcomeBenefit } from "@/lib/welcome-discount";
+import { hasMemberFreeShipping } from "@/lib/membership";
 
 export async function GET() {
   if (!hasSupabaseEnv) return NextResponse.json({ settings: DEFAULT_DELIVERY_SETTINGS, zones: [], user: null, addresses: [], welcomeDiscount: 0, welcomePromotionActive: false });
@@ -18,10 +19,10 @@ export async function GET() {
     const [{ data: profileData }, { data: addressData }, { data: vipData }] = await Promise.all([
       supabase.from("profiles").select("name,email,phone").eq("id", auth.user.id).maybeSingle(),
       supabase.from("user_addresses").select("*").order("is_default", { ascending: false }).order("created_at"),
-      supabase.from("vip_customers").select("user_id").eq("user_id", auth.user.id).maybeSingle(),
+      supabase.from("vip_customers").select("tier").eq("user_id", auth.user.id).maybeSingle(),
     ]);
     profile = profileData;
-    isVip = Boolean(vipData);
+    isVip = hasMemberFreeShipping(vipData?.tier);
     addresses = addressData ?? [];
   }
   let benefit;
