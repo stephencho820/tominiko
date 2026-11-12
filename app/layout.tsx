@@ -53,6 +53,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <p>{BUSINESS_INFO.address}</p>
             <a href={BUSINESS_INFO.contactUrl} target="_blank" rel="noopener noreferrer">카카오톡으로 문의하기 ↗</a>
             <a href={`mailto:${BUSINESS_INFO.email}`}>{BUSINESS_INFO.email}</a>
+            <a href={`tel:${BUSINESS_INFO.contactPhone.replace(/-/g, "")}`}>전화 문의 · {BUSINESS_INFO.contactPhone}</a>
             <p className="site-footer-prelaunch">사업자등록정보 · 통신판매업 신고정보는 정식 오픈 전에 업데이트됩니다.</p>
           </div>
           <nav className="site-footer-policy" aria-label="운영 정책">

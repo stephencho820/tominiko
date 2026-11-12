@@ -19,7 +19,7 @@ export const BUSINESS_INFO = {
   contactUrl: "https://open.kakao.com/o/sDj2GOzi",
   administratorName: "정주혜",
   kakaoId: "tominiko",
-  contactPhone: "010-4861-3883", // 관리자용. 일반 쇼핑몰에는 전화번호를 노출하지 않습니다.
+  contactPhone: "010-4861-3883",
   representative: "",
   businessRegistrationNumber: "",
   mailOrderRegistrationNumber: "",

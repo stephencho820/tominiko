@@ -85,6 +85,7 @@ export default function PrivacyPage() {
         <div><dt>운영자</dt><dd>{BUSINESS_INFO.displayName}</dd></div>
         <div><dt>운영 담당자</dt><dd>{BUSINESS_INFO.administratorName}</dd></div>
         <div><dt>이메일</dt><dd><a href={`mailto:${BUSINESS_INFO.email}`}>{BUSINESS_INFO.email}</a></dd></div>
+        <div><dt>전화번호</dt><dd><a href={`tel:${BUSINESS_INFO.contactPhone.replace(/-/g, "")}`}>{BUSINESS_INFO.contactPhone}</a></dd></div>
         <div><dt>카카오톡 ID</dt><dd>{BUSINESS_INFO.kakaoId}</dd></div>
         <div><dt>문의</dt><dd><a href={BUSINESS_INFO.contactUrl} target="_blank" rel="noopener noreferrer">카카오톡 오픈채팅 ↗</a></dd></div>
       </dl>
