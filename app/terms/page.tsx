@@ -24,9 +24,12 @@ export default function TermsPage() {
       <dl className="legal-facts">
         <div><dt>브랜드</dt><dd>{BUSINESS_INFO.displayName} · {BUSINESS_INFO.productBrand}</dd></div>
         <div><dt>사업장</dt><dd>{BUSINESS_INFO.address}</dd></div>
-        <div><dt>연락처</dt><dd><a href={BUSINESS_INFO.contactUrl} target="_blank" rel="noopener noreferrer">카카오톡 오픈프로필 ↗</a></dd></div>
+        <div><dt>운영 담당자</dt><dd>{BUSINESS_INFO.administratorName}</dd></div>
+        <div><dt>이메일</dt><dd><a href={`mailto:${BUSINESS_INFO.email}`}>{BUSINESS_INFO.email}</a></dd></div>
+        <div><dt>카카오톡 ID</dt><dd>{BUSINESS_INFO.kakaoId}</dd></div>
+        <div><dt>문의</dt><dd><a href={BUSINESS_INFO.contactUrl} target="_blank" rel="noopener noreferrer">카카오톡 오픈채팅 ↗</a></dd></div>
       </dl>
-      <p className="legal-notice">현재 프리오픈 준비 단계입니다. 대표자명, 사업자등록번호, 통신판매업 신고번호, 전자우편 주소는 정식 판매 개시 전에 실제 등록 정보로 업데이트합니다.</p>
+      <p className="legal-notice">현재 프리오픈 준비 단계입니다. 대표자명, 사업자등록번호, 통신판매업 신고번호 등 법정 사업자 표시 정보는 정식 판매 개시 전에 실제 등록 정보로 업데이트합니다.</p>
     </LegalSection>
 
     <LegalSection title="3. 상품 정보와 주문">
