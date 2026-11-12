@@ -2,6 +2,7 @@ import { revalidatePath } from "next/cache";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { MEMBERSHIP_TIERS, normalizeMembershipTier } from "@/lib/membership";
 import { createServiceClient } from "@/lib/supabase/service";
+import { getMemberStatus } from "@/lib/member-status";
 
 async function saveMembership(formData: FormData) {
   "use server";
@@ -15,6 +16,8 @@ async function saveMembership(formData: FormData) {
 
   const { data: profile } = await supabase.from("profiles").select("id").eq("id", userId).maybeSingle();
   if (!profile) throw new Error("Customer account not found");
+  if (tier === "zero_black" && (await getMemberStatus(userId)).spent12Months < 720000)
+    throw new Error("ZERO BLACK은 최근 12개월 실구매액 72만원 이상인 회원만 승인할 수 있습니다.");
   const result = tier === "auto"
     ? await supabase.from("vip_customers").delete().eq("user_id", userId)
     : await supabase.from("vip_customers").upsert({ user_id: userId, tier }, { onConflict: "user_id" });
@@ -28,11 +31,13 @@ export default async function AdminMembershipPage() {
   const supabase = await getAdminClient();
   if (!supabase) return null;
   const db = createServiceClient();
+  const yearAgo = new Date();
+  yearAgo.setUTCFullYear(yearAgo.getUTCFullYear() - 1);
   const [{ data: profiles, error: profilesError }, { data: memberTiers, error: tiersError }, { data: awards }, { data: paidOrders }] = await Promise.all([
     supabase.from("profiles").select("id,email,name,created_at").order("created_at", { ascending: false }).limit(200),
     supabase.from("vip_customers").select("user_id,tier"),
     db.from("membership_auto_awards").select("user_id,tier,protected_until"),
-    db.from("orders").select("user_id,product_subtotal,subtotal,discount_amount").eq("payment_status","paid").neq("order_status","cancelled").gte("created_at",new Date(Date.now()-366*86400000).toISOString()).not("user_id","is",null),
+    db.from("orders").select("user_id,product_subtotal,subtotal,discount_amount").eq("payment_status","paid").neq("order_status","cancelled").gte("created_at",yearAgo.toISOString()).not("user_id","is",null),
   ]);
   const tierByUser = new Map((memberTiers ?? []).map((row) => [row.user_id, normalizeMembershipTier(row.tier)]));
   const goldCount = [...tierByUser.values()].filter((tier) => tier === "gold").length;
@@ -59,8 +64,11 @@ export default async function AdminMembershipPage() {
         <div className="divide-y divide-[var(--line)]">
           {(profiles ?? []).map((profile) => {
             const manualTier = tierByUser.get(profile.id);
-            const autoTier = autoTiers.get(profile.id) ?? "general";
             const spent = spendByUser.get(profile.id) ?? 0;
+            const qualifiedTier = spent >= 360000 ? "gold" : spent >= 180000 ? "silver" : spent >= 60000 ? "bronze" : "general";
+            const savedTier = autoTiers.get(profile.id) ?? "general";
+            const ranks: Record<string, number> = { general:0, bronze:1, silver:2, gold:3, zero_black:4 };
+            const autoTier = ranks[qualifiedTier] >= ranks[savedTier] ? qualifiedTier : savedTier;
             const tier = manualTier ?? "auto";
             return <form action={saveMembership} key={profile.id} className="flex flex-wrap items-center justify-between gap-3 py-4">
               <input type="hidden" name="user_id" value={profile.id} />
