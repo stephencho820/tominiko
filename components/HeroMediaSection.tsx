@@ -64,7 +64,7 @@ export function HeroMediaSection({ media }: { media: HeroMedia }) {
         />
       )}
       {media.overlay && <div className="home-hero-shade" />}
-      <Link className="home-hero-cta" href="/shop">SHOP</Link>
+      <Link className="home-hero-cta" href="/shop">원두 둘러보기</Link>
     </section>
   );
 }
