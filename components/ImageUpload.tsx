@@ -3,9 +3,11 @@ import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { optimizeProductImage } from "@/lib/product-image";
 
-export function ImageUpload({ onUploaded, label = "상품 사진 업로드", onUploadingChange }: {
+export function ImageUpload({ onUploaded, label = "상품 사진 업로드", bucket = "product-images", successMessage = "업로드 완료 · 상품 저장 버튼을 눌러 반영하세요.", onUploadingChange }: {
   onUploaded: (url: string) => void;
   label?: string;
+  bucket?: "product-images" | "page-images";
+  successMessage?: string;
   onUploadingChange?: (uploading: boolean) => void;
 }) {
   const busyRef = useRef(false);
@@ -19,10 +21,10 @@ export function ImageUpload({ onUploaded, label = "상품 사진 업로드", onU
       const optimized = await optimizeProductImage(file);
       setStage("사진 업로드 중…");
       const supabase = createClient();
-      const { error } = await supabase.storage.from("product-images").upload(optimized.name, optimized, { contentType: optimized.type });
+      const { error } = await supabase.storage.from(bucket).upload(optimized.name, optimized, { contentType: optimized.type });
       if (error) throw error;
-      const { data } = supabase.storage.from("product-images").getPublicUrl(optimized.name);
-      onUploaded(data.publicUrl); setStage("업로드 완료 · 상품 저장 버튼을 눌러 반영하세요.");
+      const { data } = supabase.storage.from(bucket).getPublicUrl(optimized.name);
+      onUploaded(data.publicUrl); setStage(successMessage);
     } catch (error) {
       setStage(""); setError(error instanceof Error || (error && typeof error === "object" && "message" in error) ? String(error.message) : "이미지 업로드에 실패했습니다.");
     } finally { busyRef.current = false; onUploadingChange?.(false); }
