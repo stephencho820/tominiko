@@ -17,7 +17,7 @@ export function WelcomeBenefitBanner() {
       .then((response) => response.ok ? response.json() as Promise<WelcomeBenefit> : null)
       .then((result) => { if (!controller.signal.aborted) setBenefit(result); })
       .catch(() => { if (!controller.signal.aborted) setBenefit(null); });
-    return createPortal() => controller.abort();
+    return () => controller.abort();
   }, []);
 
   if (dismissed || !benefit?.enabled || (benefit.signedIn && !benefit.eligible)) return null;
