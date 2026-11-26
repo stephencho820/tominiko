@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, Gift } from "lucide-react";
+import { ArrowUpRight, Gift, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import type { WelcomeBenefit } from "@/lib/welcome-discount";
 import "./welcome-benefit.css";
 
 export function WelcomeBenefitBanner() {
+  const [dismissed, setDismissed] = useState(false);
   const [benefit, setBenefit] = useState<WelcomeBenefit | null>(null);
 
   useEffect(() => {
@@ -18,11 +20,14 @@ export function WelcomeBenefitBanner() {
     return () => controller.abort();
   }, []);
 
-  if (!benefit?.enabled || (benefit.signedIn && !benefit.eligible)) return null;
+  if (dismissed || !benefit?.enabled || (benefit.signedIn && !benefit.eligible)) return null;
 
   const money = benefit.amount.toLocaleString("ko-KR");
-  return (
+  return createPortal(
     <aside className="welcome-benefit" aria-label="회원가입 웰컴 혜택">
+      <button className="welcome-benefit-close" type="button" aria-label="가입 혜택 닫기" onClick={() => setDismissed(true)}>
+        <X size={14} strokeWidth={1.7} aria-hidden="true" />
+      </button>
       <div className="welcome-benefit-icon" aria-hidden="true"><Gift size={18} strokeWidth={1.6} /></div>
       <div className="welcome-benefit-copy">
         <span className="welcome-benefit-kicker">WELCOME BENEFIT</span>
@@ -34,6 +39,7 @@ export function WelcomeBenefitBanner() {
           가입하기 <ArrowUpRight size={14} strokeWidth={1.7} aria-hidden="true" />
         </Link>
       )}
-    </aside>
+    </aside>,
+    document.body,
   );
 }
