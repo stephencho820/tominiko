@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { ShopCatalog } from "@/components/ShopCatalog";
 import { WelcomeBenefitBanner } from "@/components/WelcomeBenefitBanner";
 import { getProducts } from "@/services/products";
-import { getPageSettings } from "@/lib/page-content";
 
 export const metadata: Metadata = {
   title: "Zero Degrees Coffee Roasters",
@@ -26,14 +25,8 @@ export const metadata: Metadata = {
 };
 
 export default async function Shop() {
-  const [products, content] = await Promise.all([
-    getProducts({ activeOnly: true }),
-    getPageSettings("shop"),
-  ]);
-  const introKo = content.texts.intro_ko?.value || "취향에 맞는 원두를 만나보세요.";
-  const introEn = content.texts.intro_en?.value || "Find the coffee that fits your taste.";
-  return <main className="shop-page shop-page-new">
-    <header className="shop-heading"><p className="section-label">TOMINIKO COFFEE SHOP · ROASTED BY ZERO DEGREES AT CASA DI STEFANO</p><p><span className="lang-ko">{introKo}</span><span className="lang-en">{introEn}</span></p></header>
+  const products = await getProducts({ activeOnly: true });
+  return <main className="shop-page shop-page-new" aria-label="원두 쇼핑">
     <WelcomeBenefitBanner />
     <ShopCatalog products={products} />
   </main>;
