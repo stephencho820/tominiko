@@ -319,19 +319,22 @@ button { cursor: pointer; }
 }
 
 .site-header {
+  --nav-forest: 12, 34, 26;
+  --nav-ivory: #faf4e8;
+  --nav-line: rgba(250, 244, 232, .2);
   position: sticky;
   top: 0;
   z-index: 50;
-  border-color: rgba(216,208,195,.8);
-  background: rgba(244,240,232,.78) !important;
+  border-color: var(--nav-line);
+  background: rgba(var(--nav-forest), .94) !important;
+  color: var(--nav-ivory);
   box-shadow: 0 8px 24px rgba(33,29,24,.04);
   backdrop-filter: blur(18px);
   transition: background-color .45s ease, box-shadow .45s ease, border-color .45s ease;
 }
 
 .site-header.is-scrolled {
-  border-color: rgba(216,208,195,.45);
-  background: rgba(244,240,232,.5) !important;
+  background: rgba(var(--nav-forest), .88) !important;
   box-shadow: 0 10px 28px rgba(33,29,24,.08);
 }
 
@@ -1585,18 +1588,20 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 .home-chrome .home-page { animation: none; }
 .home-chrome .site-header {
   border-color: transparent;
-  background: linear-gradient(180deg, rgba(20,15,12,.7), transparent) !important;
-  color: white;
+  background: linear-gradient(180deg, rgba(var(--nav-forest), .96), rgba(var(--nav-forest), .78)) !important;
   box-shadow: none;
   backdrop-filter: none;
 }
-.home-chrome .site-header > div:first-child a,
-.home-chrome .site-header > div:first-child a > span:first-child { color: inherit; }
+.site-header .nav-link:hover,
+.site-header .nav-meta:hover { color: #d9e8ce; }
+.site-header a:focus-visible,
+.site-header button:focus-visible { outline-color: var(--nav-ivory); }
 .site-header .mobile-nav-panel {
   max-height: calc(100dvh - 72px);
   overflow-y: auto;
-  background: rgba(251,250,247,.88);
-  color: var(--ink);
+  border-color: var(--nav-line);
+  background: rgba(var(--nav-forest), .90);
+  color: var(--nav-ivory);
   backdrop-filter: blur(14px);
 }
 .home-visual-hero {
@@ -2123,6 +2128,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
   font-size: 12px;
 }
 .mobile-nav-panel > .border-t {
+  border-color: var(--nav-line);
   padding-top: 8px;
 }
 @media (max-width: 760px) {
