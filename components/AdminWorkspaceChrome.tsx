@@ -27,6 +27,7 @@ const secondary = [
   { href: "/admin/membership-gifts", label: "커피백 증정", icon: Coffee },
   { href: "/admin/subscriptions", label: "정기구독", icon: Repeat2 },
   { href: "/admin/reviews", label: "리뷰 관리", icon: MessageSquareText },
+  { href: "/admin/texts", label: "글 관리", icon: MessageSquareText },
   { href: "/admin/pages", label: "홈페이지 콘텐츠", icon: Home },
   { href: "/admin/delivery", label: "배송 설정", icon: Truck },
   { href: "/admin/analytics", label: "방문 분석", icon: BarChart3 },

@@ -1,0 +1,46 @@
+.index, .reading {
+  width: min(100% - 2.5rem, 64rem);
+  margin-inline: auto;
+  padding-block: clamp(3.5rem, 9vw, 8rem);
+  overflow-wrap: anywhere;
+}
+
+.heading, .reading h1 {
+  font-family: Georgia, "Noto Serif KR", serif;
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -.035em;
+}
+
+.heading {
+  font-size: clamp(3.5rem, 10vw, 7rem);
+  margin-bottom: clamp(2rem, 6vw, 4rem);
+}
+
+.list { border-top: 1px solid #b9ad9c; }
+.list:empty { border: 0; }
+
+.row {
+  display: grid;
+  grid-template-columns: 8rem minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: baseline;
+  padding: 1.7rem .65rem;
+  border-bottom: 1px solid #d9cfc1;
+}
+
+.row:hover, .row:focus-visible { background: #a77c3610; }
+.row h2 { font-size: clamp(1.1rem, 2.5vw, 1.45rem); font-weight: 600; }
+.row p { margin-top: .45rem; color: #61564a; line-height: 1.65; }
+.row time, .reading time { color: #61564a; font-size: .82rem; font-variant-numeric: tabular-nums; }
+.pagination { display: flex; gap: 2rem; margin-top: 2rem; }
+.pagination a, .back { text-decoration: underline; text-underline-offset: .3em; }
+.reading { max-width: 44rem; }
+.reading article { margin-top: 3.5rem; }
+.reading h1 { margin-top: .8rem; font-size: clamp(2rem, 6vw, 3.75rem); }
+.body { margin-top: 2rem; border-top: 1px solid #d9cfc1; padding-top: 2rem; white-space: pre-wrap; line-height: 1.9; }
+
+@media (max-width: 560px) {
+  .row { grid-template-columns: minmax(0, 1fr) auto; gap: .4rem 1rem; }
+  .row time { grid-column: 1 / -1; }
+}
