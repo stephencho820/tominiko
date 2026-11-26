@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import type { HeroMedia } from "@/lib/page-content-config";
 
 const defaultPoster = "/images/home-hero.svg";
+const roasteryVideo = "https://ofylmltbenlabrwmucco.supabase.co/storage/v1/object/public/page-images/home/a9fe3e74-dde4-4a27-b9aa-2bd23b0f8aaf.mp4";
+const roasteryPoster = "/images/home-roastery-first-frame.webp";
 const mobileQuery = "(max-width: 760px)";
 
 export function HeroMediaSection({ media }: { media: HeroMedia }) {
@@ -13,7 +15,8 @@ export function HeroMediaSection({ media }: { media: HeroMedia }) {
   const desktopUrl = media.url.trim();
   const mobileUrl = media.mobileUrl.trim() || desktopUrl;
   const mobileType = media.mobileUrl.trim() ? media.mobileType : media.type;
-  const desktopPoster = (media.active && (media.type === "image" ? desktopUrl : media.posterUrl?.trim())) || defaultPoster;
+  const desktopVideoPoster = media.posterUrl?.trim() || (desktopUrl === roasteryVideo ? roasteryPoster : "");
+  const desktopPoster = (media.active && (media.type === "image" ? desktopUrl : desktopVideoPoster)) || defaultPoster;
   const mobilePoster = (media.active && (mobileType === "image" ? mobileUrl : media.mobilePosterUrl?.trim())) || desktopPoster;
 
   useEffect(() => {
