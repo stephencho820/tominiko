@@ -1,8 +1,10 @@
 .index {
-  width: min(100% - 2.5rem, 64rem);
+  width: 100%;
+  min-height: 70vh;
   margin-inline: auto;
-  padding-block: clamp(3.5rem, 9vw, 8rem);
+  padding: .75rem clamp(1rem, 4vw, 4rem) clamp(5rem, 9vw, 8rem);
   overflow-wrap: anywhere;
+  background: #ededeb;
 }
 
 .heading, .reading h1 {
@@ -17,21 +19,26 @@
   margin-bottom: clamp(2rem, 6vw, 4rem);
 }
 
-.list { border-top: 1px solid #b9ad9c; }
+.list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(2.25rem, 4vw, 4.5rem) .7rem;
+  max-width: 78rem;
+  margin-inline: auto;
+}
 .list:empty { border: 0; }
 
 .row {
   display: grid;
-  grid-template-columns: 8rem minmax(0, 1fr) auto;
-  gap: 1rem;
-  align-items: baseline;
-  padding: 1.7rem .65rem;
-  border-bottom: 1px solid #d9cfc1;
+  gap: .75rem;
+  align-content: start;
 }
 
-.row:hover, .row:focus-visible { background: #a77c3610; }
-.row h2 { font-size: clamp(1.1rem, 2.5vw, 1.45rem); font-weight: 600; }
-.row p { margin-top: .45rem; color: #61564a; line-height: 1.65; }
+.row img, .cardFallback { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; background: #c9c9c5; }
+.row h2 { font-size: clamp(1rem, 1.6vw, 1.2rem); font-weight: 500; line-height: 1.35; }
+.row p { margin-top: .4rem; color: #64615d; font-size: .84rem; line-height: 1.55; }
+.row:hover img, .row:focus-visible img { opacity: .88; }
+.cardCopy { padding-inline: .1rem; }
 .row time, .reading time { color: #6a6864; font-size: .78rem; font-variant-numeric: tabular-nums; }
 .pagination { display: flex; gap: 2rem; margin-top: 2rem; }
 .pagination a, .back { text-decoration: underline; text-underline-offset: .3em; }
@@ -57,8 +64,12 @@
 .body img { display: block; width: 100%; height: auto; margin: clamp(3.5rem, 7vw, 6.5rem) 0; border-radius: 0; }
 
 @media (max-width: 560px) {
-  .row { grid-template-columns: minmax(0, 1fr) auto; gap: .4rem 1rem; }
-  .row time { grid-column: 1 / -1; }
+  .index { padding: .65rem 1rem 5rem; }
+  .list { grid-template-columns: 1fr; gap: 3rem; }
+  .row { gap: .85rem; }
+  .row img, .cardFallback { aspect-ratio: 4 / 5; }
+  .row h2 { font-size: 1.15rem; }
+  .row p { font-size: .9rem; }
   .hero { min-height: 23rem; }
   .heroText { gap: 1.5rem; }
   .articleShell { padding-inline: 1.4rem; }
