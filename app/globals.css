@@ -326,7 +326,7 @@ button { cursor: pointer; }
   top: 0;
   z-index: 50;
   border-color: var(--nav-line);
-  background: rgba(var(--nav-forest), .94) !important;
+  background: rgba(var(--nav-forest), .84) !important;
   color: var(--nav-ivory);
   box-shadow: 0 8px 24px rgba(33,29,24,.04);
   backdrop-filter: blur(18px);
@@ -334,7 +334,7 @@ button { cursor: pointer; }
 }
 
 .site-header.is-scrolled {
-  background: rgba(var(--nav-forest), .88) !important;
+  background: rgba(var(--nav-forest), .78) !important;
   box-shadow: 0 10px 28px rgba(33,29,24,.08);
 }
 
@@ -1588,7 +1588,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 .home-chrome .home-page { animation: none; }
 .home-chrome .site-header {
   border-color: transparent;
-  background: linear-gradient(180deg, rgba(var(--nav-forest), .96), rgba(var(--nav-forest), .78)) !important;
+  background: linear-gradient(180deg, rgba(var(--nav-forest), .64), rgba(var(--nav-forest), .48)) !important;
   box-shadow: none;
   backdrop-filter: none;
 }
@@ -1600,7 +1600,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
   max-height: calc(100dvh - 72px);
   overflow-y: auto;
   border-color: var(--nav-line);
-  background: rgba(var(--nav-forest), .90);
+  background: rgba(var(--nav-forest), .76);
   color: var(--nav-ivory);
   backdrop-filter: blur(14px);
 }
