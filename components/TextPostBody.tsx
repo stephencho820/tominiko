@@ -15,18 +15,33 @@ function isPostImage(value: string) {
   }
 }
 
-export function TextPostBody({ body }: { body: string }) {
+export function getFirstPostImage(body: string) {
+  for (const match of body.matchAll(imageLine)) {
+    const [, alt, url] = match;
+    if (isPostImage(url)) return { alt, url };
+  }
+  return null;
+}
+
+export function TextPostBody({ body, skipFirstImage = false }: { body: string; skipFirstImage?: boolean }) {
   const pieces = [];
   let start = 0;
+  let skipped = false;
   for (const match of body.matchAll(imageLine)) {
     const [marker, alt, url] = match;
     if (!isPostImage(url)) continue;
+    if (skipFirstImage && !skipped) {
+      pieces.push(<Fragment key={match.index}>{body.slice(start, match.index).trimEnd()}</Fragment>);
+      start = match.index + marker.length;
+      skipped = true;
+      continue;
+    }
     pieces.push(
       <Fragment key={match.index}>
         {body.slice(start, match.index).trimEnd()}
         {/* Supabase image files are already resized and compressed on upload. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={url} alt={alt} loading="lazy" decoding="async" className="my-6 h-auto max-w-full rounded-sm" />
+        <img src={url} alt={alt} loading="lazy" decoding="async" />
       </Fragment>,
     );
     start = match.index + marker.length;
