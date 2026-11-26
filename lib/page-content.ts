@@ -41,7 +41,7 @@ function mergePageSettings(fallback: PageSettings, data: { texts: unknown; image
 
   const rawHero = data.hero_media && typeof data.hero_media === "object" ? data.hero_media as Record<string, unknown> : null;
   const heroMedia = rawHero && typeof rawHero.url === "string" && (rawHero.type === "image" || rawHero.type === "video")
-    ? { url: rawHero.url, type: rawHero.type as "image" | "video", mobileUrl: typeof rawHero.mobileUrl === "string" ? rawHero.mobileUrl : "", mobileType: rawHero.mobileType === "video" ? "video" as const : "image" as const, active: rawHero.active !== false, overlay: rawHero.overlay !== false } : fallback.heroMedia;
+    ? { url: rawHero.url, type: rawHero.type as "image" | "video", mobileUrl: typeof rawHero.mobileUrl === "string" ? rawHero.mobileUrl : "", mobileType: rawHero.mobileType === "video" ? "video" as const : "image" as const, posterUrl: typeof rawHero.posterUrl === "string" ? rawHero.posterUrl : "", mobilePosterUrl: typeof rawHero.mobilePosterUrl === "string" ? rawHero.mobilePosterUrl : "", active: rawHero.active !== false, overlay: rawHero.overlay !== false } : fallback.heroMedia;
   const storedPromotions = Array.isArray(data.promotions) ? data.promotions.filter(isPromotionBanner).map((banner) => ({ ...banner, mobileImage: banner.mobileImage ?? "" })) : [];
   const promotions = fallback.promotions?.map((defaultBanner) =>
     storedPromotions.find((banner) => banner.placement === defaultBanner.placement) ?? defaultBanner

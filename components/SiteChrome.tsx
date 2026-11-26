@@ -19,5 +19,8 @@ export function SiteChrome({ children, footer }: { children: React.ReactNode; fo
       <div className="site-shell">{children}</div>
     </div>;
   }
+  if (pathname === "/") {
+    return <div className="home-chrome"><Header />{children}</div>;
+  }
   return <><Header /><div className="site-shell">{children}</div>{footer}</>;
 }
