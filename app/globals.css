@@ -1634,6 +1634,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 }
 .home-hero-cta {
   position: relative;
+  top: clamp(24px, 5vh, 48px);
   display: grid;
   min-width: 124px;
   min-height: 48px;
