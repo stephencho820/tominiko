@@ -53,13 +53,15 @@ export function TextEditor({ post }: { post: TextPost | null }) {
         </label>
         <div className="grid gap-2">
           <ImageUpload
-            label="본문에 사진 추가"
+            label="본문에 사진 추가 (여러 장 선택 가능)"
             bucket="page-images"
             successMessage="업로드 완료 · 발행 화면에서 사진 위치를 확인하세요."
             onUploaded={insertPhoto}
             onUploadingChange={setUploading}
+            multiple
+            maxFiles={8}
           />
-          <p className="admin-muted">본문에서 사진을 넣을 위치를 누른 뒤 파일을 선택하세요. JPG, PNG, WebP · 최대 10MB</p>
+          <p className="admin-muted">본문에서 사진을 넣을 위치를 누른 뒤 사진을 선택하세요. 여러 장을 고르면 선택한 순서대로 들어갑니다. 한 번에 최대 8장 · JPG, PNG, WebP · 파일당 최대 10MB</p>
           {photoError && <p className="text-red-800" role="alert">{photoError}</p>}
           {body && <details className="rounded-sm border border-stone-400 p-3">
             <summary className="cursor-pointer">발행 화면 미리보기</summary>
