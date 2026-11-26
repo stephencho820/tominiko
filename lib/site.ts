@@ -16,7 +16,7 @@ export const BUSINESS_INFO = {
   productBrand: "Tominiko Beans & Coffee",
   roaster: "Zero Degrees",
   address: "경기 수원시 장안구 연무동 238-38",
-  contactUrl: "https://open.kakao.com/o/sDj2GOzi",
+  contactUrl: "https://pf.kakao.com/_ugxkvX/chat",
   administratorName: "정주혜",
   kakaoId: "tominiko",
   contactPhone: "010-4861-3883",
