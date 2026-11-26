@@ -85,10 +85,10 @@ export function Header() {
         </Link>
 
         <nav className="hidden items-center gap-4 md:flex lg:gap-7" aria-label="Main navigation">
-          <Link href="/" className="nav-link transition-colors hover:text-[var(--accent)]">HOME</Link>
-          <Link href="/shop" className="nav-link transition-colors hover:text-[var(--accent)]">ONLINE SHOP</Link>
-          <Link href="/tasting-room" className="nav-link transition-colors hover:text-[var(--accent)]">TASTING ROOM</Link>
-          <Link href="/texts" className="nav-link transition-colors hover:text-[var(--accent)]">NOTES</Link>
+          <Link href="/" className="nav-link transition-colors hover:text-[var(--accent)]">시작</Link>
+          <Link href="/shop" className="nav-link transition-colors hover:text-[var(--accent)]">원두 시장</Link>
+          <Link href="/tasting-room" className="nav-link transition-colors hover:text-[var(--accent)]">볶고 나누는 집</Link>
+          <Link href="/texts" className="nav-link transition-colors hover:text-[var(--accent)]">낙서</Link>
         </nav>
 
         <div className="hidden items-center justify-end gap-5 md:flex">
@@ -137,10 +137,10 @@ export function Header() {
       {cartNotice && <div className="site-cart-toast" role="status"><span>✓ {cartNotice}<br/><small>{freeShippingRemaining > 0 ? `${freeShippingRemaining.toLocaleString("ko-KR")}원 더 담으면 무료배송` : "무료배송 조건을 달성했어요"}</small></span><Link href="/cart" onClick={dismissCartNotice}>장바구니 보기 →</Link></div>}
       {open && (
         <nav className="mobile-nav-panel absolute left-0 top-full flex w-full flex-col gap-2 border-b border-[var(--line)] bg-[var(--ivory)] px-6 py-5 shadow-lg md:hidden">
-          <Link href="/" className="nav-link" onClick={() => setOpen(false)}>HOME</Link>
-          <Link href="/shop" className="nav-link" onClick={() => setOpen(false)}>ONLINE SHOP</Link>
-          <Link href="/tasting-room" className="nav-link" onClick={() => setOpen(false)}>TASTING ROOM</Link>
-          <Link href="/texts" className="nav-link" onClick={() => setOpen(false)}>NOTES</Link>
+          <Link href="/" className="nav-link" onClick={() => setOpen(false)}>시작</Link>
+          <Link href="/shop" className="nav-link" onClick={() => setOpen(false)}>원두 시장</Link>
+          <Link href="/tasting-room" className="nav-link" onClick={() => setOpen(false)}>볶고 나누는 집</Link>
+          <Link href="/texts" className="nav-link" onClick={() => setOpen(false)}>낙서</Link>
           <div className="border-t border-[var(--line)] pt-4">
             <Link href="/account" className="nav-meta" onClick={() => setOpen(false)}>
               {signedIn ? (accountName ? `${accountName}님 · 내 계정 ✓` : "로그인됨 · 내 계정 ✓") : "로그인 / 회원가입"}
