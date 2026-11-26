@@ -34,14 +34,14 @@ export default async function TextPage({ params }: Props) {
     <main className={styles.reading}>
       <section className={`${styles.hero} ${cover ? "" : styles.heroFallback}`} style={cover ? { backgroundImage: `linear-gradient(rgba(16,18,16,.18),rgba(16,18,16,.42)),url(${cover.url})` } : undefined}>
         <div className={styles.heroText}>
-          <Link href="/texts">Texts</Link>
+          <Link href="/texts">Notes</Link>
           <h1>{post.title}</h1>
         </div>
       </section>
       <div className={styles.articleShell}>
         <article>
           <header className={styles.articleMeta}>
-            <Link className={styles.back} href="/texts">← Texts</Link>
+            <Link className={styles.back} href="/texts">← Notes</Link>
             {post.published_at && <time dateTime={post.published_at}>{formatTextPostDate(post.published_at)}</time>}
           </header>
           <div className={styles.body}><TextPostBody body={post.body} skipFirstImage={Boolean(cover)} /></div>
