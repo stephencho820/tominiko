@@ -1582,9 +1582,10 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 
 /* Home — visual first, then a continuous shelf of today's coffees. */
 .home-chrome { height: 100svh; overflow: clip; }
+.home-chrome .home-page { animation: none; }
 .home-chrome .site-header {
   border-color: transparent;
-  background: linear-gradient(180deg, rgba(20,15,12,.7), transparent);
+  background: linear-gradient(180deg, rgba(20,15,12,.7), transparent) !important;
   color: white;
   box-shadow: none;
   backdrop-filter: none;
