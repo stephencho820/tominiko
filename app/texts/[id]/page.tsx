@@ -4,6 +4,7 @@ import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { formatTextPostDate, isTextPostId } from "@/lib/text-posts";
+import { TextPostBody } from "@/components/TextPostBody";
 import styles from "../texts.module.css";
 
 const getPublishedPost = cache(async (id: string) => {
@@ -36,7 +37,7 @@ export default async function TextPage({ params }: Props) {
           {post.published_at && <time dateTime={post.published_at}>{formatTextPostDate(post.published_at)}</time>}
           <h1>{post.title}</h1>
         </header>
-        <div className={styles.body}>{post.body}</div>
+        <div className={styles.body}><TextPostBody body={post.body} /></div>
       </article>
     </main>
   );
