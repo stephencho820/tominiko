@@ -5,7 +5,7 @@ import type { TextPost } from "@/lib/text-posts";
 import { getFirstPostImage } from "@/components/TextPostBody";
 import styles from "./texts.module.css";
 
-export const metadata = { title: "Texts" };
+export const metadata = { title: "Notes" };
 const pageSize = 20;
 
 export default async function TextsPage({
