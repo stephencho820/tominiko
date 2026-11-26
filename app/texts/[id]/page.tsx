@@ -4,7 +4,7 @@ import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { formatTextPostDate, isTextPostId } from "@/lib/text-posts";
-import { TextPostBody } from "@/components/TextPostBody";
+import { getFirstPostImage, TextPostBody } from "@/components/TextPostBody";
 import styles from "../texts.module.css";
 
 const getPublishedPost = cache(async (id: string) => {
@@ -29,16 +29,24 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function TextPage({ params }: Props) {
   const post = await getPublishedPost((await params).id);
+  const cover = getFirstPostImage(post.body);
   return (
     <main className={styles.reading}>
-      <Link className={styles.back} href="/texts">← 글 목록</Link>
-      <article>
-        <header>
-          {post.published_at && <time dateTime={post.published_at}>{formatTextPostDate(post.published_at)}</time>}
+      <section className={`${styles.hero} ${cover ? "" : styles.heroFallback}`} style={cover ? { backgroundImage: `linear-gradient(rgba(16,18,16,.18),rgba(16,18,16,.42)),url(${cover.url})` } : undefined}>
+        <div className={styles.heroText}>
+          <Link href="/texts">Texts</Link>
           <h1>{post.title}</h1>
-        </header>
-        <div className={styles.body}><TextPostBody body={post.body} /></div>
-      </article>
+        </div>
+      </section>
+      <div className={styles.articleShell}>
+        <article>
+          <header className={styles.articleMeta}>
+            <Link className={styles.back} href="/texts">← Texts</Link>
+            {post.published_at && <time dateTime={post.published_at}>{formatTextPostDate(post.published_at)}</time>}
+          </header>
+          <div className={styles.body}><TextPostBody body={post.body} skipFirstImage={Boolean(cover)} /></div>
+        </article>
+      </div>
     </main>
   );
 }
