@@ -2,14 +2,18 @@ import { Fragment } from "react";
 
 const imageLine = /^!\[([^\]\r\n]*)\]\((https?:\/\/[^\s()]+)\)\r?$/gm;
 const pageImagePath = /^\/storage\/v1\/object\/public\/page-images\/[0-9a-f-]{36}\.(webp|jpg|png)$/i;
+const editorialImagePath = /^\/images\/texts\/[a-z0-9/_-]+\.(webp|jpg|png)$/i;
 
 function isPostImage(value: string) {
   const storageUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!storageUrl) return false;
   try {
     const image = new URL(value);
-    return image.origin === new URL(storageUrl).origin && pageImagePath.test(image.pathname) &&
-      !image.username && !image.password && !image.search && !image.hash;
+    const isSupabaseImage = image.origin === new URL(storageUrl).origin && pageImagePath.test(image.pathname);
+    const isCasaEditorialImage = image.origin === "https://tominiko-tominiko.vercel.app" &&
+      editorialImagePath.test(image.pathname);
+    return (isSupabaseImage || isCasaEditorialImage) && !image.username && !image.password &&
+      !image.search && !image.hash;
   } catch {
     return false;
   }
