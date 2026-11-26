@@ -8,6 +8,15 @@ import "./globals.css";
 import "./typography.css";
 
 const baseUrl = siteUrl();
+const shareTitle = "Casa di Stefano 공식 온라인 스토어";
+const shareDescription = "수원 로스터리 Casa di Stefano. Zero Degrees가 볶은 Tominiko 원두를 만나보세요.";
+const shareImage = {
+  url: "/images/casa-forest-share.jpg",
+  width: 1200,
+  height: 630,
+  type: "image/jpeg",
+  alt: "안개 낀 숲을 배경으로 한 Casa di Stefano",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
@@ -21,16 +30,16 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ko_KR",
     siteName: SITE_NAME,
-    title: SITE_TITLE,
-    description: SITE_DESCRIPTION,
+    title: shareTitle,
+    description: shareDescription,
     url: "/",
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: SITE_TITLE }],
+    images: [shareImage],
   },
   twitter: {
     card: "summary_large_image",
-    title: SITE_TITLE,
-    description: SITE_DESCRIPTION,
-    images: ["/opengraph-image"],
+    title: shareTitle,
+    description: shareDescription,
+    images: [shareImage],
   },
   robots: {
     index: true,
