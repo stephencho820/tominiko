@@ -1,6 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { MessageCircle } from "lucide-react";
+import { BUSINESS_INFO } from "@/lib/site";
 import { Header } from "@/components/Header";
 
 export function SiteChrome({ children, footer }: { children: React.ReactNode; footer: React.ReactNode }) {
@@ -19,8 +21,20 @@ export function SiteChrome({ children, footer }: { children: React.ReactNode; fo
       <div className="site-shell">{children}</div>
     </div>;
   }
+  const showChat = pathname === "/" || pathname === "/shop" || pathname.startsWith("/shop/");
+  const chat = showChat && (
+    <a
+      href={BUSINESS_INFO.contactUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="fixed right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-[90] inline-flex min-h-11 items-center gap-2 rounded-full border border-white/25 bg-[#0c221a] px-4 text-xs font-semibold text-[#faf4e8] shadow-lg hover:bg-[#204637] focus-visible:outline-white"
+    >
+      <MessageCircle size={17} aria-hidden="true" />
+      카카오톡 문의
+    </a>
+  );
   if (pathname === "/") {
-    return <div className="home-chrome"><Header />{children}</div>;
+    return <div className="home-chrome"><Header />{children}{chat}</div>;
   }
-  return <><Header /><div className="site-shell">{children}</div>{footer}</>;
+  return <><Header /><div className="site-shell">{children}</div>{footer}{chat}</>;
 }

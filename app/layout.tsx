@@ -9,7 +9,7 @@ import "./typography.css";
 
 const baseUrl = siteUrl();
 const shareTitle = "Casa di Stefano 공식 온라인 스토어";
-const shareDescription = "수원 로스터리 Casa di Stefano. Zero Degrees가 볶은 Tominiko 원두를 만나보세요.";
+const shareDescription = "커피 로스터리 Casa di Stefano. Zero Degrees가 볶은 Tominiko 원두를 만나보세요.";
 const shareImage = {
   url: "/images/casa-forest-share.jpg",
   width: 1200,
