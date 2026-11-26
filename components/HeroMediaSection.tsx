@@ -1,21 +1,67 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import type { HeroMedia } from "@/lib/page-content-config";
 
-export function HeroMediaSection({ media }: { media: HeroMedia }) {
-  const showMedia = media.active && media.url.trim().length > 0;
-  const mobileUrl = media.mobileUrl.trim() || media.url;
-  const mobileType = media.mobileUrl.trim() ? media.mobileType : media.type;
+const defaultPoster = "/images/home-hero.svg";
+const mobileQuery = "(max-width: 760px)";
 
-  const renderMedia = (url: string, type: "image" | "video", className: string) => type === "video" ? (
-    <video className={`home-hero-media ${className}`} src={url} autoPlay muted loop playsInline preload="metadata" />
-  ) : <img className={`home-hero-media ${className}`} src={url} alt="Coffee at Casa di Stefano" />;
+export function HeroMediaSection({ media }: { media: HeroMedia }) {
+  const [videoUrl, setVideoUrl] = useState("");
+  const [playingUrl, setPlayingUrl] = useState("");
+  const desktopUrl = media.url.trim();
+  const mobileUrl = media.mobileUrl.trim() || desktopUrl;
+  const mobileType = media.mobileUrl.trim() ? media.mobileType : media.type;
+  const desktopPoster = (media.active && (media.type === "image" ? desktopUrl : media.posterUrl?.trim())) || defaultPoster;
+  const mobilePoster = (media.active && (mobileType === "image" ? mobileUrl : media.mobilePosterUrl?.trim())) || desktopPoster;
+
+  useEffect(() => {
+    const mobile = window.matchMedia(mobileQuery);
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    function selectVideo() {
+      const type = mobile.matches ? mobileType : media.type;
+      const url = mobile.matches ? mobileUrl : desktopUrl;
+      setVideoUrl(media.active && !reducedMotion.matches && type === "video" ? url : "");
+    }
+
+    selectVideo();
+    mobile.addEventListener("change", selectVideo);
+    reducedMotion.addEventListener("change", selectVideo);
+    return () => {
+      mobile.removeEventListener("change", selectVideo);
+      reducedMotion.removeEventListener("change", selectVideo);
+    };
+  }, [desktopUrl, media.active, media.type, mobileType, mobileUrl]);
 
   return (
     <section className="home-visual-hero" aria-label="Casa di Stefano">
-      {showMedia ? <>{renderMedia(media.url, media.type, "home-hero-media-desktop")}{renderMedia(mobileUrl, mobileType, "home-hero-media-mobile")}</> : <div className="home-hero-fallback" />}
+      <picture>
+        <source media={mobileQuery} srcSet={mobilePoster} />
+        <img className="home-hero-media" src={desktopPoster} alt="" fetchPriority="high" />
+      </picture>
+      {videoUrl && (
+        <video
+          key={videoUrl}
+          className={`home-hero-media home-hero-video${playingUrl === videoUrl ? " is-playing" : ""}`}
+          src={videoUrl}
+          muted
+          loop
+          playsInline
+          preload="auto"
+          aria-hidden="true"
+          onCanPlayThrough={({ currentTarget }) => {
+            void currentTarget.play().catch(() => setPlayingUrl(""));
+          }}
+          onPlaying={() => setPlayingUrl(videoUrl)}
+          onError={() => setPlayingUrl("")}
+          onWaiting={() => setPlayingUrl("")}
+          onEmptied={() => setPlayingUrl("")}
+        />
+      )}
       {media.overlay && <div className="home-hero-shade" />}
-      <a className="home-hero-cta" href="#discover">
-        <span className="lang-ko">내 원두 찾기</span><span className="lang-en">Find my beans</span><span aria-hidden="true">↓</span>
-      </a>
+      <Link className="home-hero-cta" href="/shop">SHOP</Link>
     </section>
   );
 }

@@ -93,7 +93,7 @@ export function PageContentEditor({ slug, initial }: { slug: PageSlug; initial: 
   return <div className="admin-page-editor">\n    {uploadProgress && <div role="status" aria-live="polite" className="admin-panel" style={{ padding: "18px 22px", marginBottom: 18 }}><strong>미디어 업로드 · {uploadProgress.stage}</strong><p style={{ margin: "8px 0", overflowWrap: "anywhere" }}>{uploadProgress.name} — {uploadProgress.percent}%</p><progress value={uploadProgress.percent} max={100} style={{ width: "100%", height: 12, accentColor: "#343028" }} /><p style={{ marginTop: 8, fontSize: 12 }}>업로드 완료 후 Save & publish 버튼을 눌러주세요. 진행 중에는 페이지를 닫지 마세요.</p></div>}
     {slug === "tasting-room" && settings.tastingRoom && <TastingRoomEditor value={settings.tastingRoom} onChange={(tastingRoom) => setSettings((current) => ({ ...current, tastingRoom }))} onStatus={setStatus} onBusy={changeBusy} busy={busy} isBusy={() => busyRef.current} />}
     {Object.keys(definition.texts).length > 0 && <section className="admin-panel"><div className="admin-section-heading"><div><p className="eyebrow">{slug === "our-story" ? "Brand assets & philosophy" : "Text & typography"}</p><h2>{slug === "our-story" ? "Philosophy settings" : "Page copy"}</h2></div></div><p className="admin-muted">Line breaks are preserved. Leave text size empty to use the page&apos;s responsive default.</p>
-      <div className="admin-content-fields">{Object.entries(definition.texts).map(([key, entry]) => <div className="admin-content-field" key={key}><label>{entry[0]}<textarea value={settings.texts[key]?.value ?? ""} onChange={(event) => updateText(key, { value: event.target.value })} /></label><div><label>Font<select value={settings.texts[key]?.font ?? "serif"} onChange={(event) => updateText(key, { font: event.target.value as "serif" | "sans" | "display" })}><option value="serif">Serif</option><option value="sans">Sans serif</option><option value="display">Display</option></select></label><label>Text size<input value={settings.texts[key]?.size ?? ""} placeholder="e.g. 48px, 5vw" onChange={(event) => updateText(key, { size: event.target.value })} /></label></div></div>)}</div>
+      <div className="admin-content-fields">{Object.entries(definition.texts).map(([key, entry]) => <div className="admin-content-field" key={key}><label>{entry[0]}<textarea value={settings.texts[key]?.value ?? ""} onChange={(event) => updateText(key, { value: event.target.value })} /></label><div><label>Text size<input value={settings.texts[key]?.size ?? ""} placeholder="e.g. 48px, 5vw" onChange={(event) => updateText(key, { size: event.target.value })} /></label></div></div>)}</div>
     </section>}
     {slug === "home" && <>
       <section className="admin-panel"><div className="admin-section-heading"><div><p className="eyebrow">Hero media</p><h2>Opening visual</h2></div></div><p className="admin-muted">Upload a wide image or an MP4/WebM video. Videos play muted, inline, and on a loop.</p>
@@ -106,6 +106,26 @@ export function PageContentEditor({ slug, initial }: { slug: PageSlug; initial: 
           <label className="admin-field">Mobile media type<select value={settings.heroMedia?.mobileType ?? "image"} onChange={(event) => setSettings((current) => ({ ...current, heroMedia: { ...(current.heroMedia!), mobileType: event.target.value as "image" | "video" } }))}><option value="image">Image</option><option value="video">Video</option></select></label>
           <label className="admin-field">Upload mobile media<input type="file" disabled={busy} accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" onChange={(event) => { const file = event.target.files?.[0]; if (file) void upload("hero-mobile", file, (url) => setSettings((current) => ({ ...current, heroMedia: { ...(current.heroMedia!), mobileUrl: url, mobileType: file.type.startsWith("video/") ? "video" : "image" } }))); }} /></label>
           <label className="admin-field">Mobile media URL<input value={settings.heroMedia?.mobileUrl ?? ""} placeholder="Falls back to desktop media" onChange={(event) => setSettings((current) => ({ ...current, heroMedia: { ...(current.heroMedia!), mobileUrl: event.target.value } }))} /></label>
+          {(["posterUrl", "mobilePosterUrl"] as const).map((key) => (
+            <div key={key}>
+              <label className="admin-field">
+                {key === "posterUrl" ? "Desktop poster URL" : "Mobile poster URL"}
+                <input value={settings.heroMedia?.[key] ?? ""} onChange={(event) => {
+                  const value = event.target.value;
+                  setSettings((current) => ({ ...current, heroMedia: { ...current.heroMedia!, [key]: value } }));
+                }} />
+              </label>
+              <label className="admin-field">
+                Upload poster image
+                <input type="file" disabled={busy} accept="image/jpeg,image/png,image/webp" onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) void upload(key, file, (url) => setSettings((current) => ({
+                    ...current, heroMedia: { ...current.heroMedia!, [key]: url },
+                  })));
+                }} />
+              </label>
+            </div>
+          ))}
           <div className="admin-toggle-row"><label><input type="checkbox" checked={settings.heroMedia?.active ?? true} onChange={(event) => setSettings((current) => ({ ...current, heroMedia: { ...(current.heroMedia!), active: event.target.checked } }))} /><span>Active<small>Show the uploaded media</small></span></label><label><input type="checkbox" checked={settings.heroMedia?.overlay ?? true} onChange={(event) => setSettings((current) => ({ ...current, heroMedia: { ...(current.heroMedia!), overlay: event.target.checked } }))} /><span>Overlay<small>Subtle dark CTA contrast</small></span></label></div>
         </div></div>
       </section>

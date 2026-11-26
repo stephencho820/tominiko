@@ -51,7 +51,13 @@ function parseSettings(value: unknown) {
     if (!hero || typeof hero.url !== "string" || hero.url.length > 2_000 || (hero.type !== "image" && hero.type !== "video") || typeof hero.mobileUrl !== "string" || hero.mobileUrl.length > 2_000 || (hero.mobileType !== "image" && hero.mobileType !== "video") || typeof hero.active !== "boolean" || typeof hero.overlay !== "boolean") return null;
     const validVideo = (url: string, type: string) => type !== "video" || /^https:\/\/.+\.(mp4|webm)(\?|$)/i.test(url);
     if (!validVideo(hero.url, hero.type) || (hero.mobileUrl && !validVideo(hero.mobileUrl, hero.mobileType))) return null;
-    hero_media = { url: hero.url, type: hero.type, mobileUrl: hero.mobileUrl, mobileType: hero.mobileType, active: hero.active, overlay: hero.overlay };
+    const posterUrl = typeof hero.posterUrl === "string" ? hero.posterUrl.trim() : "";
+    const mobilePosterUrl = typeof hero.mobilePosterUrl === "string" ? hero.mobilePosterUrl.trim() : "";
+    const validPoster = (url: string) => url.length <= 2_000 && (
+      !url || /^\/(?!\/)[^\s\\]+$/.test(url) || /^https:\/\/[^\s]+$/i.test(url)
+    );
+    if (!validPoster(posterUrl) || !validPoster(mobilePosterUrl)) return null;
+    hero_media = { posterUrl, mobilePosterUrl, url: hero.url, type: hero.type, mobileUrl: hero.mobileUrl, mobileType: hero.mobileType, active: hero.active, overlay: hero.overlay };
     if (!Array.isArray(body.promotions) || body.promotions.length !== 2) return null;
     promotions = [];
     const placements = new Set<string>();

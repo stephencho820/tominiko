@@ -319,19 +319,22 @@ button { cursor: pointer; }
 }
 
 .site-header {
+  --nav-forest: 12, 34, 26;
+  --nav-ivory: #faf4e8;
+  --nav-line: rgba(250, 244, 232, .2);
   position: sticky;
   top: 0;
   z-index: 50;
-  border-color: rgba(216,208,195,.8);
-  background: rgba(244,240,232,.78) !important;
+  border-color: var(--nav-line);
+  background: rgba(var(--nav-forest), .94) !important;
+  color: var(--nav-ivory);
   box-shadow: 0 8px 24px rgba(33,29,24,.04);
   backdrop-filter: blur(18px);
   transition: background-color .45s ease, box-shadow .45s ease, border-color .45s ease;
 }
 
 .site-header.is-scrolled {
-  border-color: rgba(216,208,195,.45);
-  background: rgba(244,240,232,.5) !important;
+  background: rgba(var(--nav-forest), .88) !important;
   box-shadow: 0 10px 28px rgba(33,29,24,.08);
 }
 
@@ -1581,15 +1584,74 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 @media (max-width: 760px) { .admin-pages-grid, .admin-content-fields, .admin-image-fields { grid-template-columns: 1fr; } .admin-editor-save { flex-wrap: wrap; } .admin-editor-save span { width: 100%; } }
 
 /* Home — visual first, then a continuous shelf of today's coffees. */
-.site-shell:has(.home-page-reimagined) { width: 100%; margin-top: 0; border: 0; box-shadow: none; }
-.home-page-reimagined { background: var(--paper); }
-.home-visual-hero { position: relative; height: calc(100svh - 72px); min-height: 560px; overflow: hidden; background: #403529; }
-.home-hero-media { width: 100%; height: 100%; object-fit: cover; object-position: center; }
-.home-hero-media-mobile { display: none; }
-.home-hero-fallback { width: 100%; height: 100%; background: linear-gradient(135deg,#33291f,#786049); }
-.home-hero-shade { position: absolute; inset: 0; background: linear-gradient(180deg,rgba(20,15,10,.04) 45%,rgba(20,15,10,.48)); pointer-events: none; }
-.home-hero-cta { position: absolute; bottom: clamp(28px,5vw,64px); left: 50%; display: inline-flex; min-height: 52px; align-items: center; gap: 28px; border: 1px solid rgba(255,255,255,.7); padding: 0 22px; background: rgba(27,22,17,.22); color: white; font: 700 10px/1 "Avenir Next",Arial,sans-serif; letter-spacing: .14em; text-transform: uppercase; transform: translateX(-50%); backdrop-filter: blur(8px); transition: background .3s ease; }
-.home-hero-cta:hover { background: rgba(27,22,17,.7); }
+.home-chrome { height: 100svh; overflow: clip; }
+.home-chrome .home-page { animation: none; }
+.home-chrome .site-header {
+  border-color: transparent;
+  background: linear-gradient(180deg, rgba(var(--nav-forest), .96), rgba(var(--nav-forest), .78)) !important;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.site-header .nav-link:hover,
+.site-header .nav-meta:hover { color: #d9e8ce; }
+.site-header a:focus-visible,
+.site-header button:focus-visible { outline-color: var(--nav-ivory); }
+.site-header .mobile-nav-panel {
+  max-height: calc(100dvh - 72px);
+  overflow-y: auto;
+  border-color: var(--nav-line);
+  background: rgba(var(--nav-forest), .90);
+  color: var(--nav-ivory);
+  backdrop-filter: blur(14px);
+}
+.home-visual-hero {
+  position: relative;
+  display: grid;
+  height: 100svh;
+  place-items: center;
+  overflow: hidden;
+  background: #403529;
+}
+@supports (height: 100dvh) {
+  .home-chrome, .home-visual-hero { height: 100dvh; }
+}
+.home-hero-media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.home-visual-hero picture { position: absolute; inset: 0; }
+.home-hero-video { opacity: 0; transition: opacity .35s ease; }
+.home-hero-video.is-playing { opacity: 1; }
+.home-hero-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(20,15,11,.12), rgba(20,15,11,.3));
+  pointer-events: none;
+}
+.home-hero-cta {
+  position: relative;
+  display: grid;
+  min-width: 124px;
+  min-height: 48px;
+  padding-inline: 24px;
+  place-items: center;
+  border: 1px solid white;
+  background: rgba(27,22,17,.45);
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  transition: background .2s ease;
+}
+.home-hero-cta:hover, .home-hero-cta:focus-visible {
+  background: white;
+  color: #241f1a;
+}
+.home-hero-cta:focus-visible { outline: 2px solid white; outline-offset: 4px; }
 .coffee-marquee { padding: clamp(68px,8vw,112px) 0 clamp(74px,9vw,126px); overflow: hidden; background: #f4efe7; }
 .coffee-marquee > header { display: flex; max-width: 1400px; align-items: end; justify-content: space-between; gap: 30px; margin: 0 auto 36px; padding: 0 clamp(20px,4vw,64px); }
 .coffee-marquee h2 { margin: 10px 0 0; font-size: clamp(38px,5vw,66px); font-weight: 400; letter-spacing: -.05em; line-height: 1; }
@@ -1685,9 +1747,6 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
   .site-header > div { min-height: 72px; }
   .site-header > div > a span { font-size: 14px; }
   .site-header > div > button { display: grid; width: 44px; height: 44px; place-items: center; padding: 0; }
-  .home-visual-hero { height: calc(100dvh - 72px); min-height: calc(100svh - 72px); }
-  .home-hero-media-desktop { display: none; }.home-hero-media-mobile { display: block; }
-  .home-hero-cta { bottom: max(38px,env(safe-area-inset-bottom)); min-height: 48px; padding-inline: 24px; font-size: 11px; white-space: nowrap; }
   .coffee-marquee { padding-top: 62px; padding-bottom: 72px; }
   .coffee-marquee > header { align-items: start; flex-direction: column; gap: 12px; margin-bottom: 26px; padding-inline: 20px; }
   .coffee-marquee > header > a,.coffee-marquee-empty > a { display: inline-flex; min-height: 44px; align-items: center; }
@@ -1949,7 +2008,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
   border-bottom: 1px solid var(--ink);
   padding-bottom: 3px;
   color: var(--ink);
-  font: 700 9px/1.5 "Avenir Next", "Helvetica Neue", Arial, sans-serif !important;
+  font: 700 9px/1.5 var(--site-font) !important;
   letter-spacing: .1em;
 }
 .room-visit {
@@ -2069,6 +2128,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
   font-size: 12px;
 }
 .mobile-nav-panel > .border-t {
+  border-color: var(--nav-line);
   padding-top: 8px;
 }
 @media (max-width: 760px) {
@@ -3776,4 +3836,9 @@ body:has(> .site-header) { padding-top: 72px; }
 @media (prefers-reduced-motion: reduce) {
   .catalog-card-image--with-concept .catalog-concept-photo,
   .product-card-image .product-card-concept-photo { transition: none; }
+}
+
+html:has(.home-chrome), body:has(.home-chrome) {
+  min-height: 0;
+  overflow: hidden;
 }

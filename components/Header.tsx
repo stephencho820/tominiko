@@ -79,7 +79,7 @@ export function Header() {
     <header className={`site-header relative z-20 border-b border-[var(--line)] bg-[var(--ivory)] px-5 md:px-8 ${scrolled ? "is-scrolled" : ""}`}>
       <div className="mx-auto flex h-[72px] max-w-[1320px] items-center justify-between gap-6 md:grid md:grid-cols-[1fr_auto_1fr]">
         <Link href="/" className="group flex items-center" onClick={() => setOpen(false)}>
-          <span className="text-[13px] font-bold tracking-[.18em] text-[var(--ink)] md:text-[14px]">
+          <span className="text-[13px] font-bold tracking-[.18em] md:text-[14px]">
             CASA DI STEFANO
           </span>
         </Link>

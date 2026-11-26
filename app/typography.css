@@ -1,39 +1,31 @@
-/* CASA DI STEFANO — mobile-first editorial typography.
-   Scoped to the public storefront: admin and QR ordering remain unchanged. */
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..800&display=swap');
 
 :root {
-  --casa-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
-  --casa-ui: Inter, "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --site-font: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --casa-display: var(--site-font);
+  --casa-ui: var(--site-font);
 }
-body:not(:has(.admin-shell)) { font-family: var(--casa-ui); }
-body:not(:has(.admin-shell)) .eyebrow,
-body:not(:has(.admin-shell)) .section-label,
-body:not(:has(.admin-shell)) .catalog-origin,
-body:not(:has(.admin-shell)) .catalog-english,
-body:not(:has(.admin-shell)) .catalog-notes,
-body:not(:has(.admin-shell)) .catalog-price,
-body:not(:has(.admin-shell)) button,
-body:not(:has(.admin-shell)) select,
-body:not(:has(.admin-shell)) input { font-family: var(--casa-ui); }
+
+/* Cover route styles, Tailwind utilities and legacy editable text styles. */
+body, body * {
+  font-family: var(--site-font) !important;
+}
+
 body:not(:has(.admin-shell)) .coffee-marquee h2,
 body:not(:has(.admin-shell)) .coffee-discovery h2,
 body:not(:has(.admin-shell)) .shop-heading > p:last-child,
 body:not(:has(.admin-shell)) .product-intro h1,
 body:not(:has(.admin-shell)) .room-visit-details h2,
 body:not(:has(.admin-shell)) .site-footer-brand .eyebrow {
-  font-family: var(--casa-display);
   font-weight: 500;
   letter-spacing: -.025em;
 }
 body:not(:has(.admin-shell)) .catalog-card-copy h2 {
-  font-family: var(--casa-ui);
   font-weight: 500;
   letter-spacing: -.035em;
   line-height: 1.35;
 }
 body:not(:has(.admin-shell)) .catalog-english {
-  font-family: var(--casa-display);
   font-size: clamp(16px, 1.7vw, 20px);
   line-height: 1.2;
   letter-spacing: -.015em;
