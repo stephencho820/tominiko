@@ -232,3 +232,26 @@ html { scroll-behavior: smooth; }
   .product-detail-new .pdp-story-heading { padding:66px 20px 28px; }
   .product-detail-new .option-grid button { font-size:12px; }
 }
+
+/* Keep storefront headings at reading size across route and editable styles. */
+body:not(:has(.admin-shell)) :is(h1, h2, h3, h4, h5, h6) {
+  font-size: 1rem !important;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+body:not(:has(.admin-shell)) h1 { font-size: 1.375rem !important; }
+body:not(:has(.admin-shell)) h2 { font-size: 1.125rem !important; }
+
+/* Keep promotional titles available to assistive technology. */
+body:not(:has(.admin-shell)) :is(.home-hero-heading, .room-intro h1, .shop-heading > p:last-child) {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+}
