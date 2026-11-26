@@ -88,7 +88,7 @@ export function Header() {
           <Link href="/" className="nav-link transition-colors hover:text-[var(--accent)]">HOME</Link>
           <Link href="/shop" className="nav-link transition-colors hover:text-[var(--accent)]">ONLINE SHOP</Link>
           <Link href="/tasting-room" className="nav-link transition-colors hover:text-[var(--accent)]">TASTING ROOM</Link>
-          <Link href="/texts" className="nav-link transition-colors hover:text-[var(--accent)]">TEXTS</Link>
+          <Link href="/texts" className="nav-link transition-colors hover:text-[var(--accent)]">NOTES</Link>
         </nav>
 
         <div className="hidden items-center justify-end gap-5 md:flex">
@@ -140,7 +140,7 @@ export function Header() {
           <Link href="/" className="nav-link" onClick={() => setOpen(false)}>HOME</Link>
           <Link href="/shop" className="nav-link" onClick={() => setOpen(false)}>ONLINE SHOP</Link>
           <Link href="/tasting-room" className="nav-link" onClick={() => setOpen(false)}>TASTING ROOM</Link>
-          <Link href="/texts" className="nav-link" onClick={() => setOpen(false)}>TEXTS</Link>
+          <Link href="/texts" className="nav-link" onClick={() => setOpen(false)}>NOTES</Link>
           <div className="border-t border-[var(--line)] pt-4">
             <Link href="/account" className="nav-meta" onClick={() => setOpen(false)}>
               {signedIn ? (accountName ? `${accountName}님 · 내 계정 ✓` : "로그인됨 · 내 계정 ✓") : "로그인 / 회원가입"}
