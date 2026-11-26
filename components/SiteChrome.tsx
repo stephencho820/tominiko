@@ -27,7 +27,8 @@ export function SiteChrome({ children, footer }: { children: React.ReactNode; fo
       href={BUSINESS_INFO.contactUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-[90] inline-flex min-h-11 items-center gap-2 rounded-full border border-white/25 bg-[#0c221a] px-4 text-xs font-semibold text-[#faf4e8] shadow-lg hover:bg-[#204637] focus-visible:outline-white"
+      style={{ color: "#faf4e8" }}
+      className="fixed right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-[90] inline-flex min-h-11 items-center gap-2 rounded-full border border-white/25 bg-[#0c221a] px-4 text-xs font-semibold shadow-lg hover:bg-[#204637] focus-visible:outline-white"
     >
       <MessageCircle size={17} aria-hidden="true" />
       카카오톡 문의
