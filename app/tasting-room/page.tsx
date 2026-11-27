@@ -19,10 +19,9 @@ export default async function TastingRoomPage() {
   const heroImage = room.heroImage || defaultHero;
   const defaultMapHref = `https://map.naver.com/p/search/${encodeURIComponent("Casa Di Stefano")}`;
   const naverMapHref = /^https:\/\/[^\s]+$/i.test(room.mapLink) ? room.mapLink : defaultMapHref;
-  const actions = [
-    { href: "/tasting-room/menu", label: "테이스팅 메뉴" },
-    { href: "#visit", label: "방문 안내" },
-  ];
+  const openingHours = room.openingHours
+    .replace(/^[ \t]*[-–]?[ \t]*무인 카페[ \t]*:[ \t]*월[ \t]*[-–~][ \t]*일[ \t]*6시[ \t]*[-–~][ \t]*22시[ \t]*$/gm, "무인 카페　매일 06:00–22:00")
+    .replace(/^[ \t]*[-–]?[ \t]*로스팅[ \t]*:[ \t]*매주 화[ \t]*:[ \t]*20시[ \t]*[-–~][ \t]*23시[ \t]*$/gm, "로스팅　매주 화요일 20:00–23:00");
 
   return (
     <main className="bg-[#f8f7f3] text-[#24241f]">
@@ -34,24 +33,20 @@ export default async function TastingRoomPage() {
             <SafeHeroImage src={heroImage} fallback={defaultHero} alt="Casa di Stefano Tasting Room" />
           </picture>
           <nav aria-label="테이스팅룸 바로가기" className="mt-4 grid grid-cols-2 gap-3">
-            {actions.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className="flex min-h-12 items-center justify-center gap-2 border border-[#d5d3c9] px-2 text-sm font-medium transition-colors hover:bg-[#eeece4] focus-visible:outline-offset-[-3px] md:px-4"
-              >
-                {label}
-                <span aria-hidden="true">{href === "#visit" ? "↓" : "↗"}</span>
-              </Link>
-            ))}
+            <Link href="/tasting-room/menu" className="flex min-h-12 items-center justify-center gap-2 border border-solid border-[#d5d3c9] px-2 text-sm font-medium transition-colors hover:bg-[#eeece4]">
+              테이스팅 메뉴 <span aria-hidden="true">↗</span>
+            </Link>
+            <a href="#visit" className="flex min-h-12 items-center justify-center gap-2 border-0 px-2 text-sm text-[#57564d] hover:underline hover:underline-offset-4">
+              방문 안내 <span aria-hidden="true">↓</span>
+            </a>
           </nav>
         </section>
 
-        <section id="visit" aria-labelledby="visit-title" className="mt-10 scroll-mt-24 border-t border-[#d5d3c9] pt-5 md:mt-16 md:pt-7">
+        <section id="visit" aria-labelledby="visit-title" className="mt-10 scroll-mt-24 md:mt-16">
           <h2 id="visit-title" className="mb-5 text-sm font-medium md:mb-7">방문 안내</h2>
           <div className="grid items-start gap-7 md:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] md:gap-14">
             <dl className="m-0 text-sm leading-[1.75]">
-              <div className="grid grid-cols-[5rem_minmax(0,1fr)] gap-3 border-t border-[#d5d3c9] py-4">
+              <div className="grid grid-cols-[5rem_minmax(0,1fr)] gap-3 pb-4">
                 <dt className="text-[#57564d]">주소</dt>
                 <dd className="m-0">
                   <p className="whitespace-pre-line">{room.address || "추후 안내"}</p>
@@ -62,9 +57,9 @@ export default async function TastingRoomPage() {
               </div>
               <div className="grid grid-cols-[5rem_minmax(0,1fr)] gap-3 border-t border-[#d5d3c9] py-4">
                 <dt className="text-[#57564d]">영업시간</dt>
-                <dd className="m-0 whitespace-pre-line">{room.openingHours || "추후 안내"}</dd>
+                <dd className="m-0 whitespace-pre-line">{openingHours || "추후 안내"}</dd>
               </div>
-              <div className="grid grid-cols-[5rem_minmax(0,1fr)] gap-3 border-y border-[#d5d3c9] py-4">
+              <div className="grid grid-cols-[5rem_minmax(0,1fr)] gap-3 pt-2">
                 <dt className="text-[#57564d]">방문·예약</dt>
                 <dd className="m-0">
                   <a href={BUSINESS_INFO.contactUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
