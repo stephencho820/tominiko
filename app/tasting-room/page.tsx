@@ -20,20 +20,87 @@ export default async function TastingRoomPage() {
   const heroImage = room.heroImage || defaultHero;
   const defaultMapHref = `https://map.naver.com/p/search/${encodeURIComponent("Casa Di Stefano")}`;
   const naverMapHref = /^https:\/\/[^\s]+$/i.test(room.mapLink) ? room.mapLink : defaultMapHref;
-  return <main className="tasting-room-page">
-    <section className="room-visit-hero"><picture><source media="(max-width: 700px)" srcSet={room.mobileHeroImage || defaultMobileHero} /><SafeHeroImage src={heroImage} fallback={defaultHero} alt="Casa di Stefano Tasting Room" /></picture><Link href="/our-story" className="room-story-link">PHILOSOPHY <span>↗</span></Link></section>
-    <section className="room-intro" aria-labelledby="room-intro-title">
-      <div><p className="section-label">CASA DI STEFANO</p><h1 id="room-intro-title">향긋한 커피를<br />직접 만나보세요.</h1></div>
-      <div><p>커피를 고르기 전에 맛보고 싶을 때, 로스팅 이야기가 궁금할 때, 천천히 머물고 싶을 때 찾아오세요.</p><div className="room-intro-actions"><Link href="/tasting-room/menu">TASTING MENU ↗</Link><a href="#visit">방문 정보 ↓</a><Link href="/shop">원두 SHOP ↗</Link></div></div>
-    </section>
-    <section className="room-visit" id="visit" aria-labelledby="visit-title"><p className="section-label" id="visit-title">VISIT</p><div className="room-visit-layout">
-      <figure className="room-map"><a href={naverMapHref} target="_blank" rel="noopener noreferrer" aria-label="지도에서 Casa Di Stefano 위치 보기" title="Casa Di Stefano 지도 열기"><img src={room.mapImage || "/images/tasting-room/map-casa-user.svg"} alt="Casa di Stefano Tasting Room location map in Suwon" /></a></figure>
-      <div className="room-visit-details">
-        <div><h2>ADDRESS</h2>{room.address ? <><p className="room-preline">{room.address}</p>{naverMapHref && <a className="room-detail-action" href={naverMapHref} target="_blank" rel="noreferrer">지도에서 위치 보기 ↗</a>}</> : <p className="room-empty">Details coming soon.</p>}</div>
-        <div><h2>CONTACT</h2><a href={BUSINESS_INFO.contactUrl} target="_blank" rel="noopener noreferrer">카카오톡 오픈프로필 ↗</a><p className="room-phone-note">방문 및 예약 문의는 카카오톡으로 연락해 주세요.</p></div>
-        <div><h2>OPENING HOURS</h2>{room.openingHours ? <p className="room-preline">{room.openingHours}</p> : <p className="room-empty">Details coming soon.</p>}</div>
+  const actions = [
+    { href: "/tasting-room/menu", label: "테이스팅 메뉴" },
+    { href: "#visit", label: "방문 안내" },
+    { href: "/shop", label: "원두 구매" },
+    { href: "/our-story", label: "우리 이야기" },
+  ];
+
+  return (
+    <main className="bg-[#f8f7f3] text-[#24241f]">
+      <div className="mx-auto max-w-[1600px] px-5 pb-20 md:px-12 md:pb-28">
+        <section aria-labelledby="tasting-room-title">
+          <div className="grid gap-4 pt-10 pb-7 md:grid-cols-[minmax(0,1fr)_minmax(0,23rem)] md:items-end md:gap-12 md:pt-16 md:pb-9">
+            <h1 id="tasting-room-title" className="text-[clamp(1.75rem,4vw,3.75rem)] leading-[1.12] font-medium tracking-[-.055em]">
+              Tasting Room
+            </h1>
+            <p className="max-w-[32ch] text-sm leading-[1.8] tracking-[-.02em] text-[#57564d] md:justify-self-end">
+              Casa di Stefano에서 Zero Degrees가 볶은 커피를 직접 맛보세요.
+            </p>
+          </div>
+          <picture className="block [&>img]:block [&>img]:h-auto [&>img]:w-full">
+            <source media="(max-width: 700px)" srcSet={room.mobileHeroImage || defaultMobileHero} />
+            <SafeHeroImage src={heroImage} fallback={defaultHero} alt="Casa di Stefano Tasting Room" />
+          </picture>
+          <nav aria-label="테이스팅룸 바로가기" className="grid grid-cols-2 border-b border-[#d5d3c9] md:grid-cols-4">
+            {actions.map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className="flex min-h-12 items-center justify-between gap-2 border-t border-[#d5d3c9] px-2 text-xs font-medium transition-colors hover:bg-[#eeece4] focus-visible:outline-offset-[-3px] md:px-4 md:text-sm"
+              >
+                {label}
+                <span aria-hidden="true">{href === "#visit" ? "↓" : "↗"}</span>
+              </Link>
+            ))}
+          </nav>
+        </section>
+
+        {room.galleryImages.length > 0 && (
+          <section aria-labelledby="space-title" className="mt-16 md:mt-24">
+            <h2 id="space-title" className="mb-4 text-sm font-medium md:mb-6">공간 사진</h2>
+            <TastingRoomGallery images={room.galleryImages} />
+          </section>
+        )}
+
+        <section id="visit" aria-labelledby="visit-title" className="mt-16 scroll-mt-24 border-t border-[#d5d3c9] pt-5 md:mt-24 md:pt-7">
+          <h2 id="visit-title" className="mb-5 text-sm font-medium md:mb-7">방문 안내</h2>
+          <div className="grid items-start gap-7 md:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] md:gap-14">
+            <a href={naverMapHref} target="_blank" rel="noopener noreferrer" className="block" aria-label="네이버 지도에서 위치 보기">
+              <img
+                src={room.mapImage || "/images/tasting-room/map-casa-user.svg"}
+                alt="Casa di Stefano 테이스팅룸 위치 지도"
+                loading="lazy"
+                className="block h-auto w-full"
+              />
+            </a>
+            <dl className="m-0 text-sm leading-[1.75]">
+              <div className="grid grid-cols-[5rem_minmax(0,1fr)] gap-3 border-t border-[#d5d3c9] py-4">
+                <dt className="text-[#57564d]">주소</dt>
+                <dd className="m-0">
+                  <p className="whitespace-pre-line">{room.address || "추후 안내"}</p>
+                  <a href={naverMapHref} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block underline underline-offset-4">
+                    지도에서 위치 보기 ↗
+                  </a>
+                </dd>
+              </div>
+              <div className="grid grid-cols-[5rem_minmax(0,1fr)] gap-3 border-t border-[#d5d3c9] py-4">
+                <dt className="text-[#57564d]">영업시간</dt>
+                <dd className="m-0 whitespace-pre-line">{room.openingHours || "추후 안내"}</dd>
+              </div>
+              <div className="grid grid-cols-[5rem_minmax(0,1fr)] gap-3 border-y border-[#d5d3c9] py-4">
+                <dt className="text-[#57564d]">방문·예약</dt>
+                <dd className="m-0">
+                  <a href={BUSINESS_INFO.contactUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
+                    카카오톡으로 문의 ↗
+                  </a>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </section>
       </div>
-    </div></section>
-    <section className="room-space" aria-labelledby="space-title"><p className="section-label" id="space-title">THE SPACE</p><TastingRoomGallery images={room.galleryImages} /></section>
-  </main>;
+    </main>
+  );
 }
