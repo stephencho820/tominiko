@@ -24,7 +24,7 @@ export default async function TastingRoomPage() {
     .replace(/^[ \t]*[-–]?[ \t]*로스팅[ \t]*:[ \t]*매주 화[ \t]*:[ \t]*20시[ \t]*[-–~][ \t]*23시[ \t]*$/gm, "로스팅　매주 화요일 20:00–23:00");
 
   return (
-    <main className="bg-[#f8f7f3] text-[#24241f]">
+    <main className="bg-[#f0efe9] text-[#24241f]">
       <div className="mx-auto max-w-[1600px] px-5 pt-5 pb-16 md:px-12 md:pt-10 md:pb-24">
         <section aria-labelledby="tasting-room-title">
           <h1 id="tasting-room-title" className="sr-only">Tasting Room</h1>
